@@ -19,28 +19,34 @@ export type Database = {
           audio_url: string | null
           created_at: string
           id: string
+          mood: string | null
           project_name: string
           script_url: string | null
           updated_at: string
           user_id: string
+          voice_style: string | null
         }
         Insert: {
           audio_url?: string | null
           created_at?: string
           id?: string
+          mood?: string | null
           project_name: string
           script_url?: string | null
           updated_at?: string
           user_id: string
+          voice_style?: string | null
         }
         Update: {
           audio_url?: string | null
           created_at?: string
           id?: string
+          mood?: string | null
           project_name?: string
           script_url?: string | null
           updated_at?: string
           user_id?: string
+          voice_style?: string | null
         }
         Relationships: []
       }

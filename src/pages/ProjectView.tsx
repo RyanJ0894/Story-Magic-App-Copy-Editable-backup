@@ -4,16 +4,24 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Play, Pause, Volume2, Download, FileText, AlertCircle, Sparkles, Loader2 } from 'lucide-react';
+import { ArrowLeft, Play, Pause, Volume2, Download, FileText, AlertCircle, Sparkles, Loader2, ChevronDown } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface Project {
   id: string;
   project_name: string;
   script_url: string | null;
   audio_url: string | null;
+  voice_style: string | null;
+  mood: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -182,6 +190,54 @@ export default function ProjectView() {
     }
 
     return new Blob([arrayBuffer], { type: 'audio/wav' });
+  };
+
+  const updateVoiceStyle = async (voiceStyle: string) => {
+    if (!project) return;
+    
+    const { error } = await supabase
+      .from('user_projects')
+      .update({ voice_style: voiceStyle })
+      .eq('id', project.id);
+
+    if (error) {
+      toast({
+        title: "Update failed",
+        description: error.message,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setProject({ ...project, voice_style: voiceStyle });
+    toast({
+      title: "Voice style updated",
+      description: `Set to ${voiceStyle}`,
+    });
+  };
+
+  const updateMood = async (mood: string) => {
+    if (!project) return;
+    
+    const { error } = await supabase
+      .from('user_projects')
+      .update({ mood: mood })
+      .eq('id', project.id);
+
+    if (error) {
+      toast({
+        title: "Update failed",
+        description: error.message,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setProject({ ...project, mood: mood });
+    toast({
+      title: "Mood updated",
+      description: `Set to ${mood}`,
+    });
   };
 
   const generateAudio = async () => {
@@ -445,6 +501,81 @@ export default function ProjectView() {
                   </div>
                 </div>
               )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Voice & Mood Settings */}
+        <div className="mt-8">
+          <Card>
+            <CardHeader>
+              <CardTitle>Audio Settings</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Voice Style Dropdown */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Voice Style</label>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" className="w-full justify-between">
+                        {project.voice_style || "Select voice style"}
+                        <ChevronDown className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-full">
+                      <DropdownMenuItem onClick={() => updateVoiceStyle("Narrator Deep")}>
+                        Narrator Deep
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => updateVoiceStyle("Warm Female")}>
+                        Warm Female
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => updateVoiceStyle("Neutral Male")}>
+                        Neutral Male
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => updateVoiceStyle("Young Energetic")}>
+                        Young Energetic
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => updateVoiceStyle("Wise Elder")}>
+                        Wise Elder
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+
+                {/* Mood Dropdown */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Mood</label>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" className="w-full justify-between">
+                        {project.mood || "Select mood"}
+                        <ChevronDown className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-full">
+                      <DropdownMenuItem onClick={() => updateMood("Tense")}>
+                        Tense
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => updateMood("Inspiring")}>
+                        Inspiring
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => updateMood("Dark")}>
+                        Dark
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => updateMood("Comedic")}>
+                        Comedic
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => updateMood("Mysterious")}>
+                        Mysterious
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => updateMood("Uplifting")}>
+                        Uplifting
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>
