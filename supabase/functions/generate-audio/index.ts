@@ -65,9 +65,9 @@ serve(async (req) => {
 
     const scriptContent = await scriptData.text()
     
-    // Use first 1000 characters if script is very long, or full script if shorter
-    const textToGenerate = scriptContent.length > 1000 
-      ? scriptContent.substring(0, 1000) + '...'
+    // Use first 800 characters for efficient audio generation
+    const textToGenerate = scriptContent.length > 800 
+      ? scriptContent.substring(0, 800) + '...'
       : scriptContent
 
     console.log('Generating audio for:', { voiceStyle, mood, scriptLength: scriptContent.length, textLength: textToGenerate.length })
