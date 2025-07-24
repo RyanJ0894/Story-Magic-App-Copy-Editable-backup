@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Play, Pause, Volume2, Download, FileText, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Play, Pause, Volume2, Download, FileText, AlertCircle, Sparkles, Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -26,6 +26,7 @@ export default function ProjectView() {
   
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
+  const [generating, setGenerating] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -137,6 +138,133 @@ export default function ProjectView() {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+    }
+  };
+
+  // Helper function to convert AudioBuffer to WAV blob
+  const audioBufferToWav = (buffer: AudioBuffer): Blob => {
+    const length = buffer.length;
+    const numberOfChannels = buffer.numberOfChannels;
+    const sampleRate = buffer.sampleRate;
+    const bytesPerSample = 2;
+    const arrayBuffer = new ArrayBuffer(44 + length * numberOfChannels * bytesPerSample);
+    const view = new DataView(arrayBuffer);
+
+    // WAV header
+    const writeString = (offset: number, string: string) => {
+      for (let i = 0; i < string.length; i++) {
+        view.setUint8(offset + i, string.charCodeAt(i));
+      }
+    };
+
+    writeString(0, 'RIFF');
+    view.setUint32(4, 36 + length * numberOfChannels * bytesPerSample, true);
+    writeString(8, 'WAVE');
+    writeString(12, 'fmt ');
+    view.setUint32(16, 16, true);
+    view.setUint16(20, 1, true);
+    view.setUint16(22, numberOfChannels, true);
+    view.setUint32(24, sampleRate, true);
+    view.setUint32(28, sampleRate * numberOfChannels * bytesPerSample, true);
+    view.setUint16(32, numberOfChannels * bytesPerSample, true);
+    view.setUint16(34, 8 * bytesPerSample, true);
+    writeString(36, 'data');
+    view.setUint32(40, length * numberOfChannels * bytesPerSample, true);
+
+    // Convert audio data
+    let offset = 44;
+    for (let i = 0; i < length; i++) {
+      for (let channel = 0; channel < numberOfChannels; channel++) {
+        const sample = Math.max(-1, Math.min(1, buffer.getChannelData(channel)[i]));
+        view.setInt16(offset, sample * 0x7FFF, true);
+        offset += 2;
+      }
+    }
+
+    return new Blob([arrayBuffer], { type: 'audio/wav' });
+  };
+
+  const generateAudio = async () => {
+    if (!project || !user) return;
+
+    setGenerating(true);
+    try {
+      // Create a simple audio buffer (5 seconds of placeholder tone)
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const sampleRate = audioContext.sampleRate;
+      const duration = 5; // 5 seconds
+      const frameCount = sampleRate * duration;
+      
+      const audioBuffer = audioContext.createBuffer(1, frameCount, sampleRate);
+      const channelData = audioBuffer.getChannelData(0);
+      
+      // Generate a simple tone as placeholder
+      for (let i = 0; i < frameCount; i++) {
+        channelData[i] = Math.sin(2 * Math.PI * 440 * i / sampleRate) * 0.1; // 440Hz tone at low volume
+      }
+
+      // Convert to WAV blob
+      const wavBlob = audioBufferToWav(audioBuffer);
+      
+      const fileName = `${user.id}/audio.wav`;
+      
+      // Upload to Supabase Storage
+      const { error: uploadError } = await supabase.storage
+        .from('user-files')
+        .upload(fileName, wavBlob, {
+          cacheControl: '3600',
+          upsert: true,
+          contentType: 'audio/wav'
+        });
+
+      if (uploadError) {
+        console.error('Upload error:', uploadError);
+        toast({
+          title: "Upload failed",
+          description: uploadError.message,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Get the public URL
+      const { data: urlData } = supabase.storage
+        .from('user-files')
+        .getPublicUrl(fileName);
+
+      // Update the project with the audio URL
+      const { error: updateError } = await supabase
+        .from('user_projects')
+        .update({ audio_url: urlData.publicUrl })
+        .eq('id', project.id);
+
+      if (updateError) {
+        console.error('Update error:', updateError);
+        toast({
+          title: "Update failed",
+          description: updateError.message,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Refresh project data
+      await fetchProject();
+      
+      toast({
+        title: "Audio generated!",
+        description: "Your placeholder audio has been created and is ready to play.",
+      });
+
+    } catch (error) {
+      console.error('Error generating audio:', error);
+      toast({
+        title: "Generation failed",
+        description: "Failed to generate audio file",
+        variant: "destructive",
+      });
+    } finally {
+      setGenerating(false);
     }
   };
 
@@ -290,12 +418,31 @@ export default function ProjectView() {
                   </Button>
                 </div>
               ) : (
-                <div className="border-2 border-dashed border-border rounded-lg p-8 text-center">
-                  <Volume2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <p className="font-medium mb-2">No audio file yet</p>
-                  <p className="text-sm text-muted-foreground">
-                    Audio will appear here once processing is complete
-                  </p>
+                <div className="space-y-6">
+                  <div className="border-2 border-dashed border-border rounded-lg p-8 text-center">
+                    <Volume2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <p className="font-medium mb-2">No audio file yet</p>
+                    <p className="text-sm text-muted-foreground mb-6">
+                      Generate audio from your script to create an immersive experience
+                    </p>
+                    <Button 
+                      onClick={generateAudio}
+                      disabled={generating}
+                      className="gap-2"
+                    >
+                      {generating ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Generating Audio...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="h-4 w-4" />
+                          Generate Audio
+                        </>
+                      )}
+                    </Button>
+                  </div>
                 </div>
               )}
             </CardContent>
