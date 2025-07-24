@@ -9,6 +9,7 @@ import { ArrowLeft, Play, Pause, Volume2, Download, FileText, AlertCircle, Spark
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import * as pdfjs from 'pdfjs-dist';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -62,6 +63,11 @@ export default function ProjectView() {
   
   const audioRef = useRef<HTMLAudioElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Set up PDF.js worker
+  useEffect(() => {
+    pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
+  }, []);
 
   useEffect(() => {
     if (projectId && user) {
@@ -198,8 +204,27 @@ export default function ProjectView() {
       
       // Handle different file types
       if (filePath.toLowerCase().endsWith('.pdf')) {
-        // For PDF files, we'll show a message that PDF content extraction is not yet supported
-        scriptContent = 'PDF content extraction is not yet supported. Please convert your script to a .txt file for full functionality.';
+        // Extract text from PDF
+        try {
+          const arrayBuffer = await scriptData.arrayBuffer();
+          const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
+          const textContent = [];
+          
+          for (let i = 1; i <= pdf.numPages; i++) {
+            const page = await pdf.getPage(i);
+            const pageText = await page.getTextContent();
+            const pageString = pageText.items
+              .filter((item: any) => item.str)
+              .map((item: any) => item.str)
+              .join(' ');
+            textContent.push(pageString);
+          }
+          
+          scriptContent = textContent.join('\n\n');
+        } catch (pdfError) {
+          console.error('Error parsing PDF:', pdfError);
+          scriptContent = 'Error extracting text from PDF. Please try uploading a text file instead.';
+        }
       } else {
         // For text files
         scriptContent = await scriptData.text();
@@ -207,17 +232,17 @@ export default function ProjectView() {
       
       setFullScript(scriptContent);
       
-      // Parse scenes only if it's not a PDF
-      if (!filePath.toLowerCase().endsWith('.pdf')) {
+      // Parse scenes if we have valid content
+      if (scriptContent && !scriptContent.startsWith('Error')) {
         const parsedScenes = parseScenes(scriptContent);
         setScenes(parsedScenes);
       } else {
         setScenes([]);
       }
       
-      // Get first 800 characters for preview
-      const preview = scriptContent.length > 800 
-        ? scriptContent.substring(0, 800) + '...'
+      // Get first 500 characters for preview
+      const preview = scriptContent.length > 500 
+        ? scriptContent.substring(0, 500) + '...'
         : scriptContent;
       
       setScriptPreview(preview);
