@@ -330,7 +330,7 @@ export default function ProjectView() {
       await fetchProject();
       
       toast({
-        title: "Audio generated!",
+        title: "Audio generated successfully!",
         description: "Your AI-generated audio is ready to play.",
       });
 
