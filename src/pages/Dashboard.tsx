@@ -1,3 +1,4 @@
+import React from "react";
 import { Header } from "@/components/Header";
 import { ScriptUpload } from "@/components/ScriptUpload";
 import { VoiceCasting } from "@/components/VoiceCasting";
