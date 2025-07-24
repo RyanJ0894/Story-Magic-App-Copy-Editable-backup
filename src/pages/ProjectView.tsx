@@ -174,12 +174,17 @@ export default function ProjectView() {
     
     setLoadingScript(true);
     try {
-      // Extract the file path from the script URL
-      const fileName = project.script_url.split('/').pop()!;
+      // Extract the file path from the script URL - get everything after '/user-files/'
+      const urlParts = project.script_url.split('/user-files/');
+      if (urlParts.length < 2) {
+        console.error('Invalid script URL format');
+        return;
+      }
+      const filePath = urlParts[1];
       
       const { data: scriptData, error } = await supabase.storage
         .from('user-files')
-        .download(fileName);
+        .download(filePath);
 
       if (error || !scriptData) {
         console.error('Error fetching script:', error);
@@ -189,12 +194,26 @@ export default function ProjectView() {
         return;
       }
 
-      const scriptContent = await scriptData.text();
+      let scriptContent = '';
+      
+      // Handle different file types
+      if (filePath.toLowerCase().endsWith('.pdf')) {
+        // For PDF files, we'll show a message that PDF content extraction is not yet supported
+        scriptContent = 'PDF content extraction is not yet supported. Please convert your script to a .txt file for full functionality.';
+      } else {
+        // For text files
+        scriptContent = await scriptData.text();
+      }
+      
       setFullScript(scriptContent);
       
-      // Parse scenes
-      const parsedScenes = parseScenes(scriptContent);
-      setScenes(parsedScenes);
+      // Parse scenes only if it's not a PDF
+      if (!filePath.toLowerCase().endsWith('.pdf')) {
+        const parsedScenes = parseScenes(scriptContent);
+        setScenes(parsedScenes);
+      } else {
+        setScenes([]);
+      }
       
       // Get first 800 characters for preview
       const preview = scriptContent.length > 800 
@@ -207,6 +226,11 @@ export default function ProjectView() {
       setScriptPreview('');
       setFullScript('');
       setScenes([]);
+      toast({
+        title: "Error loading script",
+        description: "Failed to load script content. Please try re-uploading.",
+        variant: "destructive",
+      });
     } finally {
       setLoadingScript(false);
     }
@@ -247,9 +271,15 @@ export default function ProjectView() {
   };
 
   const openScript = () => {
-    if (project?.script_url) {
-      window.open(project.script_url, '_blank');
-    }
+    if (!project?.script_url) return;
+    
+    // Trigger script loading to show content in the UI
+    fetchScriptPreview();
+    
+    toast({
+      title: "Script loaded",
+      description: "Script content is now displayed below",
+    });
   };
 
   const downloadAudio = () => {
@@ -452,12 +482,32 @@ export default function ProjectView() {
   const generateAudio = async () => {
     if (!project || !user) return;
 
+    // Check if script content is available
+    if (!fullScript || fullScript.trim() === '') {
+      toast({
+        title: "No script content",
+        description: "Please load your script first by clicking 'Open Script'",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setGenerating(true);
     try {
       // Determine what text to use for generation
       let textToGenerate = fullScript;
       if (selectedSceneIndex !== null && scenes[selectedSceneIndex]) {
         textToGenerate = scenes[selectedSceneIndex].content;
+      }
+
+      // Validate text content
+      if (!textToGenerate || textToGenerate.trim() === '') {
+        toast({
+          title: "No content to generate",
+          description: "Please select a scene or ensure your script has content",
+          variant: "destructive",
+        });
+        return;
       }
 
       // Call the edge function to generate audio with ElevenLabs
