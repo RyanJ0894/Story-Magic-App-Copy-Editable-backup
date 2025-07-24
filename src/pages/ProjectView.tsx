@@ -22,6 +22,7 @@ interface Project {
   audio_url: string | null;
   voice_style: string | null;
   mood: string | null;
+  generation_count: number | null;
   created_at: string;
   updated_at: string;
 }
@@ -310,10 +311,13 @@ export default function ProjectView() {
         throw new Error(data.error || 'Unknown error occurred');
       }
 
-      // Update the project with the audio URL
+      // Update the project with the audio URL and increment generation count
       const { error: updateError } = await supabase
         .from('user_projects')
-        .update({ audio_url: data.audioUrl })
+        .update({ 
+          audio_url: data.audioUrl,
+          generation_count: (project.generation_count || 0) + 1
+        })
         .eq('id', project.id);
 
       if (updateError) {
