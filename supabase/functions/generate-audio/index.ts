@@ -26,13 +26,51 @@ serve(async (req) => {
   }
 
   try {
-    const { text, voiceStyle, mood, userId, projectId } = await req.json()
+    const { voiceStyle, mood, userId, projectId } = await req.json()
 
-    if (!text || !userId || !projectId) {
-      throw new Error('Text, userId, and projectId are required')
+    if (!userId || !projectId) {
+      throw new Error('userId and projectId are required')
     }
 
-    console.log('Generating audio for:', { voiceStyle, mood, textLength: text.length })
+    // Initialize Supabase client
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    
+    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+
+    // Get project details to fetch script content
+    const { data: project, error: projectError } = await supabase
+      .from('user_projects')
+      .select('script_url')
+      .eq('id', projectId)
+      .eq('user_id', userId)
+      .single()
+
+    if (projectError || !project) {
+      throw new Error('Project not found or access denied')
+    }
+
+    if (!project.script_url) {
+      throw new Error('No script uploaded for this project')
+    }
+
+    // Fetch script content from storage
+    const { data: scriptData, error: scriptError } = await supabase.storage
+      .from('user-files')
+      .download(project.script_url.split('/').pop()!)
+
+    if (scriptError || !scriptData) {
+      throw new Error('Failed to fetch script content')
+    }
+
+    const scriptContent = await scriptData.text()
+    
+    // Use first 1000 characters if script is very long, or full script if shorter
+    const textToGenerate = scriptContent.length > 1000 
+      ? scriptContent.substring(0, 1000) + '...'
+      : scriptContent
+
+    console.log('Generating audio for:', { voiceStyle, mood, scriptLength: scriptContent.length, textLength: textToGenerate.length })
 
     // Get ElevenLabs API key
     const elevenLabsApiKey = Deno.env.get('ELEVENLABS_API_KEY')
@@ -44,7 +82,7 @@ serve(async (req) => {
     const voiceId = voiceMap[voiceStyle] || 'EXAVITQu4vr4xnSDxMaL' // Default to Sarah
 
     // Create prompt that incorporates mood
-    let styledText = text
+    let styledText = textToGenerate
     if (mood) {
       const moodInstructions = {
         'Tense': 'Speak with tension and urgency in your voice.',
@@ -59,7 +97,7 @@ serve(async (req) => {
       
       const instruction = moodInstructions[mood as keyof typeof moodInstructions]
       if (instruction) {
-        styledText = `${instruction} ${text}`
+        styledText = `${instruction} ${textToGenerate}`
       }
     }
 
@@ -92,12 +130,6 @@ serve(async (req) => {
     // Get audio buffer
     const audioBuffer = await response.arrayBuffer()
     console.log('Audio generated, size:', audioBuffer.byteLength)
-
-    // Initialize Supabase client
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-    
-    const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
     // Upload to Supabase Storage
     const fileName = `${userId}/${projectId}-audio.mp3`
