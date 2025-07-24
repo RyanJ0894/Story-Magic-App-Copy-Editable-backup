@@ -26,7 +26,7 @@ serve(async (req) => {
   }
 
   try {
-    const { voiceStyle, mood, userId, projectId } = await req.json()
+    const { voiceStyle, mood, userId, projectId, customText } = await req.json()
 
     if (!userId || !projectId) {
       throw new Error('userId and projectId are required')
@@ -38,39 +38,45 @@ serve(async (req) => {
     
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-    // Get project details to fetch script content
-    const { data: project, error: projectError } = await supabase
-      .from('user_projects')
-      .select('script_url')
-      .eq('id', projectId)
-      .eq('user_id', userId)
-      .single()
+    let textToGenerate: string
 
-    if (projectError || !project) {
-      throw new Error('Project not found or access denied')
+    // If customText is provided, use it directly
+    if (customText) {
+      textToGenerate = customText
+    } else {
+      // Otherwise, fetch script content from storage
+      const { data: project, error: projectError } = await supabase
+        .from('user_projects')
+        .select('script_url')
+        .eq('id', projectId)
+        .eq('user_id', userId)
+        .single()
+
+      if (projectError || !project) {
+        throw new Error('Project not found or access denied')
+      }
+
+      if (!project.script_url) {
+        throw new Error('No script uploaded for this project')
+      }
+
+      const { data: scriptData, error: scriptError } = await supabase.storage
+        .from('user-files')
+        .download(project.script_url.split('/').pop()!)
+
+      if (scriptError || !scriptData) {
+        throw new Error('Failed to fetch script content')
+      }
+
+      const scriptContent = await scriptData.text()
+      
+      // Use first 800 characters for efficient audio generation
+      textToGenerate = scriptContent.length > 800 
+        ? scriptContent.substring(0, 800) + '...'
+        : scriptContent
     }
 
-    if (!project.script_url) {
-      throw new Error('No script uploaded for this project')
-    }
-
-    // Fetch script content from storage
-    const { data: scriptData, error: scriptError } = await supabase.storage
-      .from('user-files')
-      .download(project.script_url.split('/').pop()!)
-
-    if (scriptError || !scriptData) {
-      throw new Error('Failed to fetch script content')
-    }
-
-    const scriptContent = await scriptData.text()
-    
-    // Use first 800 characters for efficient audio generation
-    const textToGenerate = scriptContent.length > 800 
-      ? scriptContent.substring(0, 800) + '...'
-      : scriptContent
-
-    console.log('Generating audio for:', { voiceStyle, mood, scriptLength: scriptContent.length, textLength: textToGenerate.length })
+    console.log('Generating audio for:', { voiceStyle, mood, textLength: textToGenerate.length, usingCustomText: !!customText })
 
     // Get ElevenLabs API key
     const elevenLabsApiKey = Deno.env.get('ELEVENLABS_API_KEY')

@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Play, Pause, Volume2, Download, FileText, AlertCircle, Sparkles, Loader2, ChevronDown } from 'lucide-react';
+import { ArrowLeft, Play, Pause, Volume2, Download, FileText, AlertCircle, Sparkles, Loader2, ChevronDown, List } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -14,6 +14,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 
 interface Project {
   id: string;
@@ -27,6 +32,12 @@ interface Project {
   updated_at: string;
 }
 
+interface Scene {
+  heading: string;
+  content: string;
+  preview: string;
+}
+
 export default function ProjectView() {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
@@ -37,11 +48,15 @@ export default function ProjectView() {
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [scriptPreview, setScriptPreview] = useState<string>('');
+  const [fullScript, setFullScript] = useState<string>('');
+  const [scenes, setScenes] = useState<Scene[]>([]);
+  const [selectedSceneIndex, setSelectedSceneIndex] = useState<number | null>(null);
   const [loadingScript, setLoadingScript] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(70);
+  const [scenesOpen, setScenesOpen] = useState(false);
   
   const audioRef = useRef<HTMLAudioElement>(null);
 
@@ -107,6 +122,50 @@ export default function ProjectView() {
     }
   };
 
+  const parseScenes = (scriptContent: string): Scene[] => {
+    const lines = scriptContent.split('\n');
+    const scenes: Scene[] = [];
+    let currentScene: { heading: string; content: string[] } | null = null;
+
+    for (const line of lines) {
+      const trimmedLine = line.trim();
+      
+      // Check if line is a scene heading (starts with INT. or EXT. in caps)
+      if (trimmedLine.match(/^(INT\.|EXT\.)/i)) {
+        // Save previous scene if exists
+        if (currentScene && currentScene.content.length > 0) {
+          const content = currentScene.content.join('\n').trim();
+          scenes.push({
+            heading: currentScene.heading,
+            content: content,
+            preview: content.substring(0, 100) + (content.length > 100 ? '...' : '')
+          });
+        }
+        
+        // Start new scene
+        currentScene = {
+          heading: trimmedLine,
+          content: []
+        };
+      } else if (currentScene && trimmedLine) {
+        // Add content to current scene
+        currentScene.content.push(line);
+      }
+    }
+
+    // Add the last scene
+    if (currentScene && currentScene.content.length > 0) {
+      const content = currentScene.content.join('\n').trim();
+      scenes.push({
+        heading: currentScene.heading,
+        content: content,
+        preview: content.substring(0, 100) + (content.length > 100 ? '...' : '')
+      });
+    }
+
+    return scenes;
+  };
+
   const fetchScriptPreview = async () => {
     if (!project?.script_url) return;
     
@@ -122,10 +181,18 @@ export default function ProjectView() {
       if (error || !scriptData) {
         console.error('Error fetching script:', error);
         setScriptPreview('');
+        setFullScript('');
+        setScenes([]);
         return;
       }
 
       const scriptContent = await scriptData.text();
+      setFullScript(scriptContent);
+      
+      // Parse scenes
+      const parsedScenes = parseScenes(scriptContent);
+      setScenes(parsedScenes);
+      
       // Get first 800 characters for preview
       const preview = scriptContent.length > 800 
         ? scriptContent.substring(0, 800) + '...'
@@ -135,6 +202,8 @@ export default function ProjectView() {
     } catch (error) {
       console.error('Error loading script preview:', error);
       setScriptPreview('');
+      setFullScript('');
+      setScenes([]);
     } finally {
       setLoadingScript(false);
     }
@@ -287,6 +356,12 @@ export default function ProjectView() {
 
     setGenerating(true);
     try {
+      // Determine what text to use for generation
+      let textToGenerate = fullScript;
+      if (selectedSceneIndex !== null && scenes[selectedSceneIndex]) {
+        textToGenerate = scenes[selectedSceneIndex].content;
+      }
+
       // Call the edge function to generate audio with ElevenLabs
       const { data, error } = await supabase.functions.invoke('generate-audio', {
         body: {
@@ -294,6 +369,7 @@ export default function ProjectView() {
           mood: project.mood,
           userId: user.id,
           projectId: project.id,
+          customText: textToGenerate, // Send the selected scene or full script
         },
       });
 
@@ -501,14 +577,69 @@ export default function ProjectView() {
                 </div>
               ) : (
                 <div className="space-y-6">
+                  {/* Scene Picker */}
+                  {project.script_url && scenes.length > 0 && (
+                    <div className="bg-muted/30 rounded-lg p-4 border">
+                      <Collapsible open={scenesOpen} onOpenChange={setScenesOpen}>
+                        <CollapsibleTrigger asChild>
+                          <Button variant="ghost" className="w-full justify-between p-0 h-auto">
+                            <div className="flex items-center gap-2">
+                              <List className="h-4 w-4" />
+                              <span className="text-sm font-medium">
+                                Scene Picker ({scenes.length} scenes found)
+                                {selectedSceneIndex !== null && ` - Selected: Scene ${selectedSceneIndex + 1}`}
+                              </span>
+                            </div>
+                            <ChevronDown className="h-4 w-4" />
+                          </Button>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent className="mt-3">
+                          <div className="space-y-2 max-h-48 overflow-y-auto">
+                            <Button
+                              variant={selectedSceneIndex === null ? "default" : "outline"}
+                              size="sm"
+                              onClick={() => setSelectedSceneIndex(null)}
+                              className="w-full justify-start text-left"
+                            >
+                              <span className="font-medium">Full Script</span>
+                            </Button>
+                            {scenes.map((scene, index) => (
+                              <Button
+                                key={index}
+                                variant={selectedSceneIndex === index ? "default" : "outline"}
+                                size="sm"
+                                onClick={() => setSelectedSceneIndex(index)}
+                                className="w-full justify-start text-left h-auto py-2"
+                              >
+                                <div className="flex flex-col items-start gap-1">
+                                  <span className="font-medium text-xs">Scene {index + 1}: {scene.heading}</span>
+                                  <span className="text-xs text-muted-foreground">{scene.preview}</span>
+                                </div>
+                              </Button>
+                            ))}
+                          </div>
+                        </CollapsibleContent>
+                      </Collapsible>
+                    </div>
+                  )}
+
                   {/* Script Preview for Audio Generation */}
                   {project.script_url && (
                     <div className="bg-muted/30 rounded-lg p-4 border">
-                      <h4 className="text-sm font-medium mb-2">Script Preview (First 800 characters)</h4>
+                      <h4 className="text-sm font-medium mb-2">
+                        {selectedSceneIndex !== null 
+                          ? `Selected Scene: ${scenes[selectedSceneIndex]?.heading}` 
+                          : "Script Preview (First 800 characters)"
+                        }
+                      </h4>
                       {loadingScript ? (
                         <div className="flex items-center gap-2">
                           <Loader2 className="h-4 w-4 animate-spin" />
                           <span className="text-sm text-muted-foreground">Loading script preview...</span>
+                        </div>
+                      ) : selectedSceneIndex !== null ? (
+                        <div className="text-sm text-muted-foreground max-h-32 overflow-y-auto leading-relaxed">
+                          {scenes[selectedSceneIndex]?.content || 'Scene content not available'}
                         </div>
                       ) : scriptPreview ? (
                         <div className="text-sm text-muted-foreground max-h-32 overflow-y-auto leading-relaxed">
@@ -525,7 +656,9 @@ export default function ProjectView() {
                     <p className="font-medium mb-2">No audio file yet</p>
                     <p className="text-sm text-muted-foreground mb-6">
                       {project.script_url 
-                        ? "Generate audio from your script to create an immersive experience"
+                        ? selectedSceneIndex !== null 
+                          ? `Generate audio for Scene ${selectedSceneIndex + 1}: ${scenes[selectedSceneIndex]?.heading}`
+                          : "Generate audio from your full script to create an immersive experience"
                         : "Upload a script first, then generate audio from it"
                       }
                     </p>
