@@ -35,6 +35,8 @@ export default function ProjectView() {
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
+  const [scriptPreview, setScriptPreview] = useState<string>('');
+  const [loadingScript, setLoadingScript] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -47,6 +49,12 @@ export default function ProjectView() {
       fetchProject();
     }
   }, [projectId, user]);
+
+  useEffect(() => {
+    if (project?.script_url) {
+      fetchScriptPreview();
+    }
+  }, [project?.script_url]);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -95,6 +103,39 @@ export default function ProjectView() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchScriptPreview = async () => {
+    if (!project?.script_url) return;
+    
+    setLoadingScript(true);
+    try {
+      // Extract the file path from the script URL
+      const fileName = project.script_url.split('/').pop()!;
+      
+      const { data: scriptData, error } = await supabase.storage
+        .from('user-files')
+        .download(fileName);
+
+      if (error || !scriptData) {
+        console.error('Error fetching script:', error);
+        setScriptPreview('');
+        return;
+      }
+
+      const scriptContent = await scriptData.text();
+      // Get first 800 characters for preview
+      const preview = scriptContent.length > 800 
+        ? scriptContent.substring(0, 800) + '...'
+        : scriptContent;
+      
+      setScriptPreview(preview);
+    } catch (error) {
+      console.error('Error loading script preview:', error);
+      setScriptPreview('');
+    } finally {
+      setLoadingScript(false);
     }
   };
 
@@ -245,13 +286,9 @@ export default function ProjectView() {
 
     setGenerating(true);
     try {
-      // Placeholder text for now (will be linked to script content later)
-      const placeholderText = `This is a sample narration for the project "${project.project_name}". The voice style is set to ${project.voice_style || 'default'} with a ${project.mood || 'neutral'} mood. This demonstration shows how the final audio will sound when generated from your script content.`;
-
       // Call the edge function to generate audio with ElevenLabs
       const { data, error } = await supabase.functions.invoke('generate-audio', {
         body: {
-          text: placeholderText,
           voiceStyle: project.voice_style,
           mood: project.mood,
           userId: user.id,
@@ -460,15 +497,37 @@ export default function ProjectView() {
                 </div>
               ) : (
                 <div className="space-y-6">
+                  {/* Script Preview for Audio Generation */}
+                  {project.script_url && (
+                    <div className="bg-muted/30 rounded-lg p-4 border">
+                      <h4 className="text-sm font-medium mb-2">Script Preview (First 800 characters)</h4>
+                      {loadingScript ? (
+                        <div className="flex items-center gap-2">
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          <span className="text-sm text-muted-foreground">Loading script preview...</span>
+                        </div>
+                      ) : scriptPreview ? (
+                        <div className="text-sm text-muted-foreground max-h-32 overflow-y-auto leading-relaxed">
+                          {scriptPreview}
+                        </div>
+                      ) : (
+                        <p className="text-sm text-muted-foreground">Unable to load script preview</p>
+                      )}
+                    </div>
+                  )}
+                  
                   <div className="border-2 border-dashed border-border rounded-lg p-8 text-center">
                     <Volume2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                     <p className="font-medium mb-2">No audio file yet</p>
                     <p className="text-sm text-muted-foreground mb-6">
-                      Generate audio from your script to create an immersive experience
+                      {project.script_url 
+                        ? "Generate audio from your script to create an immersive experience"
+                        : "Upload a script first, then generate audio from it"
+                      }
                     </p>
                     <Button 
                       onClick={generateAudio}
-                      disabled={generating}
+                      disabled={generating || !project.script_url}
                       className="gap-2"
                     >
                       {generating ? (
