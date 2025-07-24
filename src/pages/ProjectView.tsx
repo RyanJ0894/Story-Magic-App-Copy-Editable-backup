@@ -378,6 +378,11 @@ export default function ProjectView() {
       // Update local state
       setProject({ ...project, script_url: urlData.publicUrl });
       
+      // Automatically load and parse the script after upload
+      setTimeout(() => {
+        fetchScriptPreview();
+      }, 100);
+      
       toast({
         title: "Script uploaded successfully!",
         description: "Your script has been uploaded and is ready for processing.",
