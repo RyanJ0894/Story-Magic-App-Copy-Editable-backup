@@ -527,11 +527,29 @@ export default function ProjectView() {
                       <DropdownMenuItem onClick={() => updateVoiceStyle("Narrator Deep")}>
                         Narrator Deep
                       </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => updateVoiceStyle("Narrator Soothing")}>
+                        Narrator Soothing
+                      </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => updateVoiceStyle("Warm Female")}>
                         Warm Female
                       </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => updateVoiceStyle("Assertive Female")}>
+                        Assertive Female
+                      </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => updateVoiceStyle("Neutral Male")}>
                         Neutral Male
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => updateVoiceStyle("Comedic Male")}>
+                        Comedic Male
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => updateVoiceStyle("Elderly Male Mentor")}>
+                        Elderly Male Mentor
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => updateVoiceStyle("Elderly Female Mentor")}>
+                        Elderly Female Mentor
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => updateVoiceStyle("Young Hero")}>
+                        Young Hero
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -559,6 +577,18 @@ export default function ProjectView() {
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => updateMood("Comedic")}>
                         Comedic
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => updateMood("Melancholy")}>
+                        Melancholy
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => updateMood("Hopeful")}>
+                        Hopeful
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => updateMood("Romantic")}>
+                        Romantic
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => updateMood("Epic")}>
+                        Epic
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
