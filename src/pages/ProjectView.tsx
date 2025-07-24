@@ -533,12 +533,6 @@ export default function ProjectView() {
                       <DropdownMenuItem onClick={() => updateVoiceStyle("Neutral Male")}>
                         Neutral Male
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => updateVoiceStyle("Young Energetic")}>
-                        Young Energetic
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => updateVoiceStyle("Wise Elder")}>
-                        Wise Elder
-                      </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
@@ -565,12 +559,6 @@ export default function ProjectView() {
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => updateMood("Comedic")}>
                         Comedic
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => updateMood("Mysterious")}>
-                        Mysterious
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => updateMood("Uplifting")}>
-                        Uplifting
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
