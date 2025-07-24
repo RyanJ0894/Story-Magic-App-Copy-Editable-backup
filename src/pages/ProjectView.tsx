@@ -245,53 +245,38 @@ export default function ProjectView() {
 
     setGenerating(true);
     try {
-      // Create a simple audio buffer (5 seconds of placeholder tone)
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-      const sampleRate = audioContext.sampleRate;
-      const duration = 5; // 5 seconds
-      const frameCount = sampleRate * duration;
-      
-      const audioBuffer = audioContext.createBuffer(1, frameCount, sampleRate);
-      const channelData = audioBuffer.getChannelData(0);
-      
-      // Generate a simple tone as placeholder
-      for (let i = 0; i < frameCount; i++) {
-        channelData[i] = Math.sin(2 * Math.PI * 440 * i / sampleRate) * 0.1; // 440Hz tone at low volume
-      }
+      // Placeholder text for now (will be linked to script content later)
+      const placeholderText = `This is a sample narration for the project "${project.project_name}". The voice style is set to ${project.voice_style || 'default'} with a ${project.mood || 'neutral'} mood. This demonstration shows how the final audio will sound when generated from your script content.`;
 
-      // Convert to WAV blob
-      const wavBlob = audioBufferToWav(audioBuffer);
-      
-      const fileName = `${user.id}/audio.wav`;
-      
-      // Upload to Supabase Storage
-      const { error: uploadError } = await supabase.storage
-        .from('user-files')
-        .upload(fileName, wavBlob, {
-          cacheControl: '3600',
-          upsert: true,
-          contentType: 'audio/wav'
-        });
+      // Call the edge function to generate audio with ElevenLabs
+      const { data, error } = await supabase.functions.invoke('generate-audio', {
+        body: {
+          text: placeholderText,
+          voiceStyle: project.voice_style,
+          mood: project.mood,
+          userId: user.id,
+          projectId: project.id,
+        },
+      });
 
-      if (uploadError) {
-        console.error('Upload error:', uploadError);
+      if (error) {
+        console.error('Function error:', error);
         toast({
-          title: "Upload failed",
-          description: uploadError.message,
+          title: "Generation failed",
+          description: error.message,
           variant: "destructive",
         });
         return;
       }
 
-      // Get the public URL
-      const { data: urlData } = supabase.storage
-        .from('user-files')
-        .getPublicUrl(fileName);
+      if (!data.success) {
+        throw new Error(data.error || 'Unknown error occurred');
+      }
 
       // Update the project with the audio URL
       const { error: updateError } = await supabase
         .from('user_projects')
-        .update({ audio_url: urlData.publicUrl })
+        .update({ audio_url: data.audioUrl })
         .eq('id', project.id);
 
       if (updateError) {
@@ -309,7 +294,7 @@ export default function ProjectView() {
       
       toast({
         title: "Audio generated!",
-        description: "Your placeholder audio has been created and is ready to play.",
+        description: "Your AI-generated audio is ready to play.",
       });
 
     } catch (error) {
