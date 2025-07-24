@@ -73,7 +73,7 @@ export const ScriptUpload = () => {
                   <div className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-cinema-gold/50 transition-colors">
                     <input
                       type="file"
-                      accept=".pdf,.fdx,.txt"
+                      accept=".txt,.pdf,.fdx"
                       onChange={handleFileUpload}
                       className="hidden"
                       id="script-upload"
@@ -88,7 +88,7 @@ export const ScriptUpload = () => {
                         {isUploading ? "Uploading..." : "Drop your script here"}
                       </p>
                       <p className="text-muted-foreground">
-                        Supports PDF, Final Draft (.fdx), and text files
+                        Supports text (.txt), PDF, and Final Draft (.fdx) files
                       </p>
                     </label>
                   </div>

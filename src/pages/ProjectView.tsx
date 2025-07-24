@@ -198,19 +198,24 @@ export default function ProjectView() {
       let scriptContent = '';
       
       // Handle different file types
-      if (filePath.toLowerCase().endsWith('.pdf')) {
+      if (filePath.toLowerCase().endsWith('.txt') || scriptData.type === 'text/plain') {
+        // Handle text files - this is the primary supported format
+        try {
+          scriptContent = await scriptData.text();
+        } catch (error) {
+          console.error('Error reading text file:', error);
+          scriptContent = 'Error reading text file. Please ensure it is a valid UTF-8 text file.';
+        }
+      } else if (filePath.toLowerCase().endsWith('.pdf')) {
         // For now, show message that PDF parsing requires server-side processing
-        scriptContent = 'PDF files uploaded successfully. For full text extraction, please convert your PDF to a .txt file or use our upcoming PDF processing feature. You can still proceed with audio generation by manually entering scene content.';
-      } else if (filePath.toLowerCase().endsWith('.txt') || scriptData.type === 'text/plain') {
-        // Handle text files
-        scriptContent = await scriptData.text();
+        scriptContent = 'PDF uploaded successfully. For full functionality, please convert your PDF to a .txt file. PDF text extraction is coming soon.';
       } else {
-        // Default to text parsing for any other file type
+        // Try to read as text for any other file type
         try {
           scriptContent = await scriptData.text();
         } catch (error) {
           console.error('Error reading file as text:', error);
-          scriptContent = 'Error reading file. Please ensure it is a valid text or PDF file.';
+          scriptContent = 'File uploaded but could not extract text. Please use .txt files for best results.';
         }
       }
       
