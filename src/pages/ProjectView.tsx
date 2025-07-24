@@ -9,7 +9,6 @@ import { ArrowLeft, Play, Pause, Volume2, Download, FileText, AlertCircle, Spark
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import * as pdfjs from 'pdfjs-dist';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -64,10 +63,6 @@ export default function ProjectView() {
   const audioRef = useRef<HTMLAudioElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Set up PDF.js worker
-  useEffect(() => {
-    pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
-  }, []);
 
   useEffect(() => {
     if (projectId && user) {
@@ -204,30 +199,19 @@ export default function ProjectView() {
       
       // Handle different file types
       if (filePath.toLowerCase().endsWith('.pdf')) {
-        // Extract text from PDF
-        try {
-          const arrayBuffer = await scriptData.arrayBuffer();
-          const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
-          const textContent = [];
-          
-          for (let i = 1; i <= pdf.numPages; i++) {
-            const page = await pdf.getPage(i);
-            const pageText = await page.getTextContent();
-            const pageString = pageText.items
-              .filter((item: any) => item.str)
-              .map((item: any) => item.str)
-              .join(' ');
-            textContent.push(pageString);
-          }
-          
-          scriptContent = textContent.join('\n\n');
-        } catch (pdfError) {
-          console.error('Error parsing PDF:', pdfError);
-          scriptContent = 'Error extracting text from PDF. Please try uploading a text file instead.';
-        }
-      } else {
-        // For text files
+        // For now, show message that PDF parsing requires server-side processing
+        scriptContent = 'PDF files uploaded successfully. For full text extraction, please convert your PDF to a .txt file or use our upcoming PDF processing feature. You can still proceed with audio generation by manually entering scene content.';
+      } else if (filePath.toLowerCase().endsWith('.txt') || scriptData.type === 'text/plain') {
+        // Handle text files
         scriptContent = await scriptData.text();
+      } else {
+        // Default to text parsing for any other file type
+        try {
+          scriptContent = await scriptData.text();
+        } catch (error) {
+          console.error('Error reading file as text:', error);
+          scriptContent = 'Error reading file. Please ensure it is a valid text or PDF file.';
+        }
       }
       
       setFullScript(scriptContent);
