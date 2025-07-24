@@ -1,13 +1,12 @@
 import { Button } from "@/components/ui/button";
-import { Menu } from "lucide-react";
-import storyMagicLogo from "@/assets/story-magic-logo.png";
+import { Film, Menu } from "lucide-react";
 
 export const Header = () => {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-lg">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <div className="flex items-center gap-2">
-          <img src={storyMagicLogo} alt="Story Magic" className="h-8 w-8" />
+          <Film className="h-8 w-8 text-cinema-gold" />
           <h1 className="text-xl font-bold bg-gradient-accent bg-clip-text text-transparent">
             Story Magic
           </h1>
