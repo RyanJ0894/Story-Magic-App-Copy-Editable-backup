@@ -4,7 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Play, Pause, Volume2, Download, FileText, AlertCircle, Sparkles, Loader2, ChevronDown, List } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { ArrowLeft, Play, Pause, Volume2, Download, FileText, AlertCircle, Sparkles, Loader2, ChevronDown, List, Upload } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -57,8 +58,10 @@ export default function ProjectView() {
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(70);
   const [scenesOpen, setScenesOpen] = useState(false);
+  const [uploading, setUploading] = useState(false);
   
   const audioRef = useRef<HTMLAudioElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (projectId && user) {
@@ -257,6 +260,101 @@ export default function ProjectView() {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+    }
+  };
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !project || !user) return;
+
+    // Validate file type
+    const allowedTypes = ['text/plain', 'application/pdf'];
+    if (!allowedTypes.includes(file.type)) {
+      toast({
+        title: "Invalid file type",
+        description: "Please upload a .txt or .pdf file",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate file size (10MB limit)
+    if (file.size > 10 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Please upload a file smaller than 10MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setUploading(true);
+    try {
+      // Generate a unique filename
+      const fileExtension = file.name.split('.').pop();
+      const fileName = `${user.id}/${project.id}/script.${fileExtension}`;
+
+      // Upload file to Supabase storage
+      const { error: uploadError } = await supabase.storage
+        .from('user-files')
+        .upload(fileName, file, {
+          upsert: true,
+        });
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      // Get the public URL
+      const { data: urlData } = supabase.storage
+        .from('user-files')
+        .getPublicUrl(fileName);
+
+      // Update the project with script URL
+      const { error: updateError } = await supabase
+        .from('user_projects')
+        .update({ script_url: urlData.publicUrl })
+        .eq('id', project.id);
+
+      if (updateError) {
+        throw updateError;
+      }
+
+      // Update local state
+      setProject({ ...project, script_url: urlData.publicUrl });
+      
+      toast({
+        title: "Script uploaded successfully!",
+        description: "Your script has been uploaded and is ready for processing.",
+      });
+
+      // Clear the file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+
+    } catch (error) {
+      console.error('Error uploading script:', error);
+      toast({
+        title: "Upload failed",
+        description: error instanceof Error ? error.message : "Failed to upload script",
+        variant: "destructive",
+      });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const triggerFileUpload = () => {
+    fileInputRef.current?.click();
+  };
+
+  const getScriptFileName = (url: string) => {
+    try {
+      const fileName = url.split('/').pop();
+      return fileName || 'script';
+    } catch {
+      return 'script';
     }
   };
 
@@ -489,20 +587,75 @@ export default function ProjectView() {
                   <div className="border-2 border-dashed border-border rounded-lg p-8 text-center">
                     <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                     <p className="font-medium mb-2">Script uploaded</p>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      Click to view your screenplay
+                    <p className="text-sm text-muted-foreground mb-2">
+                      File: {getScriptFileName(project.script_url)}
                     </p>
-                    <Button onClick={openScript} variant="outline">
-                      Open Script
-                    </Button>
+                    <p className="text-xs text-muted-foreground mb-4">
+                      Click to view your screenplay or upload a new one
+                    </p>
+                    <div className="flex gap-2 justify-center">
+                      <Button onClick={openScript} variant="outline">
+                        <FileText className="h-4 w-4 mr-2" />
+                        Open Script
+                      </Button>
+                      <Button 
+                        onClick={triggerFileUpload} 
+                        variant="outline"
+                        disabled={uploading}
+                      >
+                        {uploading ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Uploading...
+                          </>
+                        ) : (
+                          <>
+                            <Upload className="h-4 w-4 mr-2" />
+                            Replace
+                          </>
+                        )}
+                      </Button>
+                    </div>
                   </div>
                 </div>
               ) : (
                 <div className="border-2 border-dashed border-border rounded-lg p-8 text-center">
                   <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <p className="text-muted-foreground">No script uploaded yet</p>
+                  <p className="font-medium mb-2">Upload Your Script</p>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Upload a .txt or .pdf screenplay file to get started
+                  </p>
+                  <Button 
+                    onClick={triggerFileUpload} 
+                    disabled={uploading}
+                    className="gap-2"
+                  >
+                    {uploading ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Uploading...
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="h-4 w-4" />
+                        Choose File
+                      </>
+                    )}
+                  </Button>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Supported formats: TXT, PDF (max 10MB)
+                  </p>
                 </div>
               )}
+              
+              {/* Hidden file input */}
+              <Input
+                ref={fileInputRef}
+                type="file"
+                accept=".txt,.pdf"
+                onChange={handleFileUpload}
+                className="hidden"
+              />
             </CardContent>
           </Card>
 
