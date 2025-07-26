@@ -40,9 +40,12 @@ serve(async (req) => {
 
     let textToGenerate: string
 
-    // If customText is provided, use it directly
+    // Use dynamic text from script or custom text
     if (customText) {
-      textToGenerate = customText
+      // Truncate custom text to 800 characters for performance
+      textToGenerate = customText.length > 800 
+        ? customText.substring(0, 800) + '...'
+        : customText
     } else {
       // Otherwise, fetch script content from storage
       const { data: project, error: projectError } = await supabase

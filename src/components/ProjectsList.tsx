@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Folder, FileText, Volume2, Plus, Calendar } from 'lucide-react';
+import { Folder, FileText, Volume2, Plus, Calendar, Mic } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -128,10 +128,18 @@ export const ProjectsList = () => {
         <div className="max-w-6xl mx-auto">
           <div className="flex justify-between items-center mb-8">
             <h3 className="text-2xl font-semibold">All Projects</h3>
-            <Button onClick={createNewProject} className="gap-2">
-              <Plus className="h-4 w-4" />
-              New Project
-            </Button>
+            <div className="flex gap-2">
+              <Link to="/test-voice">
+                <Button variant="outline" className="gap-2">
+                  <Mic className="h-4 w-4" />
+                  Test Voice
+                </Button>
+              </Link>
+              <Button onClick={createNewProject} className="gap-2">
+                <Plus className="h-4 w-4" />
+                New Project
+              </Button>
+            </div>
           </div>
 
           {projects.length === 0 ? (
