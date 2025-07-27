@@ -1,5 +1,4 @@
 import { ParsedScript, Character, DialogueLine } from './scriptParser';
-import toWav from 'audiobuffer-to-wav';
 
 export interface AudioSegment {
   character: string;
@@ -16,6 +15,48 @@ export interface GenerationProgress {
   total: number;
   character: string;
   text: string;
+}
+
+// Helper: Convert AudioBuffer to WAV Blob (browser compatible)
+function audioBufferToWavBlob(buffer: AudioBuffer): Blob {
+  const numOfChan = buffer.numberOfChannels;
+  const length = buffer.length * numOfChan * 2 + 44;
+  const bufferArray = new ArrayBuffer(length);
+  const view = new DataView(bufferArray);
+
+  function writeString(view: DataView, offset: number, str: string) {
+    for (let i = 0; i < str.length; i++) {
+      view.setUint8(offset + i, str.charCodeAt(i));
+    }
+  }
+
+  let offset = 0;
+  writeString(view, offset, 'RIFF'); offset += 4;
+  view.setUint32(offset, 36 + buffer.length * numOfChan * 2, true); offset += 4;
+  writeString(view, offset, 'WAVE'); offset += 4;
+  writeString(view, offset, 'fmt '); offset += 4;
+  view.setUint32(offset, 16, true); offset += 4;
+  view.setUint16(offset, 1, true); offset += 2;
+  view.setUint16(offset, numOfChan, true); offset += 2;
+  view.setUint32(offset, buffer.sampleRate, true); offset += 4;
+  view.setUint32(offset, buffer.sampleRate * numOfChan * 2, true); offset += 4;
+  view.setUint16(offset, numOfChan * 2, true); offset += 2;
+  view.setUint16(offset, 16, true); offset += 2;
+  writeString(view, offset, 'data'); offset += 4;
+  view.setUint32(offset, buffer.length * numOfChan * 2, true); offset += 4;
+
+  // Interleave PCM samples
+  let index = 44;
+  for (let i = 0; i < buffer.length; i++) {
+    for (let channel = 0; channel < numOfChan; channel++) {
+      let sample = buffer.getChannelData(channel)[i];
+      sample = Math.max(-1, Math.min(1, sample));
+      view.setInt16(index, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
+      index += 2;
+    }
+  }
+
+  return new Blob([bufferArray], { type: 'audio/wav' });
 }
 
 export class MultiVoiceGenerator {
@@ -172,8 +213,7 @@ export class MultiVoiceGenerator {
     }
 
     // Export the buffer to a WAV file
-    const wav = toWav(outputBuffer);
-    const wavBlob = new Blob([wav], { type: 'audio/wav' });
+    const wavBlob = audioBufferToWavBlob(outputBuffer);
     return URL.createObjectURL(wavBlob);
   }
 
