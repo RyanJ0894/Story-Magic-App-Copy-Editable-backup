@@ -10,6 +10,7 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import ProjectView from "./pages/ProjectView";
 import TestVoice from "./pages/TestVoice";
+import MultiVoiceTest from "./pages/MultiVoiceTest";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -27,6 +28,7 @@ const App = () => (
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/project/:projectId" element={<ProjectView />} />
             <Route path="/test-voice" element={<TestVoice />} />
+            <Route path="/multi-voice" element={<MultiVoiceTest />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

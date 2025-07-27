@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Film, Menu } from "lucide-react";
+import { Film, Menu, Mic, Volume2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 
@@ -24,6 +24,22 @@ export const Header = () => {
         
         {user && (
           <nav className="hidden md:flex items-center gap-6">
+            <Button
+              variant="ghost"
+              onClick={() => navigate('/test-voice')}
+              className="flex items-center gap-2"
+            >
+              <Volume2 className="h-4 w-4" />
+              Single Voice
+            </Button>
+            <Button
+              variant="ghost"
+              onClick={() => navigate('/multi-voice')}
+              className="flex items-center gap-2"
+            >
+              <Mic className="h-4 w-4" />
+              Multi-Voice
+            </Button>
             <a href="#features" className="text-muted-foreground hover:text-foreground transition-colors">
               Features
             </a>
