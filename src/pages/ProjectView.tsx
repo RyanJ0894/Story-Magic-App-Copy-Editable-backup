@@ -467,22 +467,88 @@ export default function ProjectView() {
 
     setUploading(true);
     try {
-      // First, call the API with the file
+      // First, try to call the API with the file
       try {
         const base64 = await readFileAsBase64(file);
-        const response = await fetch(
-          "https://dc6121d4ef24.ngrok-free.app/api/v1/resume/generate",
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              isBase64: true,
-              baseResumeText: base64,
-            }),
+        
+        // Try multiple approaches to handle CORS
+        let response;
+        
+        // Method 1: Try with CORS mode and proper headers
+        try {
+          response = await fetch(
+            "https://6901750e351a.ngrok-free.app/api/v1/resume/generate",
+            {
+              method: "POST",
+              headers: { 
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+                "ngrok-skip-browser-warning": "true" // Skip ngrok browser warning
+              },
+              mode: 'cors',
+              body: JSON.stringify({
+                isBase64: true,
+                baseResumeText: base64,
+              }),
+            }
+          );
+        } catch (corsError) {
+          console.log("CORS error, trying without mode specification:", corsError);
+          
+          // Method 2: Try without explicit CORS mode
+          try {
+            response = await fetch(
+              "https://6901750e351a.ngrok-free.app/api/v1/resume/generate",
+              {
+                method: "POST",
+                headers: { 
+                  "Content-Type": "application/json",
+                  "Accept": "application/json",
+                  "ngrok-skip-browser-warning": "true"
+                },
+                body: JSON.stringify({
+                  isBase64: true,
+                  baseResumeText: base64,
+                }),
+              }
+            );
+          } catch (secondError) {
+            console.log("Second attempt failed, trying XMLHttpRequest:", secondError);
+            
+            // Method 3: Try with XMLHttpRequest as fallback
+            response = await new Promise((resolve, reject) => {
+              const xhr = new XMLHttpRequest();
+              xhr.open('POST', 'https://6901750e351a.ngrok-free.app/api/v1/resume/generate', true);
+              xhr.setRequestHeader('Content-Type', 'application/json');
+              xhr.setRequestHeader('Accept', 'application/json');
+              xhr.setRequestHeader('ngrok-skip-browser-warning', 'true');
+              
+              xhr.onload = function() {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                  resolve({
+                    ok: true,
+                    json: () => Promise.resolve(JSON.parse(xhr.responseText))
+                  });
+                } else {
+                  reject(new Error(`HTTP ${xhr.status}: ${xhr.statusText}`));
+                }
+              };
+              
+              xhr.onerror = function() {
+                reject(new Error('Network error'));
+              };
+              
+              xhr.send(JSON.stringify({
+                isBase64: true,
+                baseResumeText: base64,
+              }));
+            });
           }
-        );
+        }
 
-        if (!response.ok) throw new Error("API call failed");
+        if (!response.ok) {
+          throw new Error(`API call failed: ${response.status} ${response.statusText}`);
+        }
 
         const data = await response.json();
         setApiResponseData(data.resumes[0].extractedText);
@@ -494,12 +560,21 @@ export default function ProjectView() {
         });
       } catch (apiError) {
         console.error("API call failed:", apiError);
-        toast({
-          title: "API processing failed",
-          description:
-            "File uploaded but API processing failed. You can still use the file normally.",
-          variant: "destructive",
-        });
+        
+        // Show different messages based on error type
+        if (apiError.message.includes('CORS') || apiError.message.includes('Failed to fetch')) {
+          toast({
+            title: "API temporarily unavailable",
+            description: "External API is not accessible. File uploaded successfully to Supabase.",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "API processing failed",
+            description: "File uploaded but API processing failed. You can still use the file normally.",
+            variant: "destructive",
+          });
+        }
       }
 
       // Generate a unique filename

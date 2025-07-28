@@ -383,7 +383,7 @@ export default function TestVoice() {
       
       // Call the API for text extraction
       const response = await fetch(
-        "https://dc6121d4ef24.ngrok-free.app/api/v1/resume/generate",
+        "https://6901750e351a.ngrok-free.app/api/v1/resume/generate",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
