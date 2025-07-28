@@ -17,46 +17,61 @@ export interface GenerationProgress {
   text: string;
 }
 
-// Helper: Convert AudioBuffer to WAV Blob (browser compatible)
-function audioBufferToWavBlob(buffer: AudioBuffer): Blob {
-  const numOfChan = buffer.numberOfChannels;
-  const length = buffer.length * numOfChan * 2 + 44;
-  const bufferArray = new ArrayBuffer(length);
-  const view = new DataView(bufferArray);
-
-  function writeString(view: DataView, offset: number, str: string) {
-    for (let i = 0; i < str.length; i++) {
-      view.setUint8(offset + i, str.charCodeAt(i));
+// Helper function to convert AudioBuffer to WAV Blob
+function audioBufferToWavBlob(audioBuffer: AudioBuffer): Blob {
+  const numChannels = audioBuffer.numberOfChannels;
+  const sampleRate = audioBuffer.sampleRate;
+  const length = audioBuffer.length;
+  
+  // Create a buffer for the WAV file
+  const buffer = new ArrayBuffer(44 + length * numChannels * 2);
+  const view = new DataView(buffer);
+  
+  // WAV file header
+  const writeString = (offset: number, string: string) => {
+    for (let i = 0; i < string.length; i++) {
+      view.setUint8(offset + i, string.charCodeAt(i));
+    }
+  };
+  
+  const writeUint32 = (offset: number, value: number) => {
+    view.setUint32(offset, value, true);
+  };
+  
+  const writeUint16 = (offset: number, value: number) => {
+    view.setUint16(offset, value, true);
+  };
+  
+  // RIFF chunk descriptor
+  writeString(0, 'RIFF');
+  writeUint32(4, 36 + length * numChannels * 2);
+  writeString(8, 'WAVE');
+  
+  // fmt sub-chunk
+  writeString(12, 'fmt ');
+  writeUint32(16, 16); // fmt chunk size
+  writeUint16(20, 1); // audio format (PCM)
+  writeUint16(22, numChannels);
+  writeUint32(24, sampleRate);
+  writeUint32(28, sampleRate * numChannels * 2); // byte rate
+  writeUint16(32, numChannels * 2); // block align
+  writeUint16(34, 16); // bits per sample
+  
+  // data sub-chunk
+  writeString(36, 'data');
+  writeUint32(40, length * numChannels * 2);
+  
+  // Write audio data
+  let offset = 44;
+  for (let i = 0; i < length; i++) {
+    for (let channel = 0; channel < numChannels; channel++) {
+      const sample = Math.max(-1, Math.min(1, audioBuffer.getChannelData(channel)[i]));
+      view.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
+      offset += 2;
     }
   }
-
-  let offset = 0;
-  writeString(view, offset, 'RIFF'); offset += 4;
-  view.setUint32(offset, 36 + buffer.length * numOfChan * 2, true); offset += 4;
-  writeString(view, offset, 'WAVE'); offset += 4;
-  writeString(view, offset, 'fmt '); offset += 4;
-  view.setUint32(offset, 16, true); offset += 4;
-  view.setUint16(offset, 1, true); offset += 2;
-  view.setUint16(offset, numOfChan, true); offset += 2;
-  view.setUint32(offset, buffer.sampleRate, true); offset += 4;
-  view.setUint32(offset, buffer.sampleRate * numOfChan * 2, true); offset += 4;
-  view.setUint16(offset, numOfChan * 2, true); offset += 2;
-  view.setUint16(offset, 16, true); offset += 2;
-  writeString(view, offset, 'data'); offset += 4;
-  view.setUint32(offset, buffer.length * numOfChan * 2, true); offset += 4;
-
-  // Interleave PCM samples
-  let index = 44;
-  for (let i = 0; i < buffer.length; i++) {
-    for (let channel = 0; channel < numOfChan; channel++) {
-      let sample = buffer.getChannelData(channel)[i];
-      sample = Math.max(-1, Math.min(1, sample));
-      view.setInt16(index, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
-      index += 2;
-    }
-  }
-
-  return new Blob([bufferArray], { type: 'audio/wav' });
+  
+  return new Blob([buffer], { type: 'audio/wav' });
 }
 
 export class MultiVoiceGenerator {

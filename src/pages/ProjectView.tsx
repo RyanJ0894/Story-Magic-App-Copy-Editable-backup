@@ -87,6 +87,7 @@ export default function ProjectView() {
     if (projectId && user) {
       fetchProject();
       loadProjectScript();
+      loadMultiVoiceAudio();
     }
   }, [projectId, user]);
 
@@ -130,6 +131,32 @@ export default function ProjectView() {
       }
     } catch (error) {
       console.error('Error loading project script:', error);
+    }
+  };
+
+  // Load multi-voice audio data from Supabase
+  const loadMultiVoiceAudio = async () => {
+    if (!projectId || !user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('multi_voice_data')
+        .select('*')
+        .eq('project_id', projectId)
+        .eq('user_id', user.id)
+        .single();
+
+      if (error && error.code !== 'PGRST116') { // PGRST116 is "not found"
+        console.error('Error loading multi-voice data:', error);
+        return;
+      }
+
+      if (data && data.audio_url) {
+        // Update the project with the multi-voice audio URL
+        setProject(prev => prev ? { ...prev, audio_url: data.audio_url } : null);
+      }
+    } catch (error) {
+      console.error('Error loading multi-voice audio:', error);
     }
   };
 
@@ -389,16 +416,81 @@ export default function ProjectView() {
     }
   };
 
+  // Test audio URL accessibility
+  const testAudioUrl = async (audioUrl: string) => {
+    try {
+      const response = await fetch(audioUrl, { method: 'HEAD' });
+      console.log('Audio URL test response:', response.status, response.statusText);
+      
+      if (!response.ok) {
+        toast({
+          title: "Audio file not accessible",
+          description: `HTTP ${response.status}: ${response.statusText}`,
+          variant: "destructive",
+        });
+        return false;
+      }
+      
+      const contentType = response.headers.get('content-type');
+      console.log('Audio content type:', contentType);
+      
+      if (!contentType || !contentType.includes('audio/')) {
+        toast({
+          title: "Invalid audio file",
+          description: "The file is not recognized as an audio file",
+          variant: "destructive",
+        });
+        return false;
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('Audio URL test error:', error);
+      toast({
+        title: "Audio file test failed",
+        description: "Unable to access the audio file",
+        variant: "destructive",
+      });
+      return false;
+    }
+  };
+
   const togglePlay = () => {
     const audio = audioRef.current;
     if (!audio || !project?.audio_url) return;
 
-    if (isPlaying) {
-      audio.pause();
-    } else {
-      audio.play();
+    // Debug: Log audio URL and check if it's accessible
+    console.log('Attempting to play audio:', project.audio_url);
+    
+    // Check if audio URL is valid
+    if (!project.audio_url.startsWith('http')) {
+      toast({
+        title: "Invalid audio URL",
+        description: "Audio file URL is not accessible",
+        variant: "destructive",
+      });
+      return;
     }
-    setIsPlaying(!isPlaying);
+
+    // Test audio URL before attempting to play
+    testAudioUrl(project.audio_url).then((isAccessible) => {
+      if (!isAccessible) return;
+      
+      if (isPlaying) {
+        audio.pause();
+      } else {
+        // Add error handling for audio playback
+        audio.play().catch((error) => {
+          console.error('Audio playback error:', error);
+          toast({
+            title: "Audio playback failed",
+            description: "Unable to play the audio file. It may be corrupted or inaccessible.",
+            variant: "destructive",
+          });
+        });
+      }
+      setIsPlaying(!isPlaying);
+    });
   };
 
   const handleSeek = (value: number[]) => {
@@ -788,6 +880,50 @@ export default function ProjectView() {
     }
   };
 
+  // Check Supabase storage bucket configuration
+  const checkStorageBucket = async () => {
+    try {
+      const { data, error } = await supabase.storage.listBuckets();
+      
+      if (error) {
+        console.error('Storage bucket error:', error);
+        toast({
+          title: "Storage access error",
+          description: error.message,
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      console.log('Available storage buckets:', data);
+      
+      // Check if user-files bucket exists
+      const userFilesBucket = data.find(bucket => bucket.name === 'user-files');
+      if (!userFilesBucket) {
+        toast({
+          title: "Storage bucket missing",
+          description: "The 'user-files' bucket does not exist in Supabase storage",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      console.log('user-files bucket found:', userFilesBucket);
+      
+      // Check bucket public/private status
+      if (!userFilesBucket.public) {
+        toast({
+          title: "Storage bucket not public",
+          description: "The 'user-files' bucket is not public. Files may not be accessible.",
+          variant: "destructive",
+        });
+      }
+      
+    } catch (error) {
+      console.error('Storage bucket check error:', error);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -970,6 +1106,10 @@ export default function ProjectView() {
               // Auto-save script changes
               saveProjectScript(newScriptText);
             }}
+            onAudioSaved={(audioUrl) => {
+              // Update the project state with the new audio URL
+              setProject(prev => prev ? { ...prev, audio_url: audioUrl } : null);
+            }}
           />
 
           {/* Audio Player */}
@@ -987,6 +1127,20 @@ export default function ProjectView() {
                     ref={audioRef}
                     src={project.audio_url}
                     preload="metadata"
+                    onError={(e) => {
+                      console.error('Audio element error:', e);
+                      toast({
+                        title: "Audio loading failed",
+                        description: "Unable to load the audio file from Supabase storage",
+                        variant: "destructive",
+                      });
+                    }}
+                    onLoadStart={() => {
+                      console.log('Audio loading started:', project.audio_url);
+                    }}
+                    onCanPlay={() => {
+                      console.log('Audio can play:', project.audio_url);
+                    }}
                   />
 
                   {/* Play Controls */}
@@ -1043,6 +1197,24 @@ export default function ProjectView() {
                   >
                     <Download className="h-4 w-4 mr-2" />
                     Download Audio
+                  </Button>
+
+                  {/* Debug Button */}
+                  <Button
+                    onClick={() => project?.audio_url && testAudioUrl(project.audio_url)}
+                    variant="outline"
+                    className="w-full"
+                  >
+                    Test Audio URL
+                  </Button>
+
+                  {/* Storage Check Button */}
+                  <Button
+                    onClick={checkStorageBucket}
+                    variant="outline"
+                    className="w-full"
+                  >
+                    Check Storage Bucket
                   </Button>
                 </div>
               ) : (
