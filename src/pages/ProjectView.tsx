@@ -13,6 +13,7 @@ import {
   ChevronDown,
   List,
   Upload,
+  Eye,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -436,6 +437,68 @@ export default function ProjectView() {
       title: "Script loaded",
       description: "Script content is now displayed below",
     });
+  };
+
+  const previewScript = async () => {
+    if (!project?.script_url || !user) {
+      toast({
+        title: "No script to preview",
+        description: "Please upload a script first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // Extract file path from the URL
+      const urlParts = project.script_url.split("/user-files/");
+      if (urlParts.length < 2) {
+        throw new Error("Invalid script URL format");
+      }
+      const filePath = urlParts[1];
+
+      // Generate a signed URL for better access
+      const { data: signedUrlData, error: signedUrlError } = await supabase.storage
+        .from('user-files')
+        .createSignedUrl(filePath, 3600); // 1 hour expiry
+
+      if (signedUrlError) {
+        throw signedUrlError;
+      }
+
+      const previewUrl = signedUrlData.signedUrl;
+
+      // Check if it's a PDF file
+      if (project.script_url.toLowerCase().includes('.pdf')) {
+        // Open PDF in new tab with signed URL
+        window.open(previewUrl, '_blank');
+        toast({
+          title: "PDF Preview",
+          description: "Opening PDF in new tab...",
+        });
+      } else if (project.script_url.toLowerCase().includes('.txt')) {
+        // For text files, show the content in the UI
+        openScript();
+        toast({
+          title: "Text Preview",
+          description: "Showing text content below",
+        });
+      } else {
+        // For other file types, try to open in new tab with signed URL
+        window.open(previewUrl, '_blank');
+        toast({
+          title: "File Preview",
+          description: "Opening file in new tab...",
+        });
+      }
+    } catch (error) {
+      console.error('Preview error:', error);
+      toast({
+        title: "Preview failed",
+        description: "Unable to generate preview. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleFileUpload = async (
@@ -972,6 +1035,10 @@ export default function ProjectView() {
                       <Button onClick={openScript} variant="outline">
                         <FileText className="h-4 w-4 mr-2" />
                         Open Script
+                      </Button>
+                      <Button onClick={previewScript} variant="outline">
+                        <Eye className="h-4 w-4 mr-2" />
+                        Preview
                       </Button>
                       <Button
                         onClick={triggerFileUpload}
