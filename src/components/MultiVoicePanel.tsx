@@ -1085,15 +1085,15 @@ export default function MultiVoicePanel({
   };
 
   return (
-    <div className="my-8">
+    <div className="my-4 lg:my-8">
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-lg lg:text-xl">
             <Mic className="h-5 w-5" />
             Multi-Character Voice Generation
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4 lg:space-y-6">
           {/* API Key Input */}
           <div className="mb-4">
             <Input
@@ -1101,13 +1101,13 @@ export default function MultiVoicePanel({
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
               placeholder="Paste your ElevenLabs API key here"
-              className="w-full max-w-md"
+              className="w-full max-w-md text-sm"
             />
           </div>
 
           {/* Script Input (if allowed) */}
           {allowScriptEdit && (
-            <div className="mb-6">
+            <div className="mb-4 lg:mb-6">
               <label className="text-sm font-medium mb-2 block">
                 Script Input
               </label>
@@ -1118,7 +1118,7 @@ export default function MultiVoicePanel({
                   onScriptChange?.(e.target.value);
                 }}
                 placeholder="Paste your script with character names in ALL CAPS and dialogue below..."
-                className="min-h-[200px]"
+                className="min-h-[150px] lg:min-h-[200px] text-sm"
               />
               <p className="text-xs text-muted-foreground mt-1">
                 {scriptText.length} characters
@@ -1155,11 +1155,12 @@ export default function MultiVoicePanel({
               </Button>
               
               {/* Debug Buttons */}
-              <div className="mt-2 flex gap-2">
+              <div className="mt-2 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
                 <Button
                   onClick={checkStorageBucket}
                   variant="outline"
                   size="sm"
+                  className="text-xs"
                 >
                   Check Storage
                 </Button>
@@ -1167,6 +1168,7 @@ export default function MultiVoicePanel({
                   onClick={testDatabaseConnection}
                   variant="outline"
                   size="sm"
+                  className="text-xs"
                 >
                   Test Database
                 </Button>
@@ -1182,6 +1184,7 @@ export default function MultiVoicePanel({
                       }}
                       variant="outline"
                       size="sm"
+                      className="text-xs"
                     >
                       Log Audio URL
                     </Button>
@@ -1205,6 +1208,7 @@ export default function MultiVoicePanel({
                       }}
                       variant="outline"
                       size="sm"
+                      className="text-xs"
                     >
                       Test Audio URL
                     </Button>
@@ -1212,6 +1216,7 @@ export default function MultiVoicePanel({
                       onClick={testAudioUrlComprehensive}
                       variant="outline"
                       size="sm"
+                      className="text-xs"
                     >
                       Comprehensive Test
                     </Button>
@@ -1219,6 +1224,7 @@ export default function MultiVoicePanel({
                       onClick={testAudioWithAuth}
                       variant="outline"
                       size="sm"
+                      className="text-xs"
                     >
                       Test Auth Access
                     </Button>

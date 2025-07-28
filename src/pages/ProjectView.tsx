@@ -872,7 +872,7 @@ export default function ProjectView() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 lg:gap-8">
           {/* Script Preview */}
           <Card>
             <CardHeader>
@@ -1023,7 +1023,7 @@ export default function ProjectView() {
               <CardTitle>Audio Settings</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                 {/* Voice Style Dropdown */}
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Voice Style</label>
