@@ -33,6 +33,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import MultiVoicePanel from "@/components/MultiVoicePanel";
 
 interface Project {
   id: string;
@@ -76,6 +77,8 @@ export default function ProjectView() {
   const [uploading, setUploading] = useState(false);
   const [apiResponseData, setApiResponseData] = useState<string>("");
   const [showApiData, setShowApiData] = useState(false);
+  const [savingScript, setSavingScript] = useState(false);
+  const [scriptText, setScriptText] = useState<string>("");
 
   const audioRef = useRef<HTMLAudioElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -83,6 +86,7 @@ export default function ProjectView() {
   useEffect(() => {
     if (projectId && user) {
       fetchProject();
+      loadProjectScript();
     }
   }, [projectId, user]);
 
@@ -91,6 +95,116 @@ export default function ProjectView() {
       fetchScriptPreview();
     }
   }, [project?.script_url]);
+
+  // Load project script from Supabase
+  const loadProjectScript = async () => {
+    if (!projectId || !user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('project_scripts')
+        .select('*')
+        .eq('project_id', projectId)
+        .eq('user_id', user.id)
+        .single();
+
+      if (error && error.code !== 'PGRST116') { // PGRST116 is "not found"
+        console.error('Error loading project script:', error);
+        return;
+      }
+
+      if (data && data.script_text) {
+        setScriptText(data.script_text);
+        setFullScript(data.script_text);
+        
+        // Parse scenes if we have valid content
+        if (data.script_text && !data.script_text.startsWith("Error")) {
+          const parsedScenes = parseScenes(data.script_text);
+          setScenes(parsedScenes);
+        }
+        
+        toast({
+          title: "Script loaded",
+          description: "Your saved script has been restored",
+        });
+      }
+    } catch (error) {
+      console.error('Error loading project script:', error);
+    }
+  };
+
+  // Save project script to Supabase
+  const saveProjectScript = async (scriptContent: string) => {
+    if (!projectId || !user) {
+      toast({
+        title: "Cannot save",
+        description: "Project ID or user not available",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSavingScript(true);
+    try {
+      const { error } = await supabase
+        .from('project_scripts')
+        .upsert({
+          project_id: projectId,
+          user_id: user.id,
+          script_text: scriptContent,
+          updated_at: new Date().toISOString(),
+        }, {
+          onConflict: 'project_id,user_id'
+        });
+
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: "Script saved successfully!",
+        description: "Your script has been saved to the cloud",
+      });
+    } catch (error) {
+      console.error('Error saving project script:', error);
+      toast({
+        title: "Save failed",
+        description: "Failed to save script to the cloud",
+        variant: "destructive",
+      });
+    } finally {
+      setSavingScript(false);
+    }
+  };
+
+  // Update project audio URL in Supabase
+  const updateProjectAudio = async (audioUrl: string) => {
+    if (!project) return;
+
+    try {
+      const { error } = await supabase
+        .from("user_projects")
+        .update({ 
+          audio_url: audioUrl,
+          generation_count: (project.generation_count || 0) + 1,
+        })
+        .eq("id", project.id);
+
+      if (error) {
+        throw error;
+      }
+
+      // Update local state
+      setProject({ ...project, audio_url: audioUrl });
+    } catch (error) {
+      console.error('Error updating project audio:', error);
+      toast({
+        title: "Update failed",
+        description: "Failed to update audio URL in database",
+        variant: "destructive",
+      });
+    }
+  };
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -654,8 +768,9 @@ export default function ProjectView() {
         return;
       }
 
-      // Refresh project data
-      await fetchProject();
+      // Update local state and save to Supabase
+      setProject({ ...project, audio_url: data.audioUrl });
+      await updateProjectAudio(data.audioUrl);
 
       toast({
         title: "Audio generated successfully!",
@@ -843,6 +958,19 @@ export default function ProjectView() {
               )}
             </CardContent>
           </Card>
+
+          {/* Multi-Voice Panel for this project's script */}
+          <MultiVoicePanel 
+            scriptText={scriptText || fullScript} 
+            allowScriptEdit={true}
+            projectId={projectId}
+            onScriptChange={(newScriptText) => {
+              setScriptText(newScriptText);
+              setFullScript(newScriptText);
+              // Auto-save script changes
+              saveProjectScript(newScriptText);
+            }}
+          />
 
           {/* Audio Player */}
           <Card>
