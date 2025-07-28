@@ -2,15 +2,10 @@ import React, { useState, useRef, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import {
   ArrowLeft,
-  Play,
-  Pause,
-  Volume2,
-  Download,
   FileText,
   AlertCircle,
   Sparkles,
@@ -69,10 +64,6 @@ export default function ProjectView() {
     null
   );
   const [loadingScript, setLoadingScript] = useState(false);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const [volume, setVolume] = useState(70);
   const [scenesOpen, setScenesOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [apiResponseData, setApiResponseData] = useState<string>("");
@@ -80,7 +71,6 @@ export default function ProjectView() {
   const [savingScript, setSavingScript] = useState(false);
   const [scriptText, setScriptText] = useState<string>("");
 
-  const audioRef = useRef<HTMLAudioElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -232,25 +222,6 @@ export default function ProjectView() {
       });
     }
   };
-
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-
-    const updateTime = () => setCurrentTime(audio.currentTime);
-    const updateDuration = () => setDuration(audio.duration);
-    const handleEnded = () => setIsPlaying(false);
-
-    audio.addEventListener("timeupdate", updateTime);
-    audio.addEventListener("loadedmetadata", updateDuration);
-    audio.addEventListener("ended", handleEnded);
-
-    return () => {
-      audio.removeEventListener("timeupdate", updateTime);
-      audio.removeEventListener("loadedmetadata", updateDuration);
-      audio.removeEventListener("ended", handleEnded);
-    };
-  }, [project?.audio_url]);
 
   const fetchProject = async () => {
     try {
@@ -455,66 +426,6 @@ export default function ProjectView() {
     }
   };
 
-  const togglePlay = () => {
-    const audio = audioRef.current;
-    if (!audio || !project?.audio_url) return;
-
-    // Debug: Log audio URL and check if it's accessible
-    console.log('Attempting to play audio:', project.audio_url);
-    
-    // Check if audio URL is valid
-    if (!project.audio_url.startsWith('http')) {
-      toast({
-        title: "Invalid audio URL",
-        description: "Audio file URL is not accessible",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Test audio URL before attempting to play
-    testAudioUrl(project.audio_url).then((isAccessible) => {
-      if (!isAccessible) return;
-      
-      if (isPlaying) {
-        audio.pause();
-      } else {
-        // Add error handling for audio playback
-        audio.play().catch((error) => {
-          console.error('Audio playback error:', error);
-          toast({
-            title: "Audio playback failed",
-            description: "Unable to play the audio file. It may be corrupted or inaccessible.",
-            variant: "destructive",
-          });
-        });
-      }
-      setIsPlaying(!isPlaying);
-    });
-  };
-
-  const handleSeek = (value: number[]) => {
-    const audio = audioRef.current;
-    if (audio) {
-      audio.currentTime = value[0];
-      setCurrentTime(value[0]);
-    }
-  };
-
-  const handleVolumeChange = (value: number[]) => {
-    const newVolume = value[0];
-    setVolume(newVolume);
-    if (audioRef.current) {
-      audioRef.current.volume = newVolume / 100;
-    }
-  };
-
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs.toString().padStart(2, "0")}`;
-  };
-
   const openScript = () => {
     if (!project?.script_url) return;
 
@@ -525,17 +436,6 @@ export default function ProjectView() {
       title: "Script loaded",
       description: "Script content is now displayed below",
     });
-  };
-
-  const downloadAudio = () => {
-    if (project?.audio_url) {
-      const link = document.createElement("a");
-      link.href = project.audio_url;
-      link.download = `${project.project_name}-audio.mp3`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
   };
 
   const handleFileUpload = async (
@@ -1112,246 +1012,8 @@ export default function ProjectView() {
             }}
           />
 
-          {/* Audio Player */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Volume2 className="h-5 w-5" />
-                Audio Player
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {project.audio_url ? (
-                <div className="space-y-6">
-                  <audio
-                    ref={audioRef}
-                    src={project.audio_url}
-                    preload="metadata"
-                    onError={(e) => {
-                      console.error('Audio element error:', e);
-                      toast({
-                        title: "Audio loading failed",
-                        description: "Unable to load the audio file from Supabase storage",
-                        variant: "destructive",
-                      });
-                    }}
-                    onLoadStart={() => {
-                      console.log('Audio loading started:', project.audio_url);
-                    }}
-                    onCanPlay={() => {
-                      console.log('Audio can play:', project.audio_url);
-                    }}
-                  />
-
-                  {/* Play Controls */}
-                  <div className="flex items-center justify-center gap-4">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={togglePlay}
-                      className="h-12 w-12 rounded-full"
-                    >
-                      {isPlaying ? (
-                        <Pause className="h-6 w-6" />
-                      ) : (
-                        <Play className="h-6 w-6" />
-                      )}
-                    </Button>
-                  </div>
-
-                  {/* Progress Bar */}
-                  <div className="space-y-2">
-                    <Slider
-                      value={[currentTime]}
-                      onValueChange={handleSeek}
-                      max={duration || 100}
-                      step={1}
-                      className="w-full"
-                    />
-                    <div className="flex justify-between text-sm text-muted-foreground">
-                      <span>{formatTime(currentTime)}</span>
-                      <span>{formatTime(duration)}</span>
-                    </div>
-                  </div>
-
-                  {/* Volume Control */}
-                  <div className="flex items-center gap-3">
-                    <Volume2 className="h-4 w-4 text-muted-foreground" />
-                    <Slider
-                      value={[volume]}
-                      onValueChange={handleVolumeChange}
-                      max={100}
-                      step={1}
-                      className="flex-1 max-w-32"
-                    />
-                    <span className="text-sm text-muted-foreground w-10">
-                      {volume}%
-                    </span>
-                  </div>
-
-                  {/* Download Button */}
-                  <Button
-                    onClick={downloadAudio}
-                    variant="outline"
-                    className="w-full"
-                  >
-                    <Download className="h-4 w-4 mr-2" />
-                    Download Audio
-                  </Button>
-
-                  {/* Debug Button */}
-                  <Button
-                    onClick={() => project?.audio_url && testAudioUrl(project.audio_url)}
-                    variant="outline"
-                    className="w-full"
-                  >
-                    Test Audio URL
-                  </Button>
-
-                  {/* Storage Check Button */}
-                  <Button
-                    onClick={checkStorageBucket}
-                    variant="outline"
-                    className="w-full"
-                  >
-                    Check Storage Bucket
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-6">
-                  {/* Scene Picker */}
-                  {project.script_url && scenes.length > 0 && (
-                    <div className="bg-muted/30 rounded-lg p-4 border">
-                      <Collapsible
-                        open={scenesOpen}
-                        onOpenChange={setScenesOpen}
-                      >
-                        <CollapsibleTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            className="w-full justify-between p-0 h-auto"
-                          >
-                            <div className="flex items-center gap-2">
-                              <List className="h-4 w-4" />
-                              <span className="text-sm font-medium">
-                                Scene Picker ({scenes.length} scenes found)
-                                {selectedSceneIndex !== null &&
-                                  ` - Selected: Scene ${
-                                    selectedSceneIndex + 1
-                                  }`}
-                              </span>
-                            </div>
-                            <ChevronDown className="h-4 w-4" />
-                          </Button>
-                        </CollapsibleTrigger>
-                        <CollapsibleContent className="mt-3">
-                          <div className="space-y-2 max-h-48 overflow-y-auto">
-                            <Button
-                              variant={
-                                selectedSceneIndex === null
-                                  ? "default"
-                                  : "outline"
-                              }
-                              size="sm"
-                              onClick={() => setSelectedSceneIndex(null)}
-                              className="w-full justify-start text-left"
-                            >
-                              <span className="font-medium">Full Script</span>
-                            </Button>
-                            {scenes.map((scene, index) => (
-                              <Button
-                                key={index}
-                                variant={
-                                  selectedSceneIndex === index
-                                    ? "default"
-                                    : "outline"
-                                }
-                                size="sm"
-                                onClick={() => setSelectedSceneIndex(index)}
-                                className="w-full justify-start text-left h-auto py-2"
-                              >
-                                <div className="flex flex-col items-start gap-1">
-                                  <span className="font-medium text-xs">
-                                    Scene {index + 1}: {scene.heading}
-                                  </span>
-                                  <span className="text-xs text-muted-foreground">
-                                    {scene.preview}
-                                  </span>
-                                </div>
-                              </Button>
-                            ))}
-                          </div>
-                        </CollapsibleContent>
-                      </Collapsible>
-                    </div>
-                  )}
-
-                  {/* Script Preview for Audio Generation */}
-                  {project.script_url && (
-                    <div className="bg-muted/30 rounded-lg p-4 border">
-                      <h4 className="text-sm font-medium mb-2">
-                        {selectedSceneIndex !== null
-                          ? `Selected Scene: ${scenes[selectedSceneIndex]?.heading}`
-                          : "Script Preview (First 800 characters)"}
-                      </h4>
-                      {loadingScript ? (
-                        <div className="flex items-center gap-2">
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                          <span className="text-sm text-muted-foreground">
-                            Loading script preview...
-                          </span>
-                        </div>
-                      ) : selectedSceneIndex !== null ? (
-                        <div className="text-sm text-muted-foreground max-h-32 overflow-y-auto leading-relaxed">
-                          {scenes[selectedSceneIndex]?.content ||
-                            "Scene content not available"}
-                        </div>
-                      ) : scriptPreview ? (
-                        <div className="text-sm text-muted-foreground max-h-32 overflow-y-auto leading-relaxed">
-                          {scriptPreview}
-                        </div>
-                      ) : (
-                        <p className="text-sm text-muted-foreground">
-                          Unable to load script preview
-                        </p>
-                      )}
-                    </div>
-                  )}
-
-                  <div className="border-2 border-dashed border-border rounded-lg p-8 text-center">
-                    <Volume2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <p className="font-medium mb-2">No audio file yet</p>
-                    <p className="text-sm text-muted-foreground mb-6">
-                      {project.script_url
-                        ? selectedSceneIndex !== null
-                          ? `Generate audio for Scene ${
-                              selectedSceneIndex + 1
-                            }: ${scenes[selectedSceneIndex]?.heading}`
-                          : "Generate audio from your full script to create an immersive experience"
-                        : "Upload a script first, then generate audio from it"}
-                    </p>
-                    <Button
-                      onClick={generateAudio}
-                      disabled={generating || !project.script_url}
-                      className="gap-2"
-                    >
-                      {generating ? (
-                        <>
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                          Generating Audio...
-                        </>
-                      ) : (
-                        <>
-                          <Sparkles className="h-4 w-4" />
-                          Generate Audio
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          {/* Multi-Voice Panel handles all audio functionality now */}
+          {/* Removed duplicate audio player - MultiVoicePanel has its own audio player */}
         </div>
 
         {/* Voice & Mood Settings */}
