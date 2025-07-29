@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Film, Menu, Mic, Volume2, Home, X } from "lucide-react";
+import { Film, Menu, Mic, Volume2, Home, X, LayoutDashboard } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
@@ -56,19 +56,11 @@ export const Header = () => {
             </Button>
             <Button
               variant="ghost"
-              onClick={() => navigate('/test-voice')}
+              onClick={() => navigate('/dashboard')}
               className="flex items-center gap-2"
             >
-              <Volume2 className="h-4 w-4" />
-              Single Voice
-            </Button>
-            <Button
-              variant="ghost"
-              onClick={() => navigate('/multi-voice')}
-              className="flex items-center gap-2"
-            >
-              <Mic className="h-4 w-4" />
-              Multi-Voice
+              <LayoutDashboard className="h-4 w-4" />
+              Dashboard
             </Button>
             <a href="#features" className="text-muted-foreground hover:text-foreground transition-colors">
               Features
@@ -99,13 +91,9 @@ export const Header = () => {
                     <Home className="h-4 w-4 mr-2" />
                     Home
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleNavigation('/test-voice')}>
-                    <Volume2 className="h-4 w-4 mr-2" />
-                    Single Voice
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleNavigation('/multi-voice')}>
-                    <Mic className="h-4 w-4 mr-2" />
-                    Multi-Voice
+                  <DropdownMenuItem onClick={() => handleNavigation('/dashboard')}>
+                    <LayoutDashboard className="h-4 w-4 mr-2" />
+                    Dashboard
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={handleSignOut}>
                     Sign Out
