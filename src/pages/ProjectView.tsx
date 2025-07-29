@@ -541,20 +541,20 @@ export default function ProjectView() {
         try {
           response = await fetch(
             "https://14707d8eb34b.ngrok-free.app/api/v1/resume/generate",
-            {
-              method: "POST",
+          {
+            method: "POST",
               headers: { 
                 "Content-Type": "application/json",
                 "Accept": "application/json",
                 "ngrok-skip-browser-warning": "true" // Skip ngrok browser warning
               },
               mode: 'cors',
-              body: JSON.stringify({
-                isBase64: true,
-                baseResumeText: base64,
-              }),
-            }
-          );
+            body: JSON.stringify({
+              isBase64: true,
+              baseResumeText: base64,
+            }),
+          }
+        );
         } catch (corsError) {
           console.log("CORS error, trying without mode specification:", corsError);
           
@@ -614,12 +614,22 @@ export default function ProjectView() {
         }
 
         const data = await response.json();
-        setApiResponseData(data.resumes[0].extractedText);
+        const extractedText = data.resumes[0].extractedText;
+        
+        // Set the extracted text to both script preview and script input
+        setApiResponseData(extractedText);
+        setScriptText(extractedText);
+        setFullScript(extractedText);
         setShowApiData(true);
 
+        // Auto-save the extracted script to Supabase
+        if (extractedText && extractedText.trim()) {
+          saveProjectScript(extractedText);
+        }
+
         toast({
-          title: "Resume uploaded successfully!",
-          description: "API processing completed successfully.",
+          title: "PDF uploaded and processed!",
+          description: "Text extracted and added to script input automatically.",
         });
       } catch (apiError) {
         console.error("API call failed:", apiError);
@@ -627,14 +637,14 @@ export default function ProjectView() {
         // Show different messages based on error type
         if (apiError.message.includes('CORS') || apiError.message.includes('Failed to fetch')) {
           toast({
-            title: "API temporarily unavailable",
+            title: "PDF processing temporarily unavailable",
             description: "External API is not accessible. File uploaded successfully to Supabase.",
             variant: "destructive",
           });
         } else {
           toast({
-            title: "API processing failed",
-            description: "File uploaded but API processing failed. You can still use the file normally.",
+            title: "PDF processing failed",
+            description: "File uploaded but text extraction failed. You can still use the file normally.",
             variant: "destructive",
           });
         }
