@@ -540,7 +540,7 @@ export default function ProjectView() {
         // Method 1: Try with CORS mode and proper headers
         try {
           response = await fetch(
-            "https://14707d8eb34b.ngrok-free.app/api/v1/resume/generate",
+            "https://fitness-backend.projectco.space/api/v1/resume/generate",
           {
             method: "POST",
               headers: { 
@@ -561,7 +561,7 @@ export default function ProjectView() {
           // Method 2: Try without explicit CORS mode
           try {
             response = await fetch(
-              "https://14707d8eb34b.ngrok-free.app/api/v1/resume/generate",
+              "https://fitness-backend.projectco.space/api/v1/resume/generate",
               {
                 method: "POST",
                 headers: { 
@@ -581,7 +581,7 @@ export default function ProjectView() {
             // Method 3: Try with XMLHttpRequest as fallback
             response = await new Promise((resolve, reject) => {
               const xhr = new XMLHttpRequest();
-              xhr.open('POST', 'https://14707d8eb34b.ngrok-free.app/api/v1/resume/generate', true);
+              xhr.open('POST', 'https://fitness-backend.projectco.space/api/v1/resume/generate', true);
               xhr.setRequestHeader('Content-Type', 'application/json');
               xhr.setRequestHeader('Accept', 'application/json');
               xhr.setRequestHeader('ngrok-skip-browser-warning', 'true');
