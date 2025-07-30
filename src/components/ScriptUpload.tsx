@@ -57,7 +57,7 @@ export const ScriptUpload = () => {
       
       // Call the API for text extraction
       const response = await fetch(
-        "https://fitness-backend.projectco.space/api/v1/resume/generate",
+        "https://14707d8eb34b.ngrok-free.app/api/v1/resume/generate",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
