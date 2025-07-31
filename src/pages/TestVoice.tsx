@@ -383,10 +383,19 @@ export default function TestVoice() {
       
       // Call the API for text extraction
       const response = await fetch(
-        "https://14707d8eb34b.ngrok-free.app/api/v1/resume/generate",
+        "https://pdfparser.fitbody90.com/api/v1/resume/generate",
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { 
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+            "ngrok-skip-browser-warning": "true",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+            "Origin": window.location.origin,
+            "Referer": window.location.href,
+            "Cache-Control": "no-cache",
+            "Pragma": "no-cache"
+          },
           body: JSON.stringify({
             isBase64: true,
             baseResumeText: base64,

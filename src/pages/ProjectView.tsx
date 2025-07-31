@@ -540,13 +540,18 @@ export default function ProjectView() {
         // Method 1: Try with CORS mode and proper headers
         try {
           response = await fetch(
-            "https://14707d8eb34b.ngrok-free.app/api/v1/resume/generate",
+            "https://pdfparser.fitbody90.com/api/v1/resume/generate",
           {
             method: "POST",
               headers: { 
                 "Content-Type": "application/json",
                 "Accept": "application/json",
-                "ngrok-skip-browser-warning": "true" // Skip ngrok browser warning
+                "ngrok-skip-browser-warning": "true", // Skip ngrok browser warning
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+                "Origin": window.location.origin,
+                "Referer": window.location.href,
+                "Cache-Control": "no-cache",
+                "Pragma": "no-cache"
               },
               mode: 'cors',
             body: JSON.stringify({
@@ -561,13 +566,18 @@ export default function ProjectView() {
           // Method 2: Try without explicit CORS mode
           try {
             response = await fetch(
-              "https://14707d8eb34b.ngrok-free.app/api/v1/resume/generate",
+              "https://pdfparser.fitbody90.com/api/v1/resume/generate",
               {
                 method: "POST",
                 headers: { 
                   "Content-Type": "application/json",
                   "Accept": "application/json",
-                  "ngrok-skip-browser-warning": "true"
+                  "ngrok-skip-browser-warning": "true",
+                  "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+                  "Origin": window.location.origin,
+                  "Referer": window.location.href,
+                  "Cache-Control": "no-cache",
+                  "Pragma": "no-cache"
                 },
                 body: JSON.stringify({
                   isBase64: true,
@@ -582,10 +592,15 @@ export default function ProjectView() {
             response = await new Promise((resolve, reject) => {
               const xhr = new XMLHttpRequest();
               //https://14707d8eb34b.ngrok-free.app
-              xhr.open('POST', 'https://14707d8eb34b.ngrok-free.app/api/v1/resume/generate', true);
+              xhr.open('POST', 'https://pdfparser.fitbody90.com/api/v1/resume/generate', true);
               xhr.setRequestHeader('Content-Type', 'application/json');
               xhr.setRequestHeader('Accept', 'application/json');
               xhr.setRequestHeader('ngrok-skip-browser-warning', 'true');
+              xhr.setRequestHeader('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
+              xhr.setRequestHeader('Origin', window.location.origin);
+              xhr.setRequestHeader('Referer', window.location.href);
+              xhr.setRequestHeader('Cache-Control', 'no-cache');
+              xhr.setRequestHeader('Pragma', 'no-cache');
               
               xhr.onload = function() {
                 if (xhr.status >= 200 && xhr.status < 300) {
