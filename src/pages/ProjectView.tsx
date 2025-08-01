@@ -1165,6 +1165,7 @@ export default function ProjectView() {
 
           {/* Multi-Voice Panel for this project's script */}
           <MultiVoicePanel 
+            key={`${projectId}-${scriptText?.substring(0, 50)}`}
             scriptText={scriptText || fullScript} 
             allowScriptEdit={true}
             projectId={projectId}

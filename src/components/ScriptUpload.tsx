@@ -87,9 +87,19 @@ export const ScriptUpload = () => {
       setUploadedScript(file.name);
       setExtractedText(extractedText);
       
+      // Auto-populate the script input with extracted text
+      // This will be used by the parent component to update the script input
+      if (extractedText && extractedText.trim()) {
+        // Trigger a custom event to notify parent components
+        const event = new CustomEvent('scriptExtracted', { 
+          detail: { text: extractedText, fileName: file.name } 
+        });
+        window.dispatchEvent(event);
+      }
+      
       toast({
         title: "File processed successfully!",
-        description: `Text extracted from ${file.name}`,
+        description: `Text extracted from ${file.name} and added to script input.`,
       });
     } catch (error) {
       console.error("Error processing file:", error);

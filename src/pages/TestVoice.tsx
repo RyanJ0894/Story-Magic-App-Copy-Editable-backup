@@ -418,7 +418,7 @@ export default function TestVoice() {
       
       toast({
         title: "File processed successfully!",
-        description: `Text extracted from ${file.name}`,
+        description: `Text extracted from ${file.name} and added to script input.`,
       });
     } catch (error) {
       console.error("Error processing file:", error);
