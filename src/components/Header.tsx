@@ -42,7 +42,7 @@ export const Header = () => {
           <img 
             src="/lovable-uploads/cdb1e7c3-497c-4996-bf08-d03c68bed2a7.png" 
             alt="Story Magic" 
-            className="h-10 w-auto object-contain"
+            className="h-12 w-auto object-contain"
           />
         </div>
         
