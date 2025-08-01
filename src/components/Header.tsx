@@ -3,6 +3,7 @@ import { Film, Menu, Mic, Volume2, Home, X, LayoutDashboard } from "lucide-react
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -34,14 +35,15 @@ export const Header = () => {
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-lg">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <div 
-          className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity"
+          className="flex items-center cursor-pointer hover:opacity-80 transition-opacity"
           onClick={handleHomeClick}
           title="Go to Homepage"
         >
-          <Film className="h-8 w-8 text-cinema-gold" />
-          <h1 className="text-xl font-bold bg-gradient-accent bg-clip-text text-transparent">
-            Story Magic
-          </h1>
+          <img 
+            src="/story-magic-logo.png" 
+            alt="Story Magic" 
+            className="h-10 w-auto object-contain"
+          />
         </div>
         
         {user && (
