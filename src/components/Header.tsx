@@ -40,7 +40,7 @@ export const Header = () => {
           title="Go to Homepage"
         >
           <img 
-            src="/lovable-uploads/63155d72-7c13-4dc9-aef0-7fa0581d4f04.png" 
+            src="/lovable-uploads/b7f986e0-0a9e-4d64-b642-5b5c51d31e3b.png" 
             alt="Story Magic" 
             className="h-28 w-auto object-contain"
           />
