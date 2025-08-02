@@ -17,6 +17,58 @@ export interface GenerationProgress {
   text: string;
 }
 
+// Function to clean script content for better audio generation (same as edge function)
+function filterScriptForAudio(scriptText: string): string {
+  if (!scriptText || typeof scriptText !== 'string') {
+    return '';
+  }
+  
+  const lines = scriptText.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+  const filteredLines: string[] = [];
+  
+  // Patterns to remove script formatting elements
+  const pageNumberPattern = /^\d+$|^Page\s+\d+|^PAGE\s+\d+/i;
+  const stageDirectionPattern = /^\([^)]+\)|^\[[^\]]+\]|^\{[^}]+\}|^CONT'D$|^CONTINUED$|^MORE$/i;
+  const sceneNumberPattern = /^SCENE\s+\d+|^ACT\s+\d+|^CHAPTER\s+\d+/i;
+  const characterNamePattern = /^[A-Z][A-Z\s\-'\.]{2,}$|^[A-Z][A-Z\s\-'\.]+:$/;
+  const transitionPattern = /^(FADE IN|FADE OUT|CUT TO|DISSOLVE TO|INT\.|EXT\.|INT\/EXT\.|INTERIOR|EXTERIOR)/i;
+  const sceneHeadingPattern = /^(INT\.|EXT\.|INTERIOR|EXTERIOR)\s+.+\s+[-–—]\s+(DAY|NIGHT|MORNING|EVENING|DAWN|DUSK|LATER|CONTINUOUS)/i;
+  
+  for (const line of lines) {
+    // Skip empty lines
+    if (!line.trim()) continue;
+    
+    // Skip script formatting elements
+    if (pageNumberPattern.test(line) || 
+        stageDirectionPattern.test(line) || 
+        sceneNumberPattern.test(line) || 
+        characterNamePattern.test(line) || 
+        transitionPattern.test(line) || 
+        sceneHeadingPattern.test(line)) {
+      continue;
+    }
+    
+    // Keep dialogue and narration
+    if (line.length > 2) {
+      filteredLines.push(line);
+    }
+  }
+  
+  // Join and clean up
+  let result = filteredLines.join(' ').replace(/\s+/g, ' ').trim();
+  
+  // Additional cleanup
+  result = result
+    .replace(/\b(CONT'D|CONTINUED|MORE)\b/gi, '')
+    .replace(/\([^)]*\)/g, '') // Remove parentheticals
+    .replace(/\[[^\]]*\]/g, '') // Remove brackets
+    .replace(/\{[^}]*\}/g, '') // Remove braces
+    .replace(/\s+/g, ' ')
+    .trim();
+  
+  return result;
+}
+
 // Helper function to convert AudioBuffer to WAV Blob
 function audioBufferToWavBlob(audioBuffer: AudioBuffer): Blob {
   const numChannels = audioBuffer.numberOfChannels;
@@ -165,6 +217,19 @@ export class MultiVoiceGenerator {
   }
 
   private async generateSingleVoiceAudio(text: string, voiceId: string): Promise<Blob> {
+    // Apply script filtering to clean up the text
+    const filteredText = filterScriptForAudio(text);
+    
+    // If filtered text is empty, skip generation
+    if (!filteredText || filteredText.trim().length === 0) {
+      console.log('Skipping empty text after filtering:', text);
+      // Return a very short silent audio blob
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const buffer = audioContext.createBuffer(1, audioContext.sampleRate * 0.1, audioContext.sampleRate); // 0.1 second silence
+      const wavBlob = audioBufferToWavBlob(buffer);
+      return wavBlob;
+    }
+
     const response = await fetch(
       `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`,
       {
@@ -175,7 +240,7 @@ export class MultiVoiceGenerator {
           Accept: "audio/mpeg",
         },
         body: JSON.stringify({
-          text: text,
+          text: filteredText, // Use filtered text instead of original
           model_id: "eleven_monolingual_v1",
           voice_settings: {
             stability: 0.5,
