@@ -94,10 +94,13 @@ serve(async (req) => {
 
     // Use dynamic text from script or custom text
     if (customText) {
-      // Truncate custom text to 800 characters for performance
-      textToGenerate = customText.length > 800 
-        ? customText.substring(0, 800) + '...'
-        : customText
+      // Apply filtering to custom text as well
+      const filteredCustomText = filterScriptForAudio(customText)
+      
+      // Truncate filtered text to 800 characters for performance
+      textToGenerate = filteredCustomText.length > 800 
+        ? filteredCustomText.substring(0, 800) + '...'
+        : filteredCustomText
     } else {
       // Otherwise, fetch script content from storage
       const { data: project, error: projectError } = await supabase
