@@ -9,7 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 
 interface ScriptPreviewProps {
   parsedScript: ParsedScript;
-  onGenerateAudio: () => void;
+  onGenerateAudio: (forceRegenerate?: boolean) => void;
   generating: boolean;
 }
 
@@ -96,13 +96,23 @@ export default function ScriptPreview({
               )}
             </Button>
             <Button
-              onClick={onGenerateAudio}
+              onClick={() => onGenerateAudio(false)}
               disabled={generating}
               size="sm"
               className="gap-2"
             >
               <Play className="h-4 w-4" />
               {generating ? "Generating..." : "Generate Multi-Voice Audio"}
+            </Button>
+            <Button
+              onClick={() => onGenerateAudio(true)}
+              disabled={generating}
+              variant="outline"
+              size="sm"
+              className="gap-2"
+            >
+              <Play className="h-4 w-4" />
+              Force Regenerate
             </Button>
           </div>
         </div>

@@ -434,6 +434,27 @@ export default function MultiVoicePanel({
 
   const generateMultiVoiceAudio = async (forceRegenerate = false) => {
     console.log('🔥 GENERATING MULTI-VOICE AUDIO - Force regenerate:', forceRegenerate);
+    
+    if (forceRegenerate) {
+      console.log('🗑️ Clearing existing audio data for fresh generation...');
+      setMultiVoiceAudioUrl(null);
+      setAudioSegments([]);
+      
+      // Clear from database too
+      if (projectId && user) {
+        try {
+          await supabase
+            .from('multi_voice_data')
+            .delete()
+            .eq('project_id', projectId)
+            .eq('user_id', user.id);
+          console.log('✅ Cleared cached multi-voice data from database');
+        } catch (error) {
+          console.error('Failed to clear cached data:', error);
+        }
+      }
+    }
+    
     if (!apiKey.trim()) {
       toast({
         title: "API Key required",
