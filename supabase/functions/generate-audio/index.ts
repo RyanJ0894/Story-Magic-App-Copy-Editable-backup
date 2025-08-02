@@ -6,10 +6,10 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-// Voice style to ElevenLabs voice ID mapping
+// Voice style to ElevenLabs voice ID mapping (now optimized for cleaner audio generation)
 const voiceMap: Record<string, string> = {
-  'Narrator Deep': 'JBFqnCBsd6RMkjVDRZzb', // George
-  'Narrator Soothing': 'TX3LPaxmHKxFdv7VOQHJ', // Liam
+  'Narrator Deep': 'JBFqnCBsd6RMkjVDRZzb', // George - Primary narrator voice
+  'Narrator Soothing': 'TX3LPaxmHKxFdv7VOQHJ', // Liam - Alternative narrator
   'Warm Female': 'EXAVITQu4vr4xnSDxMaL', // Sarah
   'Assertive Female': 'cgSgspJ2msm6clMCkdW9', // Jessica
   'Neutral Male': 'nPczCjzI2devNBz1zQrb', // Brian
@@ -17,6 +17,58 @@ const voiceMap: Record<string, string> = {
   'Elderly Male Mentor': 'pqHfZKP75CvOlQylNhV4', // Bill
   'Elderly Female Mentor': 'XrExE9yKIg1WjnnlVkGX', // Matilda
   'Young Hero': 'IKne3meq5aSn9XLyUdCD', // Charlie
+}
+
+// Function to filter script content for cleaner audio generation
+function filterScriptForAudio(scriptText: string): string {
+  const lines = scriptText.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+  const filteredLines: string[] = [];
+  
+  // Patterns to exclude
+  const pageNumberPattern = /^\d+$|^Page\s+\d+/i;
+  const stageDirectionPattern = /^\([^)]+\)|^\[[^\]]+\]|^\{[^}]+\}/;
+  const sceneNumberPattern = /^SCENE\s+\d+/i;
+  const characterNamePattern = /^[A-Z][A-Z\s]+$/;
+  
+  let skipNext = false;
+  
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    
+    // Skip if we flagged this line to skip
+    if (skipNext) {
+      skipNext = false;
+      continue;
+    }
+    
+    // Skip page numbers
+    if (pageNumberPattern.test(line)) {
+      continue;
+    }
+    
+    // Skip stage directions
+    if (stageDirectionPattern.test(line)) {
+      continue;
+    }
+    
+    // Skip scene numbers but keep location descriptions
+    if (sceneNumberPattern.test(line)) {
+      continue;
+    }
+    
+    // For character names, skip the name but include the following dialogue
+    if (characterNamePattern.test(line) && !stageDirectionPattern.test(line)) {
+      // Skip the character name line itself
+      continue;
+    }
+    
+    // Include everything else (dialogue, scene descriptions, action lines)
+    if (line.length > 2) {
+      filteredLines.push(line);
+    }
+  }
+  
+  return filteredLines.join(' ').replace(/\s+/g, ' ').trim();
 }
 
 serve(async (req) => {
@@ -73,10 +125,13 @@ serve(async (req) => {
 
       const scriptContent = await scriptData.text()
       
+      // Parse and filter the script to remove unwanted elements
+      const filteredContent = filterScriptForAudio(scriptContent)
+      
       // Use first 800 characters for efficient audio generation
-      textToGenerate = scriptContent.length > 800 
-        ? scriptContent.substring(0, 800) + '...'
-        : scriptContent
+      textToGenerate = filteredContent.length > 800 
+        ? filteredContent.substring(0, 800) + '...'
+        : filteredContent
     }
 
     console.log('Generating audio for:', { voiceStyle, mood, textLength: textToGenerate.length, usingCustomText: !!customText })

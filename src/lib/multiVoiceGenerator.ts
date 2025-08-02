@@ -100,23 +100,35 @@ export class MultiVoiceGenerator {
     // Generate audio for each line
     for (const scene of parsedScript.scenes) {
       for (const line of scene.lines) {
-        const characterVoice = characterVoices.find(cv => cv.name === line.character);
-        if (!characterVoice) {
-          console.warn(`No voice assigned for character: ${line.character}`);
-          continue;
+        let voiceId: string;
+        let speaker: string;
+        
+        if (line.type === 'narrator') {
+          // Use narrator voice
+          voiceId = parsedScript.narrator.voiceId;
+          speaker = 'NARRATOR';
+        } else {
+          // Use character voice
+          const characterVoice = characterVoices.find(cv => cv.name === line.speaker);
+          if (!characterVoice) {
+            console.warn(`No voice assigned for character: ${line.speaker}`);
+            continue;
+          }
+          voiceId = characterVoice.voiceId;
+          speaker = line.speaker;
         }
 
         try {
           // Generate audio for this line
-          const audioBlob = await this.generateSingleVoiceAudio(line.text, characterVoice.voiceId);
+          const audioBlob = await this.generateSingleVoiceAudio(line.text, voiceId);
           
           // Create audio element to get duration
           const audioUrl = URL.createObjectURL(audioBlob);
           const duration = await this.getAudioDuration(audioUrl);
 
           const segment: AudioSegment = {
-            character: line.character,
-            voiceId: characterVoice.voiceId,
+            character: speaker,
+            voiceId: voiceId,
             text: line.text,
             startTime: currentTime,
             endTime: currentTime + duration,
@@ -133,12 +145,12 @@ export class MultiVoiceGenerator {
             this.onProgress({
               current: processedLines,
               total: totalLines,
-              character: line.character,
+              character: speaker,
               text: line.text.substring(0, 50) + (line.text.length > 50 ? '...' : '')
             });
           }
         } catch (error) {
-          console.error(`Failed to generate audio for ${line.character}:`, error);
+          console.error(`Failed to generate audio for ${speaker}:`, error);
         }
       }
     }

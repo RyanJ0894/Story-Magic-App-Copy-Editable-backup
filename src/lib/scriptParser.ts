@@ -4,8 +4,14 @@ export interface Character {
   voiceName: string;
 }
 
+export interface NarratorVoice {
+  voiceId: string;
+  voiceName: string;
+}
+
 export interface DialogueLine {
-  character: string;
+  type: 'dialogue' | 'narrator';
+  speaker: string; // Character name or 'NARRATOR'
   text: string;
   sceneIndex: number;
   lineIndex: number;
@@ -20,6 +26,7 @@ export interface Scene {
 export interface ParsedScript {
   scenes: Scene[];
   characters: string[];
+  narrator: NarratorVoice;
   totalLines: number;
 }
 
@@ -57,6 +64,18 @@ export class ScriptParser {
     /^PAGE\s+\d+/i,
   ];
 
+  // Patterns for narrator text (scene descriptions, action lines)
+  private static readonly NARRATOR_PATTERNS = [
+    /^[a-z]/, // Lines starting with lowercase (often action/description)
+    /^The\s+/, // Description lines starting with "The"
+    /^We\s+(see|hear)/, // Common narrative phrases
+    /^Close\s+up/i,
+    /^Wide\s+shot/i,
+    /^Medium\s+shot/i,
+    /^Camera\s+/i,
+    /^Sound\s+of/i,
+  ];
+
   static parseScript(scriptText: string): ParsedScript {
     const lines = scriptText.split('\n').map(line => line.trim()).filter(line => line.length > 0);
     const scenes: Scene[] = [];
@@ -65,8 +84,15 @@ export class ScriptParser {
     let sceneIndex = 0;
     let lineIndex = 0;
 
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i];
+    // Skip unwanted elements during initial filtering
+    const filteredLines = lines.filter(line => 
+      !this.isPageNumber(line) && 
+      !this.isStageDirection(line) &&
+      line.length > 2 // Skip very short lines that are likely formatting artifacts
+    );
+
+    for (let i = 0; i < filteredLines.length; i++) {
+      const line = filteredLines[i];
       
       // Check if this is a scene header
       if (this.isSceneHeader(line)) {
@@ -80,6 +106,17 @@ export class ScriptParser {
         };
         sceneIndex++;
         lineIndex = 0;
+        
+        // Add scene header as narrator text (INT./EXT. should be read)
+        if (this.shouldReadSceneHeader(line)) {
+          currentScene.lines.push({
+            type: 'narrator',
+            speaker: 'NARRATOR',
+            text: this.cleanSceneTitle(line),
+            sceneIndex: currentScene.index,
+            lineIndex: lineIndex++
+          });
+        }
         continue;
       }
 
@@ -102,14 +139,11 @@ export class ScriptParser {
         let dialogueText = '';
         let j = i + 1;
         
-        while (j < lines.length) {
-          const nextLine = lines[j];
+        while (j < filteredLines.length) {
+          const nextLine = filteredLines[j];
           
-          // Stop if we hit another character name, scene header, or stage direction
-          if (this.isCharacterName(nextLine) || 
-              this.isSceneHeader(nextLine) || 
-              this.isStageDirection(nextLine) ||
-              this.isPageNumber(nextLine)) {
+          // Stop if we hit another character name or scene header
+          if (this.isCharacterName(nextLine) || this.isSceneHeader(nextLine)) {
             break;
           }
           
@@ -124,7 +158,8 @@ export class ScriptParser {
         // Only add if we found actual dialogue
         if (dialogueText.trim()) {
           currentScene.lines.push({
-            character: characterName,
+            type: 'dialogue',
+            speaker: characterName,
             text: this.cleanDialogueText(dialogueText),
             sceneIndex: currentScene.index,
             lineIndex: lineIndex++
@@ -133,6 +168,18 @@ export class ScriptParser {
         
         // Skip the dialogue lines we just processed
         i = j - 1;
+      } else if (this.isNarratorText(line)) {
+        // This is narrator/action text that should be read
+        const cleanedText = this.cleanNarratorText(line);
+        if (cleanedText.length > 0) {
+          currentScene.lines.push({
+            type: 'narrator',
+            speaker: 'NARRATOR',
+            text: cleanedText,
+            sceneIndex: currentScene.index,
+            lineIndex: lineIndex++
+          });
+        }
       }
     }
 
@@ -141,9 +188,16 @@ export class ScriptParser {
       scenes.push(currentScene);
     }
 
+    // Assign default narrator voice
+    const narrator: NarratorVoice = {
+      voiceId: 'JBFqnCBsd6RMkjVDRZzb', // George - Deep narrator voice
+      voiceName: 'George (Narrator, Deep)'
+    };
+
     return {
       scenes,
       characters: Array.from(characters),
+      narrator,
       totalLines: scenes.reduce((total, scene) => total + scene.lines.length, 0)
     };
   }
@@ -164,6 +218,26 @@ export class ScriptParser {
 
   private static isPageNumber(line: string): boolean {
     return this.PAGE_NUMBER_PATTERNS.some(pattern => pattern.test(line));
+  }
+
+  private static shouldReadSceneHeader(line: string): boolean {
+    // Read INT./EXT. location headings but skip scene numbers
+    return /^(INT\.|EXT\.|INT\/EXT\.)/i.test(line);
+  }
+
+  private static isNarratorText(line: string): boolean {
+    // Check if this line should be read by the narrator
+    return this.NARRATOR_PATTERNS.some(pattern => pattern.test(line)) ||
+           (!this.isCharacterName(line) && !this.isSceneHeader(line) && line.length > 10);
+  }
+
+  private static cleanNarratorText(text: string): string {
+    return text
+      .replace(/\([^)]*\)/g, '') // Remove (stage directions)
+      .replace(/\[[^\]]*\]/g, '') // Remove [stage directions]
+      .replace(/\{[^}]*\}/g, '') // Remove {stage directions}
+      .replace(/\s+/g, ' ') // Normalize whitespace
+      .trim();
   }
 
   private static cleanSceneTitle(line: string): string {
@@ -197,13 +271,13 @@ export class ScriptParser {
 
   static assignDefaultVoices(characters: string[]): Character[] {
     const defaultVoices = [
-      { id: "21m00Tcm4TlvDq8ikWAM", name: "Rachel (Female, English)" },
-      { id: "AZnzlk1XvdvUeBnXmlld", name: "Adam (Male, English)" },
-      { id: "EXAVITQu4vr4xnSDxMaL", name: "Bella (Female, English)" },
-      { id: "ErXwobaYiN019PkySvjV", name: "Antoni (Male, English)" },
-      { id: "MF3mGyEYCl7XYWbV9V6O", name: "Elli (Female, English)" },
-      { id: "TxGEqnHWrfWFTfGW9XjX", name: "Josh (Male, English)" },
-      { id: "VR6AewLTigWG4xSOukaG", name: "Arnold (Male, English)" },
+      { id: "EXAVITQu4vr4xnSDxMaL", name: "Sarah (Warm Female)" },
+      { id: "cgSgspJ2msm6clMCkdW9", name: "Jessica (Assertive Female)" },
+      { id: "nPczCjzI2devNBz1zQrb", name: "Brian (Neutral Male)" },
+      { id: "iP95p4xoKVk53GoZ742B", name: "Chris (Comedic Male)" },
+      { id: "pqHfZKP75CvOlQylNhV4", name: "Bill (Elderly Male Mentor)" },
+      { id: "XrExE9yKIg1WjnnlVkGX", name: "Matilda (Elderly Female Mentor)" },
+      { id: "IKne3meq5aSn9XLyUdCD", name: "Charlie (Young Hero)" },
     ];
 
     return characters.map((character, index) => ({

@@ -43,7 +43,12 @@ export default function MultiVoicePanel({
   const { toast } = useToast();
   const { user } = useAuth();
   const [scriptText, setScriptText] = useState(initialScriptText);
-  const [parsedScript, setParsedScript] = useState<ParsedScript>({ scenes: [], characters: [], totalLines: 0 });
+  const [parsedScript, setParsedScript] = useState<ParsedScript>({ 
+    scenes: [], 
+    characters: [], 
+    narrator: { voiceId: 'JBFqnCBsd6RMkjVDRZzb', voiceName: 'George (Narrator, Deep)' },
+    totalLines: 0 
+  });
   const [characterVoices, setCharacterVoices] = useState<Character[]>([]);
   const [multiVoiceGenerating, setMultiVoiceGenerating] = useState(false);
   const [multiVoiceAudioUrl, setMultiVoiceAudioUrl] = useState<string | null>(null);
@@ -291,7 +296,12 @@ export default function MultiVoicePanel({
         });
       }
     } else {
-      setParsedScript({ scenes: [], characters: [], totalLines: 0 });
+      setParsedScript({ 
+        scenes: [], 
+        characters: [], 
+        narrator: { voiceId: 'JBFqnCBsd6RMkjVDRZzb', voiceName: 'George (Narrator, Deep)' },
+        totalLines: 0 
+      });
       setCharacterVoices([]);
     }
   }, [scriptText, toast]);
