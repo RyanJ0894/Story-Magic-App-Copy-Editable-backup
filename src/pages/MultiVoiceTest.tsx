@@ -5,6 +5,7 @@ import { Slider } from "@/components/ui/slider";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
+import { Header } from "@/components/Header";
 import {
   Play,
   Pause,
@@ -235,6 +236,7 @@ export default function MultiVoiceTest() {
 
   return (
     <div className="min-h-screen bg-background">
+      <Header />
       <div className="container mx-auto px-4 py-8">
         <div className="mb-6">
           <Button
