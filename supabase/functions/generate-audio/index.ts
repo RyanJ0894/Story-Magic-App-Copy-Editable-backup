@@ -6,10 +6,10 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-// Voice style to ElevenLabs voice ID mapping (now optimized for cleaner audio generation)
+// Voice style to ElevenLabs voice ID mapping
 const voiceMap: Record<string, string> = {
-  'Narrator Deep': 'JBFqnCBsd6RMkjVDRZzb', // George - Primary narrator voice
-  'Narrator Soothing': 'TX3LPaxmHKxFdv7VOQHJ', // Liam - Alternative narrator
+  'Narrator Deep': 'JBFqnCBsd6RMkjVDRZzb', // George
+  'Narrator Soothing': 'TX3LPaxmHKxFdv7VOQHJ', // Liam
   'Warm Female': 'EXAVITQu4vr4xnSDxMaL', // Sarah
   'Assertive Female': 'cgSgspJ2msm6clMCkdW9', // Jessica
   'Neutral Male': 'nPczCjzI2devNBz1zQrb', // Brian
@@ -19,76 +19,54 @@ const voiceMap: Record<string, string> = {
   'Young Hero': 'IKne3meq5aSn9XLyUdCD', // Charlie
 }
 
-// Function to filter script content for cleaner audio generation
+// Function to clean script content for better audio generation
 function filterScriptForAudio(scriptText: string): string {
-  console.log('Starting filterScriptForAudio with text length:', scriptText.length)
+  if (!scriptText || typeof scriptText !== 'string') {
+    return '';
+  }
   
   const lines = scriptText.split('\n').map(line => line.trim()).filter(line => line.length > 0);
   const filteredLines: string[] = [];
   
-  // Enhanced patterns to exclude more script elements
+  // Patterns to remove script formatting elements
   const pageNumberPattern = /^\d+$|^Page\s+\d+|^PAGE\s+\d+/i;
-  const stageDirectionPattern = /^\([^)]+\)|^\[[^\]]+\]|^\{[^}]+\}|^CONT'D$|^CONTINUED$/i;
-  const sceneNumberPattern = /^SCENE\s+\d+|^ACT\s+\d+/i;
-  const characterNamePattern = /^[A-Z][A-Z\s\-'\.]+$|^[A-Z][A-Z\s]+:$/;
-  const transitionPattern = /^(FADE IN|FADE OUT|CUT TO|DISSOLVE TO|INT\.|EXT\.|INT\/EXT\.)/i;
+  const stageDirectionPattern = /^\([^)]+\)|^\[[^\]]+\]|^\{[^}]+\}|^CONT'D$|^CONTINUED$|^MORE$/i;
+  const sceneNumberPattern = /^SCENE\s+\d+|^ACT\s+\d+|^CHAPTER\s+\d+/i;
+  const characterNamePattern = /^[A-Z][A-Z\s\-'\.]{2,}$|^[A-Z][A-Z\s\-'\.]+:$/;
+  const transitionPattern = /^(FADE IN|FADE OUT|CUT TO|DISSOLVE TO|INT\.|EXT\.|INT\/EXT\.|INTERIOR|EXTERIOR)/i;
+  const sceneHeadingPattern = /^(INT\.|EXT\.|INTERIOR|EXTERIOR)\s+.+\s+[-–—]\s+(DAY|NIGHT|MORNING|EVENING|DAWN|DUSK|LATER|CONTINUOUS)/i;
   
-  let skipNext = false;
-  
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
+  for (const line of lines) {
+    // Skip empty lines
+    if (!line.trim()) continue;
     
-    console.log(`Processing line ${i}: "${line}"`)
-    
-    // Skip if we flagged this line to skip
-    if (skipNext) {
-      skipNext = false;
-      console.log('  -> Skipped (flagged)')
+    // Skip script formatting elements
+    if (pageNumberPattern.test(line) || 
+        stageDirectionPattern.test(line) || 
+        sceneNumberPattern.test(line) || 
+        characterNamePattern.test(line) || 
+        transitionPattern.test(line) || 
+        sceneHeadingPattern.test(line)) {
       continue;
     }
     
-    // Skip page numbers
-    if (pageNumberPattern.test(line)) {
-      console.log('  -> Skipped (page number)')
-      continue;
-    }
-    
-    // Skip stage directions
-    if (stageDirectionPattern.test(line)) {
-      console.log('  -> Skipped (stage direction)')
-      continue;
-    }
-    
-    // Skip scene numbers and transitions
-    if (sceneNumberPattern.test(line)) {
-      console.log('  -> Skipped (scene number)')
-      continue;
-    }
-    
-    // Skip transitions and scene headings
-    if (transitionPattern.test(line)) {
-      console.log('  -> Skipped (transition)')
-      continue;
-    }
-    
-    // For character names, skip the name but include the following dialogue
-    if (characterNamePattern.test(line) && !stageDirectionPattern.test(line)) {
-      console.log('  -> Skipped (character name)')
-      continue;
-    }
-    
-    // Include everything else (dialogue, scene descriptions, action lines)
+    // Keep dialogue and narration
     if (line.length > 2) {
-      console.log('  -> Included')
       filteredLines.push(line);
-    } else {
-      console.log('  -> Skipped (too short)')
     }
   }
   
-  const result = filteredLines.join(' ').replace(/\s+/g, ' ').trim();
-  console.log('Filter result length:', result.length)
-  console.log('Filter result preview:', result.substring(0, 200))
+  // Join and clean up
+  let result = filteredLines.join(' ').replace(/\s+/g, ' ').trim();
+  
+  // Additional cleanup
+  result = result
+    .replace(/\b(CONT'D|CONTINUED|MORE)\b/gi, '')
+    .replace(/\([^)]*\)/g, '') // Remove parentheticals
+    .replace(/\[[^\]]*\]/g, '') // Remove brackets
+    .replace(/\{[^}]*\}/g, '') // Remove braces
+    .replace(/\s+/g, ' ')
+    .trim();
   
   return result;
 }
@@ -114,23 +92,17 @@ serve(async (req) => {
 
     let textToGenerate: string
 
-    // Use dynamic text from script or custom text
+    // Use custom text if provided, otherwise fetch from storage
     if (customText) {
-      console.log('Original custom text length:', customText.length)
-      console.log('Original custom text preview:', customText.substring(0, 200))
+      // Filter the custom text to remove script formatting
+      const filteredText = filterScriptForAudio(customText)
       
-      // Apply filtering to custom text as well
-      const filteredCustomText = filterScriptForAudio(customText)
-      
-      console.log('Filtered text length:', filteredCustomText.length)
-      console.log('Filtered text preview:', filteredCustomText.substring(0, 200))
-      
-      // Truncate filtered text to 800 characters for performance
-      textToGenerate = filteredCustomText.length > 800 
-        ? filteredCustomText.substring(0, 800) + '...'
-        : filteredCustomText
+      // Truncate to 800 characters for performance
+      textToGenerate = filteredText.length > 800 
+        ? filteredText.substring(0, 800) + '...'
+        : filteredText
     } else {
-      // Otherwise, fetch script content from storage
+      // Fetch script content from storage
       const { data: project, error: projectError } = await supabase
         .from('user_projects')
         .select('script_url')
@@ -138,12 +110,8 @@ serve(async (req) => {
         .eq('user_id', userId)
         .single()
 
-      if (projectError || !project) {
-        throw new Error('Project not found or access denied')
-      }
-
-      if (!project.script_url) {
-        throw new Error('No script uploaded for this project')
+      if (projectError || !project?.script_url) {
+        throw new Error('Project not found or no script uploaded')
       }
 
       const { data: scriptData, error: scriptError } = await supabase.storage
@@ -155,17 +123,17 @@ serve(async (req) => {
       }
 
       const scriptContent = await scriptData.text()
-      
-      // Parse and filter the script to remove unwanted elements
       const filteredContent = filterScriptForAudio(scriptContent)
       
-      // Use first 800 characters for efficient audio generation
       textToGenerate = filteredContent.length > 800 
         ? filteredContent.substring(0, 800) + '...'
         : filteredContent
     }
 
-    console.log('Generating audio for:', { voiceStyle, mood, textLength: textToGenerate.length, usingCustomText: !!customText })
+    // Validate we have text to generate
+    if (!textToGenerate || textToGenerate.trim().length === 0) {
+      throw new Error('No valid content found to generate audio')
+    }
 
     // Get ElevenLabs API key
     const elevenLabsApiKey = Deno.env.get('ELEVENLABS_API_KEY')
@@ -176,7 +144,7 @@ serve(async (req) => {
     // Map voice style to ElevenLabs voice ID
     const voiceId = voiceMap[voiceStyle] || 'EXAVITQu4vr4xnSDxMaL' // Default to Sarah
 
-    // Create prompt that incorporates mood
+    // Apply mood styling
     let styledText = textToGenerate
     if (mood) {
       const moodInstructions = {
@@ -195,8 +163,6 @@ serve(async (req) => {
         styledText = `${instruction} ${textToGenerate}`
       }
     }
-
-    console.log('Using voice ID:', voiceId)
 
     // Generate audio with ElevenLabs
     const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
@@ -218,13 +184,11 @@ serve(async (req) => {
 
     if (!response.ok) {
       const errorText = await response.text()
-      console.error('ElevenLabs API error:', errorText)
-      throw new Error(`ElevenLabs API error: ${response.status}`)
+      throw new Error(`ElevenLabs API error: ${response.status} - ${errorText}`)
     }
 
     // Get audio buffer
     const audioBuffer = await response.arrayBuffer()
-    console.log('Audio generated, size:', audioBuffer.byteLength)
 
     // Upload to Supabase Storage
     const fileName = `${userId}/${projectId}-audio.mp3`
@@ -237,7 +201,6 @@ serve(async (req) => {
       })
 
     if (uploadError) {
-      console.error('Upload error:', uploadError)
       throw new Error(`Upload failed: ${uploadError.message}`)
     }
 
@@ -245,8 +208,6 @@ serve(async (req) => {
     const { data: urlData } = supabase.storage
       .from('user-files')
       .getPublicUrl(fileName)
-
-    console.log('Audio uploaded successfully:', urlData.publicUrl)
 
     return new Response(
       JSON.stringify({ 
@@ -260,7 +221,10 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in generate-audio function:', error)
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        success: false 
+      }),
       {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
