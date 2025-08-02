@@ -49,7 +49,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, []);
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    try {
+      // Clear local state first
+      setUser(null);
+      setSession(null);
+      
+      // Then call Supabase signOut - this will handle invalid sessions gracefully
+      const { error } = await supabase.auth.signOut();
+      
+      // Even if there's an error (like session_not_found), we've already cleared the local state
+      // so the user will appear signed out in the UI
+      if (error && error.message !== 'Session not found') {
+        console.warn('Sign out warning:', error.message);
+      }
+    } catch (error) {
+      console.error('Sign out error:', error);
+      // Even if there's an error, clear the local state
+      setUser(null);
+      setSession(null);
+    }
   };
 
   const value = {
