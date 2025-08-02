@@ -433,6 +433,7 @@ export default function MultiVoicePanel({
   };
 
   const generateMultiVoiceAudio = async () => {
+    alert('🔥 STARTING MULTI-VOICE GENERATION - CHECK CONSOLE!');
     if (!apiKey.trim()) {
       toast({
         title: "API Key required",
