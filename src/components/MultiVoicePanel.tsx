@@ -432,8 +432,8 @@ export default function MultiVoicePanel({
     }
   };
 
-  const generateMultiVoiceAudio = async () => {
-    alert('🔥 STARTING MULTI-VOICE GENERATION - CHECK CONSOLE!');
+  const generateMultiVoiceAudio = async (forceRegenerate = false) => {
+    console.log('🔥 GENERATING MULTI-VOICE AUDIO - Force regenerate:', forceRegenerate);
     if (!apiKey.trim()) {
       toast({
         title: "API Key required",
