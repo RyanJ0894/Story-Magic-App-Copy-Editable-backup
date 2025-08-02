@@ -140,6 +140,8 @@ export class MultiVoiceGenerator {
     characterVoices: Character[]
   ): Promise<{ audioUrl: string; segments: AudioSegment[] }> {
     console.log('🚨 USING LOCAL MultiVoiceGenerator (NOT Edge Function)');
+    console.error('🚨 USING LOCAL MultiVoiceGenerator (NOT Edge Function)');  // Force error log
+    alert('🚨 USING LOCAL MultiVoiceGenerator - Check console for filtering logs!');  // Force visible alert
     console.log('📋 Parsed script scenes:', parsedScript.scenes.length);
     console.log('👥 Character voices:', characterVoices.map(cv => `${cv.name}: ${cv.voiceId}`));
     const segments: AudioSegment[] = [];
