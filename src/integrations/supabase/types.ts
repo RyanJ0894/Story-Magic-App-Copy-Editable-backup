@@ -14,6 +14,82 @@ export type Database = {
   }
   public: {
     Tables: {
+      multi_voice_data: {
+        Row: {
+          audio_url: string | null
+          character_voices: Json | null
+          created_at: string | null
+          id: string
+          project_id: string
+          script_text: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          audio_url?: string | null
+          character_voices?: Json | null
+          created_at?: string | null
+          id?: string
+          project_id: string
+          script_text?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          audio_url?: string | null
+          character_voices?: Json | null
+          created_at?: string | null
+          id?: string
+          project_id?: string
+          script_text?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "multi_voice_data_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "user_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_scripts: {
+        Row: {
+          created_at: string | null
+          id: string
+          project_id: string
+          script_text: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          project_id: string
+          script_text?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          project_id?: string
+          script_text?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_scripts_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "user_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_projects: {
         Row: {
           audio_url: string | null
