@@ -77,6 +77,8 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders })
   }
 
+  console.log('🎵 Generate Audio function called - redeployed with updated filtering')
+
   try {
     const { voiceStyle, mood, userId, projectId, customText } = await req.json()
 
