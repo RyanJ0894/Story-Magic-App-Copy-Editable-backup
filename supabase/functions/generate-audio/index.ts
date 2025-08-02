@@ -21,54 +21,76 @@ const voiceMap: Record<string, string> = {
 
 // Function to filter script content for cleaner audio generation
 function filterScriptForAudio(scriptText: string): string {
+  console.log('Starting filterScriptForAudio with text length:', scriptText.length)
+  
   const lines = scriptText.split('\n').map(line => line.trim()).filter(line => line.length > 0);
   const filteredLines: string[] = [];
   
-  // Patterns to exclude
-  const pageNumberPattern = /^\d+$|^Page\s+\d+/i;
-  const stageDirectionPattern = /^\([^)]+\)|^\[[^\]]+\]|^\{[^}]+\}/;
-  const sceneNumberPattern = /^SCENE\s+\d+/i;
-  const characterNamePattern = /^[A-Z][A-Z\s]+$/;
+  // Enhanced patterns to exclude more script elements
+  const pageNumberPattern = /^\d+$|^Page\s+\d+|^PAGE\s+\d+/i;
+  const stageDirectionPattern = /^\([^)]+\)|^\[[^\]]+\]|^\{[^}]+\}|^CONT'D$|^CONTINUED$/i;
+  const sceneNumberPattern = /^SCENE\s+\d+|^ACT\s+\d+/i;
+  const characterNamePattern = /^[A-Z][A-Z\s\-'\.]+$|^[A-Z][A-Z\s]+:$/;
+  const transitionPattern = /^(FADE IN|FADE OUT|CUT TO|DISSOLVE TO|INT\.|EXT\.|INT\/EXT\.)/i;
   
   let skipNext = false;
   
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     
+    console.log(`Processing line ${i}: "${line}"`)
+    
     // Skip if we flagged this line to skip
     if (skipNext) {
       skipNext = false;
+      console.log('  -> Skipped (flagged)')
       continue;
     }
     
     // Skip page numbers
     if (pageNumberPattern.test(line)) {
+      console.log('  -> Skipped (page number)')
       continue;
     }
     
     // Skip stage directions
     if (stageDirectionPattern.test(line)) {
+      console.log('  -> Skipped (stage direction)')
       continue;
     }
     
-    // Skip scene numbers but keep location descriptions
+    // Skip scene numbers and transitions
     if (sceneNumberPattern.test(line)) {
+      console.log('  -> Skipped (scene number)')
+      continue;
+    }
+    
+    // Skip transitions and scene headings
+    if (transitionPattern.test(line)) {
+      console.log('  -> Skipped (transition)')
       continue;
     }
     
     // For character names, skip the name but include the following dialogue
     if (characterNamePattern.test(line) && !stageDirectionPattern.test(line)) {
-      // Skip the character name line itself
+      console.log('  -> Skipped (character name)')
       continue;
     }
     
     // Include everything else (dialogue, scene descriptions, action lines)
     if (line.length > 2) {
+      console.log('  -> Included')
       filteredLines.push(line);
+    } else {
+      console.log('  -> Skipped (too short)')
     }
   }
   
-  return filteredLines.join(' ').replace(/\s+/g, ' ').trim();
+  const result = filteredLines.join(' ').replace(/\s+/g, ' ').trim();
+  console.log('Filter result length:', result.length)
+  console.log('Filter result preview:', result.substring(0, 200))
+  
+  return result;
 }
 
 serve(async (req) => {
@@ -94,8 +116,14 @@ serve(async (req) => {
 
     // Use dynamic text from script or custom text
     if (customText) {
+      console.log('Original custom text length:', customText.length)
+      console.log('Original custom text preview:', customText.substring(0, 200))
+      
       // Apply filtering to custom text as well
       const filteredCustomText = filterScriptForAudio(customText)
+      
+      console.log('Filtered text length:', filteredCustomText.length)
+      console.log('Filtered text preview:', filteredCustomText.substring(0, 200))
       
       // Truncate filtered text to 800 characters for performance
       textToGenerate = filteredCustomText.length > 800 
