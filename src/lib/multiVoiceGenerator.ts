@@ -139,6 +139,9 @@ export class MultiVoiceGenerator {
     parsedScript: ParsedScript,
     characterVoices: Character[]
   ): Promise<{ audioUrl: string; segments: AudioSegment[] }> {
+    console.log('🚨 USING LOCAL MultiVoiceGenerator (NOT Edge Function)');
+    console.log('📋 Parsed script scenes:', parsedScript.scenes.length);
+    console.log('👥 Character voices:', characterVoices.map(cv => `${cv.name}: ${cv.voiceId}`));
     const segments: AudioSegment[] = [];
     let currentTime = 0;
     let totalLines = 0;
@@ -217,18 +220,38 @@ export class MultiVoiceGenerator {
   }
 
   private async generateSingleVoiceAudio(text: string, voiceId: string): Promise<Blob> {
+    console.log('🎵 MultiVoiceGenerator.generateSingleVoiceAudio called');
+    console.log('📝 Original text:', text);
+    console.log('🎤 Voice ID:', voiceId);
+    
     // Apply script filtering to clean up the text
     const filteredText = filterScriptForAudio(text);
+    console.log('✨ Filtered text:', filteredText);
+    console.log('📊 Text comparison:');
+    console.log('  - Original length:', text.length);
+    console.log('  - Filtered length:', filteredText.length);
+    console.log('  - Text changed:', text !== filteredText);
     
     // If filtered text is empty, skip generation
     if (!filteredText || filteredText.trim().length === 0) {
-      console.log('Skipping empty text after filtering:', text);
+      console.log('⏭️  Skipping empty text after filtering:', text);
       // Return a very short silent audio blob
       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
       const buffer = audioContext.createBuffer(1, audioContext.sampleRate * 0.1, audioContext.sampleRate); // 0.1 second silence
       const wavBlob = audioBufferToWavBlob(buffer);
       return wavBlob;
     }
+
+    const payload = {
+      text: filteredText, // Use filtered text instead of original
+      model_id: "eleven_monolingual_v1",
+      voice_settings: {
+        stability: 0.5,
+        similarity_boost: 0.5,
+      },
+    };
+    
+    console.log('🚀 Sending to ElevenLabs API:', payload);
 
     const response = await fetch(
       `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`,
@@ -239,21 +262,17 @@ export class MultiVoiceGenerator {
           "Content-Type": "application/json",
           Accept: "audio/mpeg",
         },
-        body: JSON.stringify({
-          text: filteredText, // Use filtered text instead of original
-          model_id: "eleven_monolingual_v1",
-          voice_settings: {
-            stability: 0.5,
-            similarity_boost: 0.5,
-          },
-        }),
+        body: JSON.stringify(payload),
       }
     );
 
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error('❌ ElevenLabs API error:', response.status, errorText);
       throw new Error(`Failed to generate audio: ${response.statusText}`);
     }
 
+    console.log('✅ Audio generated successfully');
     return await response.blob();
   }
 
