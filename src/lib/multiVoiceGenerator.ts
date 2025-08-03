@@ -17,39 +17,72 @@ export interface GenerationProgress {
   text: string;
 }
 
-// Function to clean script content for better audio generation (same as edge function)
+// Function to clean script content for better audio generation (improved filtering)
 function filterScriptForAudio(scriptText: string): string {
   if (!scriptText || typeof scriptText !== 'string') {
     return '';
   }
   
+  console.log('🎯 Original text length:', scriptText.length);
+  
   const lines = scriptText.split('\n').map(line => line.trim()).filter(line => line.length > 0);
   const filteredLines: string[] = [];
   
-  // Patterns to remove script formatting elements
+  // Comprehensive patterns to remove script formatting elements
   const pageNumberPattern = /^\d+$|^Page\s+\d+|^PAGE\s+\d+/i;
-  const stageDirectionPattern = /^\([^)]+\)|^\[[^\]]+\]|^\{[^}]+\}|^CONT'D$|^CONTINUED$|^MORE$/i;
+  const stageDirectionPattern = /^\([^)]+\)|^\[[^\]]+\]|^\{[^}]+\}|^CONT'D$|^CONTINUED$|^MORE$|^Sounds of|^Sound of/i;
   const sceneNumberPattern = /^SCENE\s+\d+|^ACT\s+\d+|^CHAPTER\s+\d+/i;
-  const characterNamePattern = /^[A-Z][A-Z\s\-'\.]{2,}$|^[A-Z][A-Z\s\-'\.]+:$/;
-  const transitionPattern = /^(FADE IN|FADE OUT|CUT TO|DISSOLVE TO|INT\.|EXT\.|INT\/EXT\.|INTERIOR|EXTERIOR)/i;
-  const sceneHeadingPattern = /^(INT\.|EXT\.|INTERIOR|EXTERIOR)\s+.+\s+[-–—]\s+(DAY|NIGHT|MORNING|EVENING|DAWN|DUSK|LATER|CONTINUOUS)/i;
+  
+  // More aggressive character name detection
+  const characterNamePattern = /^[A-Z][A-Z\s\-'\.]{1,}(\s*\(.*\))?$|^[A-Z][A-Z\s\-'\.]+:$|^ANSWERS$|^STACY$|^LUCKY$|^Ryan\s+Jae$/;
+  
+  // More comprehensive transition and scene patterns
+  const transitionPattern = /^(FADE IN|FADE OUT|CUT TO|DISSOLVE TO|INT\.|EXT\.|INT\/EXT\.|INTERIOR|EXTERIOR|CLOSE ON|REVEAL|POV|STOPPING|WHIMSICAL|SLOW MOTION)/i;
+  const sceneHeadingPattern = /^(INT\.|EXT\.|INTERIOR|EXTERIOR|I\.E\.|O\.S\.|CONT)\s+.*/i;
+  
+  // Location/setting descriptions (all caps, multi-word) - removed unused pattern
   
   for (const line of lines) {
     // Skip empty lines
     if (!line.trim()) continue;
     
+    console.log('🔍 Checking line:', line);
+    
     // Skip script formatting elements
-    if (pageNumberPattern.test(line) || 
-        stageDirectionPattern.test(line) || 
-        sceneNumberPattern.test(line) || 
-        characterNamePattern.test(line) || 
-        transitionPattern.test(line) || 
-        sceneHeadingPattern.test(line)) {
+    if (pageNumberPattern.test(line)) {
+      console.log('🚫 Filtered page number:', line);
+      continue;
+    }
+    if (stageDirectionPattern.test(line)) {
+      console.log('🚫 Filtered stage direction:', line);
+      continue;
+    }
+    if (sceneNumberPattern.test(line)) {
+      console.log('🚫 Filtered scene number:', line);
+      continue;
+    }
+    if (characterNamePattern.test(line)) {
+      console.log('🚫 Filtered character name:', line);
+      continue;
+    }
+    if (transitionPattern.test(line)) {
+      console.log('🚫 Filtered transition:', line);
+      continue;
+    }
+    if (sceneHeadingPattern.test(line)) {
+      console.log('🚫 Filtered scene heading:', line);
       continue;
     }
     
-    // Keep dialogue and narration
-    if (line.length > 2) {
+    // Skip location descriptions (all caps, multiple words)
+    if (/^[A-Z\s\-\(\)\.]+$/.test(line) && line.split(' ').length > 2 && line.length > 15) {
+      console.log('🚫 Filtered location description:', line);
+      continue;
+    }
+    
+    // Keep dialogue and narration (mixed case or longer meaningful text)
+    if (line.length > 5 && (!/^[A-Z\s\-\(\)\.]+$/.test(line) || line.split(' ').length <= 2)) {
+      console.log('✅ Keeping dialogue:', line);
       filteredLines.push(line);
     }
   }
@@ -59,12 +92,15 @@ function filterScriptForAudio(scriptText: string): string {
   
   // Additional cleanup
   result = result
-    .replace(/\b(CONT'D|CONTINUED|MORE)\b/gi, '')
+    .replace(/\b(CONT'D|CONTINUED|MORE|O\.S\.|CONT)\b/gi, '')
     .replace(/\([^)]*\)/g, '') // Remove parentheticals
     .replace(/\[[^\]]*\]/g, '') // Remove brackets
     .replace(/\{[^}]*\}/g, '') // Remove braces
     .replace(/\s+/g, ' ')
     .trim();
+  
+  console.log('✨ Filtered text length:', result.length);
+  console.log('✨ Final result preview:', result.substring(0, 200) + '...');
   
   return result;
 }
