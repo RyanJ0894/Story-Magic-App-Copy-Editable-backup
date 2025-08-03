@@ -283,9 +283,23 @@ export default function MultiVoicePanel({
       try {
         const parsed = ScriptParser.parseScript(scriptText);
         setParsedScript(parsed);
-        if (parsed.characters.length > 0) {
+        
+        // Only assign default voices if we don't have any saved character voices
+        if (parsed.characters.length > 0 && characterVoices.length === 0) {
+          console.log('🎭 Assigning default voices to new characters');
           const defaultVoices = ScriptParser.assignDefaultVoices(parsed.characters);
           setCharacterVoices(defaultVoices);
+        } else if (parsed.characters.length > 0 && characterVoices.length > 0) {
+          console.log('🎭 Preserving existing character voice assignments');
+          // Update character voices to include any new characters not yet assigned
+          const existingCharacterNames = characterVoices.map(cv => cv.name);
+          const newCharacters = parsed.characters.filter(char => !existingCharacterNames.includes(char));
+          
+          if (newCharacters.length > 0) {
+            console.log('🎭 Adding voices for new characters:', newCharacters);
+            const newVoices = ScriptParser.assignDefaultVoices(newCharacters);
+            setCharacterVoices(prev => [...prev, ...newVoices]);
+          }
         }
       } catch (error) {
         console.error("Error parsing script:", error);
