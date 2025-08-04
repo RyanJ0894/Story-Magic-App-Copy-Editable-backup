@@ -108,11 +108,8 @@ serve(async (req) => {
       throw new Error('Project not found')
     }
 
-    console.log('📊 Project data:', { 
-      hasScriptUrl: !!project.script_url, 
-      hasAiDirectorJson: !!project.ai_director_json,
-      aiDirectorJsonLength: project.ai_director_json?.length || 0
-    })
+    // Log ai_director_json at the top
+    console.log('ai_director_json:', project.ai_director_json)
 
     let voiceSegments: Array<{type: string, text: string, voice: string}> = []
 
@@ -130,63 +127,58 @@ serve(async (req) => {
         voice: voiceStyle || 'Narrator Deep'
       }]
     }
-    // Priority 2: Use AI Director JSON if available
-    else if (project.ai_director_json) {
-      console.log('🎬 Using AI Director JSON')
-      try {
-        const directorData = JSON.parse(project.ai_director_json)
-        console.log('📋 Parsed director data:', directorData)
-        
-        // Handle both array format and object with lines property
-        let linesArray = Array.isArray(directorData) ? directorData : directorData?.lines
-        
-        if (Array.isArray(linesArray) && linesArray.length > 0) {
-          voiceSegments = linesArray.map((segment: any) => ({
-            type: segment.type || 'narration',
-            text: segment.text || '',
-            voice: segment.voice || voiceStyle || 'Narrator Deep'
-          })).filter((segment: any) => segment.text.trim().length > 0)
-          
-          console.log(`✅ Successfully created ${voiceSegments.length} voice segments from AI Director JSON`)
-          console.log('🎯 Voice segments:', voiceSegments.map(s => ({ type: s.type, voice: s.voice, textLength: s.text.length })))
-        } else {
-          console.log('❌ AI Director JSON does not contain valid lines array')
+    // Priority 2: Check AI Director JSON with exact conditional as requested
+    else {
+      let ai_director_json = null
+      if (project.ai_director_json) {
+        try {
+          ai_director_json = JSON.parse(project.ai_director_json)
+        } catch (parseError) {
+          console.error('❌ Failed to parse AI Director JSON:', parseError)
         }
-      } catch (parseError) {
-        console.error('❌ Failed to parse AI Director JSON:', parseError)
-        // Fall through to script content
-      }
-    }
-    
-    // Priority 3: Fall back to script content ONLY if no AI Director JSON was available
-    if (voiceSegments.length === 0) {
-      console.log('🔄 Falling back to script content - no AI Director JSON or custom text provided')
-      
-      if (!project.script_url) {
-        throw new Error('No script content available')
       }
 
-      const { data: scriptData, error: scriptError } = await supabase.storage
-        .from('user-files')
-        .download(project.script_url.split('/').pop()!)
+      if (ai_director_json && ai_director_json.lines && ai_director_json.lines.length > 0) {
+        // Process each line using ai_director_json
+        console.log("✅ Using AI DIRECTOR JSON")
+        
+        voiceSegments = ai_director_json.lines.map((segment: any) => ({
+          type: segment.type || 'narration',
+          text: segment.text || '',
+          voice: segment.voice || voiceStyle || 'Narrator Deep'
+        })).filter((segment: any) => segment.text.trim().length > 0)
+        
+        console.log(`Created ${voiceSegments.length} voice segments from AI Director JSON`)
+      } else {
+        // Fallback to raw script parsing
+        console.log("❌ Fallback to scriptContent")
+        
+        if (!project.script_url) {
+          throw new Error('No script content available')
+        }
 
-      if (scriptError || !scriptData) {
-        throw new Error('Failed to fetch script content')
+        const { data: scriptData, error: scriptError } = await supabase.storage
+          .from('user-files')
+          .download(project.script_url.split('/').pop()!)
+
+        if (scriptError || !scriptData) {
+          throw new Error('Failed to fetch script content')
+        }
+
+        const scriptContent = await scriptData.text()
+        const filteredContent = filterScriptForAudio(scriptContent)
+        const truncatedContent = filteredContent.length > 800 
+          ? filteredContent.substring(0, 800) + '...'
+          : filteredContent
+
+        voiceSegments = [{
+          type: 'narration',
+          text: truncatedContent,
+          voice: voiceStyle || 'Narrator Deep'
+        }]
+        
+        console.log('📄 Using script content fallback')
       }
-
-      const scriptContent = await scriptData.text()
-      const filteredContent = filterScriptForAudio(scriptContent)
-      const truncatedContent = filteredContent.length > 800 
-        ? filteredContent.substring(0, 800) + '...'
-        : filteredContent
-
-      voiceSegments = [{
-        type: 'narration',
-        text: truncatedContent,
-        voice: voiceStyle || 'Narrator Deep'
-      }]
-      
-      console.log('📄 Using script content fallback')
     }
 
     // Validate we have segments to generate
