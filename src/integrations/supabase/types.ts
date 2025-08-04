@@ -92,6 +92,7 @@ export type Database = {
       }
       user_projects: {
         Row: {
+          ai_director_json: string | null
           audio_url: string | null
           created_at: string
           generation_count: number
@@ -104,6 +105,7 @@ export type Database = {
           voice_style: string | null
         }
         Insert: {
+          ai_director_json?: string | null
           audio_url?: string | null
           created_at?: string
           generation_count?: number
@@ -116,6 +118,7 @@ export type Database = {
           voice_style?: string | null
         }
         Update: {
+          ai_director_json?: string | null
           audio_url?: string | null
           created_at?: string
           generation_count?: number

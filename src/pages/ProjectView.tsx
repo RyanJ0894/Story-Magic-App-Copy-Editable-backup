@@ -4,6 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { Header } from "@/components/Header";
 import {
   ArrowLeft,
@@ -40,6 +42,7 @@ interface Project {
   voice_style: string | null;
   mood: string | null;
   generation_count: number | null;
+  ai_director_json: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -72,6 +75,8 @@ export default function ProjectView() {
   const [showApiData, setShowApiData] = useState(false);
   const [savingScript, setSavingScript] = useState(false);
   const [scriptText, setScriptText] = useState<string>("");
+  const [aiDirectorJson, setAiDirectorJson] = useState<string>("");
+  const [savingDirectorJson, setSavingDirectorJson] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -82,6 +87,12 @@ export default function ProjectView() {
       loadMultiVoiceAudio();
     }
   }, [projectId, user]);
+
+  useEffect(() => {
+    if (project?.ai_director_json) {
+      setAiDirectorJson(project.ai_director_json);
+    }
+  }, [project?.ai_director_json]);
 
   useEffect(() => {
     if (project?.script_url) {
@@ -846,6 +857,42 @@ export default function ProjectView() {
     });
   };
 
+  const updateAiDirectorJson = async (jsonContent: string) => {
+    if (!project) return;
+
+    setSavingDirectorJson(true);
+    try {
+      const { error } = await supabase
+        .from("user_projects")
+        .update({ ai_director_json: jsonContent })
+        .eq("id", project.id);
+
+      if (error) {
+        toast({
+          title: "Save failed",
+          description: error.message,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setProject({ ...project, ai_director_json: jsonContent });
+      toast({
+        title: "AI Director JSON saved",
+        description: "Your structured JSON has been saved successfully.",
+      });
+    } catch (error) {
+      console.error("Error saving AI Director JSON:", error);
+      toast({
+        title: "Save failed",
+        description: "Failed to save AI Director JSON",
+        variant: "destructive",
+      });
+    } finally {
+      setSavingDirectorJson(false);
+    }
+  };
+
   const generateAudio = async () => {
     if (!project || !user) return;
 
@@ -1162,6 +1209,67 @@ export default function ProjectView() {
                   </div>
                 </div>
               )}
+            </CardContent>
+          </Card>
+
+          {/* AI Director JSON Input */}
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Sparkles className="h-5 w-5" />
+                AI Director JSON
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Label htmlFor="ai-director-json" className="text-sm font-medium">
+                Paste your structured JSON from AI Film Director:
+              </Label>
+              <Textarea
+                id="ai-director-json"
+                placeholder="Paste your AI Director JSON here..."
+                value={aiDirectorJson}
+                onChange={(e) => setAiDirectorJson(e.target.value)}
+                className="min-h-[200px] font-mono text-sm"
+              />
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => updateAiDirectorJson(aiDirectorJson)}
+                  disabled={savingDirectorJson || !aiDirectorJson.trim()}
+                  className="gap-2"
+                >
+                  {savingDirectorJson ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    "Save JSON"
+                  )}
+                </Button>
+                {aiDirectorJson && (
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      try {
+                        const parsed = JSON.parse(aiDirectorJson);
+                        navigator.clipboard.writeText(JSON.stringify(parsed, null, 2));
+                        toast({
+                          title: "Formatted JSON copied",
+                          description: "Pretty-formatted JSON has been copied to clipboard.",
+                        });
+                      } catch (error) {
+                        toast({
+                          title: "Invalid JSON",
+                          description: "Please check your JSON syntax.",
+                          variant: "destructive",
+                        });
+                      }
+                    }}
+                  >
+                    Format & Copy
+                  </Button>
+                )}
+              </div>
             </CardContent>
           </Card>
 
