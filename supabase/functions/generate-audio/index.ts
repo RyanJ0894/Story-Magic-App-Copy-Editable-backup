@@ -94,26 +94,54 @@ serve(async (req) => {
 
     let textToGenerate: string
 
-    // Use custom text if provided, otherwise fetch from storage
+    // Fetch project data including ai_director_json
+    const { data: project, error: projectError } = await supabase
+      .from('user_projects')
+      .select('script_url, ai_director_json')
+      .eq('id', projectId)
+      .eq('user_id', userId)
+      .single()
+
+    if (projectError || !project) {
+      throw new Error('Project not found')
+    }
+
+    let voiceSegments: Array<{type: string, text: string, voice: string}> = []
+
+    // Priority 1: Use custom text if provided
     if (customText) {
-      // Filter the custom text to remove script formatting
       const filteredText = filterScriptForAudio(customText)
-      
-      // Truncate to 800 characters for performance
-      textToGenerate = filteredText.length > 800 
+      const truncatedText = filteredText.length > 800 
         ? filteredText.substring(0, 800) + '...'
         : filteredText
-    } else {
-      // Fetch script content from storage
-      const { data: project, error: projectError } = await supabase
-        .from('user_projects')
-        .select('script_url')
-        .eq('id', projectId)
-        .eq('user_id', userId)
-        .single()
-
-      if (projectError || !project?.script_url) {
-        throw new Error('Project not found or no script uploaded')
+      
+      voiceSegments = [{
+        type: 'narration',
+        text: truncatedText,
+        voice: voiceStyle || 'Narrator Deep'
+      }]
+    }
+    // Priority 2: Use AI Director JSON if available
+    else if (project.ai_director_json) {
+      try {
+        const directorData = JSON.parse(project.ai_director_json)
+        if (Array.isArray(directorData)) {
+          voiceSegments = directorData.map((segment: any) => ({
+            type: segment.type || 'narration',
+            text: segment.text || '',
+            voice: segment.voice || voiceStyle || 'Narrator Deep'
+          })).filter((segment: any) => segment.text.trim().length > 0)
+        }
+      } catch (parseError) {
+        console.error('Failed to parse AI Director JSON:', parseError)
+        // Fall through to script content
+      }
+    }
+    
+    // Priority 3: Fall back to script content
+    if (voiceSegments.length === 0) {
+      if (!project.script_url) {
+        throw new Error('No script content available')
       }
 
       const { data: scriptData, error: scriptError } = await supabase.storage
@@ -126,14 +154,19 @@ serve(async (req) => {
 
       const scriptContent = await scriptData.text()
       const filteredContent = filterScriptForAudio(scriptContent)
-      
-      textToGenerate = filteredContent.length > 800 
+      const truncatedContent = filteredContent.length > 800 
         ? filteredContent.substring(0, 800) + '...'
         : filteredContent
+
+      voiceSegments = [{
+        type: 'narration',
+        text: truncatedContent,
+        voice: voiceStyle || 'Narrator Deep'
+      }]
     }
 
-    // Validate we have text to generate
-    if (!textToGenerate || textToGenerate.trim().length === 0) {
+    // Validate we have segments to generate
+    if (voiceSegments.length === 0) {
       throw new Error('No valid content found to generate audio')
     }
 
@@ -143,12 +176,15 @@ serve(async (req) => {
       throw new Error('ElevenLabs API key not configured')
     }
 
-    // Map voice style to ElevenLabs voice ID
-    const voiceId = voiceMap[voiceStyle] || 'EXAVITQu4vr4xnSDxMaL' // Default to Sarah
+    // Function to get voice ID from voice name or ID
+    const getVoiceId = (voice: string): string => {
+      return voiceMap[voice] || voice || 'EXAVITQu4vr4xnSDxMaL' // Default to Sarah
+    }
 
-    // Apply mood styling
-    let styledText = textToGenerate
-    if (mood) {
+    // Function to apply mood styling to text
+    const applyMoodStyling = (text: string, currentMood?: string): string => {
+      if (!currentMood && !mood) return text
+      
       const moodInstructions = {
         'Tense': 'Speak with tension and urgency in your voice.',
         'Inspiring': 'Speak with inspiration and motivation.',
@@ -160,43 +196,64 @@ serve(async (req) => {
         'Epic': 'Speak with grandeur and epicness.'
       }
       
-      const instruction = moodInstructions[mood as keyof typeof moodInstructions]
-      if (instruction) {
-        styledText = `${instruction} ${textToGenerate}`
-      }
+      const activeMood = currentMood || mood
+      const instruction = moodInstructions[activeMood as keyof typeof moodInstructions]
+      return instruction ? `${instruction} ${text}` : text
     }
 
-    // Generate audio with ElevenLabs
-    const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
-      method: 'POST',
-      headers: {
-        'Accept': 'audio/mpeg',
-        'Content-Type': 'application/json',
-        'xi-api-key': elevenLabsApiKey,
-      },
-      body: JSON.stringify({
-        text: styledText,
-        model_id: 'eleven_multilingual_v2',
-        voice_settings: {
-          stability: 0.5,
-          similarity_boost: 0.5,
+    // Generate audio for each segment
+    const audioBuffers: ArrayBuffer[] = []
+    
+    console.log(`Generating audio for ${voiceSegments.length} segments`)
+    
+    for (let i = 0; i < voiceSegments.length; i++) {
+      const segment = voiceSegments[i]
+      const voiceId = getVoiceId(segment.voice)
+      const styledText = applyMoodStyling(segment.text)
+      
+      console.log(`Segment ${i + 1}: ${segment.type} with voice ${segment.voice} (${voiceId})`)
+      
+      const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+        method: 'POST',
+        headers: {
+          'Accept': 'audio/mpeg',
+          'Content-Type': 'application/json',
+          'xi-api-key': elevenLabsApiKey,
         },
-      }),
-    })
+        body: JSON.stringify({
+          text: styledText,
+          model_id: 'eleven_multilingual_v2',
+          voice_settings: {
+            stability: 0.5,
+            similarity_boost: 0.5,
+          },
+        }),
+      })
 
-    if (!response.ok) {
-      const errorText = await response.text()
-      throw new Error(`ElevenLabs API error: ${response.status} - ${errorText}`)
+      if (!response.ok) {
+        const errorText = await response.text()
+        throw new Error(`ElevenLabs API error for segment ${i + 1}: ${response.status} - ${errorText}`)
+      }
+
+      const audioBuffer = await response.arrayBuffer()
+      audioBuffers.push(audioBuffer)
     }
 
-    // Get audio buffer
-    const audioBuffer = await response.arrayBuffer()
+    // Combine all audio buffers (simple concatenation for MP3)
+    const totalLength = audioBuffers.reduce((sum, buffer) => sum + buffer.byteLength, 0)
+    const combinedBuffer = new Uint8Array(totalLength)
+    let offset = 0
+    
+    for (const buffer of audioBuffers) {
+      combinedBuffer.set(new Uint8Array(buffer), offset)
+      offset += buffer.byteLength
+    }
 
     // Upload to Supabase Storage
     const fileName = `${userId}/${projectId}-audio.mp3`
     const { error: uploadError } = await supabase.storage
       .from('user-files')
-      .upload(fileName, audioBuffer, {
+      .upload(fileName, combinedBuffer, {
         cacheControl: '3600',
         upsert: true,
         contentType: 'audio/mpeg'
