@@ -81,6 +81,7 @@ serve(async (req) => {
 
   try {
     const { voiceStyle, mood, userId, projectId, customText } = await req.json()
+    console.log('📝 Request params:', { voiceStyle, mood, userId, projectId, customText: !!customText })
 
     if (!userId || !projectId) {
       throw new Error('userId and projectId are required')
@@ -103,13 +104,21 @@ serve(async (req) => {
       .single()
 
     if (projectError || !project) {
+      console.error('❌ Project fetch error:', projectError)
       throw new Error('Project not found')
     }
+
+    console.log('📊 Project data:', { 
+      hasScriptUrl: !!project.script_url, 
+      hasAiDirectorJson: !!project.ai_director_json,
+      aiDirectorJsonLength: project.ai_director_json?.length || 0
+    })
 
     let voiceSegments: Array<{type: string, text: string, voice: string}> = []
 
     // Priority 1: Use custom text if provided
     if (customText) {
+      console.log('🎯 Using custom text input')
       const filteredText = filterScriptForAudio(customText)
       const truncatedText = filteredText.length > 800 
         ? filteredText.substring(0, 800) + '...'
@@ -123,17 +132,22 @@ serve(async (req) => {
     }
     // Priority 2: Use AI Director JSON if available
     else if (project.ai_director_json) {
+      console.log('🎬 Using AI Director JSON')
       try {
         const directorData = JSON.parse(project.ai_director_json)
+        console.log('📋 Parsed director data:', { isArray: Array.isArray(directorData), length: directorData?.length })
+        
         if (Array.isArray(directorData)) {
           voiceSegments = directorData.map((segment: any) => ({
             type: segment.type || 'narration',
             text: segment.text || '',
             voice: segment.voice || voiceStyle || 'Narrator Deep'
           })).filter((segment: any) => segment.text.trim().length > 0)
+          
+          console.log(`✅ Created ${voiceSegments.length} voice segments from AI Director JSON`)
         }
       } catch (parseError) {
-        console.error('Failed to parse AI Director JSON:', parseError)
+        console.error('❌ Failed to parse AI Director JSON:', parseError)
         // Fall through to script content
       }
     }
