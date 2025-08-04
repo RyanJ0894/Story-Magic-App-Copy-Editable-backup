@@ -113,8 +113,30 @@ serve(async (req) => {
 
     let voiceSegments: Array<{type: string, text: string, voice: string}> = []
 
-    // Priority 1: Use custom text if provided
-    if (customText) {
+    // Priority 1: Check AI Director JSON first
+    let ai_director_json = null
+    if (project.ai_director_json) {
+      try {
+        ai_director_json = JSON.parse(project.ai_director_json)
+      } catch (parseError) {
+        console.error('❌ Failed to parse AI Director JSON:', parseError)
+      }
+    }
+
+    if (ai_director_json && ai_director_json.lines && ai_director_json.lines.length > 0) {
+      // Process each line using ai_director_json
+      console.log("✅ Using AI DIRECTOR JSON")
+      
+      voiceSegments = ai_director_json.lines.map((segment: any) => ({
+        type: segment.type || 'narration',
+        text: segment.text || '',
+        voice: segment.voice || voiceStyle || 'Narrator Deep'
+      })).filter((segment: any) => segment.text.trim().length > 0)
+      
+      console.log(`Created ${voiceSegments.length} voice segments from AI Director JSON`)
+    }
+    // Priority 2: Use custom text if provided and no AI Director JSON
+    else if (customText) {
       console.log('🎯 Using custom text input')
       const filteredText = filterScriptForAudio(customText)
       const truncatedText = filteredText.length > 800 
@@ -127,31 +149,9 @@ serve(async (req) => {
         voice: voiceStyle || 'Narrator Deep'
       }]
     }
-    // Priority 2: Check AI Director JSON with exact conditional as requested
+    // Priority 3: Fallback to raw script parsing
     else {
-      let ai_director_json = null
-      if (project.ai_director_json) {
-        try {
-          ai_director_json = JSON.parse(project.ai_director_json)
-        } catch (parseError) {
-          console.error('❌ Failed to parse AI Director JSON:', parseError)
-        }
-      }
-
-      if (ai_director_json && ai_director_json.lines && ai_director_json.lines.length > 0) {
-        // Process each line using ai_director_json
-        console.log("✅ Using AI DIRECTOR JSON")
-        
-        voiceSegments = ai_director_json.lines.map((segment: any) => ({
-          type: segment.type || 'narration',
-          text: segment.text || '',
-          voice: segment.voice || voiceStyle || 'Narrator Deep'
-        })).filter((segment: any) => segment.text.trim().length > 0)
-        
-        console.log(`Created ${voiceSegments.length} voice segments from AI Director JSON`)
-      } else {
-        // Fallback to raw script parsing
-        console.log("❌ Fallback to scriptContent")
+      console.log("❌ Fallback to scriptContent")
         
         if (!project.script_url) {
           throw new Error('No script content available')
