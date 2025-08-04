@@ -135,16 +135,22 @@ serve(async (req) => {
       console.log('🎬 Using AI Director JSON')
       try {
         const directorData = JSON.parse(project.ai_director_json)
-        console.log('📋 Parsed director data:', { isArray: Array.isArray(directorData), length: directorData?.length })
+        console.log('📋 Parsed director data:', directorData)
         
-        if (Array.isArray(directorData)) {
-          voiceSegments = directorData.map((segment: any) => ({
+        // Handle both array format and object with lines property
+        let linesArray = Array.isArray(directorData) ? directorData : directorData?.lines
+        
+        if (Array.isArray(linesArray) && linesArray.length > 0) {
+          voiceSegments = linesArray.map((segment: any) => ({
             type: segment.type || 'narration',
             text: segment.text || '',
             voice: segment.voice || voiceStyle || 'Narrator Deep'
           })).filter((segment: any) => segment.text.trim().length > 0)
           
-          console.log(`✅ Created ${voiceSegments.length} voice segments from AI Director JSON`)
+          console.log(`✅ Successfully created ${voiceSegments.length} voice segments from AI Director JSON`)
+          console.log('🎯 Voice segments:', voiceSegments.map(s => ({ type: s.type, voice: s.voice, textLength: s.text.length })))
+        } else {
+          console.log('❌ AI Director JSON does not contain valid lines array')
         }
       } catch (parseError) {
         console.error('❌ Failed to parse AI Director JSON:', parseError)
@@ -152,8 +158,10 @@ serve(async (req) => {
       }
     }
     
-    // Priority 3: Fall back to script content
+    // Priority 3: Fall back to script content ONLY if no AI Director JSON was available
     if (voiceSegments.length === 0) {
+      console.log('🔄 Falling back to script content - no AI Director JSON or custom text provided')
+      
       if (!project.script_url) {
         throw new Error('No script content available')
       }
@@ -177,6 +185,8 @@ serve(async (req) => {
         text: truncatedContent,
         voice: voiceStyle || 'Narrator Deep'
       }]
+      
+      console.log('📄 Using script content fallback')
     }
 
     // Validate we have segments to generate
