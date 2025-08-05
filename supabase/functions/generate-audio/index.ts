@@ -178,7 +178,6 @@ serve(async (req) => {
         }]
         
         console.log('📄 Using script content fallback')
-      }
     }
 
     // Validate we have segments to generate
