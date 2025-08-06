@@ -1,16 +1,20 @@
 import { Button } from "@/components/ui/button";
-import { Film, Menu } from "lucide-react";
+import { Film, Menu, LogOut } from "lucide-react";
+import { Link } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 
 export const Header = () => {
+  const { user, signOut } = useAuth();
+
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-lg">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        <div className="flex items-center gap-2">
+        <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
           <Film className="h-8 w-8 text-cinema-gold" />
           <h1 className="text-xl font-bold bg-gradient-accent bg-clip-text text-transparent">
             Story Magic
           </h1>
-        </div>
+        </Link>
         
         <nav className="hidden md:flex items-center gap-6">
           <a href="#features" className="text-muted-foreground hover:text-foreground transition-colors">
@@ -25,12 +29,34 @@ export const Header = () => {
         </nav>
 
         <div className="flex items-center gap-3">
-          <Button variant="ghost" className="hidden md:flex">
-            Sign In
-          </Button>
-          <Button variant="cinema">
-            Get Started
-          </Button>
+          {user ? (
+            <>
+              <span className="hidden md:flex text-sm text-muted-foreground">
+                {user.email}
+              </span>
+              <Button 
+                variant="ghost" 
+                className="hidden md:flex"
+                onClick={signOut}
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                Sign Out
+              </Button>
+            </>
+          ) : (
+            <>
+              <Link to="/auth">
+                <Button variant="ghost" className="hidden md:flex">
+                  Sign In
+                </Button>
+              </Link>
+              <Link to="/auth">
+                <Button variant="cinema">
+                  Get Started
+                </Button>
+              </Link>
+            </>
+          )}
           <Button variant="ghost" size="icon" className="md:hidden">
             <Menu className="h-5 w-5" />
           </Button>
