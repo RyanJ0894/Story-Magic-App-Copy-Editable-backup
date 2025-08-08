@@ -35,6 +35,17 @@ useEffect(() => {
   if (mode === "login") setIsLogin(true);
   
   checkSession();
+
+  // Listen for auth changes and navigate when authenticated
+  const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    if (session) {
+      navigate("/");
+    }
+  });
+
+  return () => {
+    subscription.unsubscribe();
+  };
 }, [navigate, location.search]);
 
   const handleAuth = async (e: React.FormEvent) => {
