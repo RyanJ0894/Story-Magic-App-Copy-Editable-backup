@@ -1,11 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { Film, Menu, LogOut } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 
 export const Header = () => {
   const { user, signOut } = useAuth();
-
+  const navigate = useNavigate();
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-lg">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
@@ -37,7 +37,10 @@ export const Header = () => {
               <Button 
                 variant="ghost" 
                 className="hidden md:flex"
-                onClick={signOut}
+                onClick={async () => {
+                  await signOut();
+                  navigate("/auth?mode=login");
+                }}
               >
                 <LogOut className="h-4 w-4 mr-2" />
                 Sign Out
