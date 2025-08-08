@@ -34,6 +34,11 @@ export const Header = () => {
               <span className="hidden md:flex text-sm text-muted-foreground">
                 {user.email}
               </span>
+              <Link to="/dashboard">
+                <Button variant="ghost">
+                  Dashboard
+                </Button>
+              </Link>
               <Button 
                 variant="ghost"
                 onClick={async () => {

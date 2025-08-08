@@ -33,7 +33,7 @@ const Auth = () => {
   // If already authenticated, send to home (use provider as source of truth)
   useEffect(() => {
     if (!authLoading && user) {
-      navigate("/");
+      navigate("/dashboard");
     }
   }, [authLoading, user, navigate]);
 
@@ -53,7 +53,7 @@ const Auth = () => {
           return;
         }
         toast({ title: "Welcome back!", description: "You have successfully signed in." });
-        navigate("/");
+        navigate("/dashboard");
       } else {
         const redirectUrl = `${window.location.origin}/`;
         const { error } = await supabase.auth.signUp({
