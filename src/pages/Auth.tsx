@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,19 +16,26 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
 
-  useEffect(() => {
-    // Check if user is already logged in
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        navigate("/");
-      }
-    };
-    
-    checkSession();
-  }, [navigate]);
+useEffect(() => {
+  // Check if user is already logged in
+  const checkSession = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      navigate("/");
+    }
+  };
+
+  // Set initial mode from query param if present
+  const params = new URLSearchParams(location.search);
+  const mode = params.get("mode");
+  if (mode === "signup") setIsLogin(false);
+  if (mode === "login") setIsLogin(true);
+  
+  checkSession();
+}, [navigate, location.search]);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();

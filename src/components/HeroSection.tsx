@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Play, Upload, Mic } from "lucide-react";
 import heroImage from "@/assets/hero-cinema.jpg";
+import { Link } from "react-router-dom";
 
 export const HeroSection = () => {
   return (
@@ -33,14 +34,18 @@ export const HeroSection = () => {
         </p>
         
         <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-          <Button variant="cinema" size="lg" className="text-lg px-8 py-6">
-            <Upload className="h-5 w-5" />
-            Upload Your Script
-          </Button>
-          <Button variant="cinema-outline" size="lg" className="text-lg px-8 py-6">
-            <Play className="h-5 w-5" />
-            Try Demo Script
-          </Button>
+          <Link to="/auth?mode=login">
+            <Button variant="cinema" size="lg" className="text-lg px-8 py-6">
+              <Upload className="h-5 w-5" />
+              Upload Your Script
+            </Button>
+          </Link>
+          <Link to="/auth?mode=login">
+            <Button variant="cinema-outline" size="lg" className="text-lg px-8 py-6">
+              <Play className="h-5 w-5" />
+              Try Demo Script
+            </Button>
+          </Link>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">

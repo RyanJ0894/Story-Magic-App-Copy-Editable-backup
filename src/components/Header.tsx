@@ -45,12 +45,12 @@ export const Header = () => {
             </>
           ) : (
             <>
-              <Link to="/auth">
+              <Link to="/auth?mode=login">
                 <Button variant="ghost" className="hidden md:flex">
                   Sign In
                 </Button>
               </Link>
-              <Link to="/auth">
+              <Link to="/auth?mode=signup">
                 <Button variant="cinema">
                   Get Started
                 </Button>
