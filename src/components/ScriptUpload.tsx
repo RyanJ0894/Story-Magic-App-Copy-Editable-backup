@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Upload, FileText, Play, Sparkles } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { Link } from "react-router-dom";
 
 export const ScriptUpload = () => {
   const [isUploading, setIsUploading] = useState(false);
@@ -99,15 +100,16 @@ export const ScriptUpload = () => {
                     <div className="flex-1 h-px bg-border" />
                   </div>
 
-                  <Button 
-                    variant="cinema-outline" 
-                    onClick={handleDemoScript}
-                    className="w-full"
-                    size="lg"
-                  >
-                    <Play className="h-5 w-5" />
-                    Try Demo Script
-                  </Button>
+                  <Link to="/signin">
+                    <Button 
+                      variant="cinema-outline" 
+                      className="w-full"
+                      size="lg"
+                    >
+                      <Play className="h-5 w-5" />
+                      Try Demo Script
+                    </Button>
+                  </Link>
                 </>
               ) : (
                 <div className="space-y-4">

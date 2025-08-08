@@ -28,11 +28,12 @@ useEffect(() => {
     }
   };
 
-  // Set initial mode from query param if present
+  // Determine mode from query or pathname
   const params = new URLSearchParams(location.search);
   const mode = params.get("mode");
-  if (mode === "signup") setIsLogin(false);
-  if (mode === "login") setIsLogin(true);
+  const path = location.pathname;
+  if (mode === "signup" || path.endsWith("/signup")) setIsLogin(false);
+  if (mode === "login" || path.endsWith("/signin")) setIsLogin(true);
   
   checkSession();
 
@@ -46,7 +47,7 @@ useEffect(() => {
   return () => {
     subscription.unsubscribe();
   };
-}, [navigate, location.search]);
+}, [navigate, location.search, location.pathname]);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -35,11 +35,10 @@ export const Header = () => {
                 {user.email}
               </span>
               <Button 
-                variant="ghost" 
-                className="hidden md:flex"
+                variant="ghost"
                 onClick={async () => {
                   await signOut();
-                  navigate("/auth?mode=login");
+                  navigate("/signin");
                 }}
               >
                 <LogOut className="h-4 w-4 mr-2" />
@@ -48,12 +47,12 @@ export const Header = () => {
             </>
           ) : (
             <>
-              <Link to="/auth?mode=login">
-                <Button variant="ghost" className="hidden md:flex">
+              <Link to="/signin">
+                <Button variant="ghost">
                   Sign In
                 </Button>
               </Link>
-              <Link to="/auth?mode=signup">
+              <Link to="/signup">
                 <Button variant="cinema">
                   Get Started
                 </Button>

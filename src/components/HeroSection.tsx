@@ -34,13 +34,13 @@ export const HeroSection = () => {
         </p>
         
         <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-          <Link to="/auth?mode=login">
+          <Link to="/signin">
             <Button variant="cinema" size="lg" className="text-lg px-8 py-6">
               <Upload className="h-5 w-5" />
               Upload Your Script
             </Button>
           </Link>
-          <Link to="/auth?mode=login">
+          <Link to="/signin">
             <Button variant="cinema-outline" size="lg" className="text-lg px-8 py-6">
               <Play className="h-5 w-5" />
               Try Demo Script
