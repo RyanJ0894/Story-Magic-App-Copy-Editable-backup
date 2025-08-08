@@ -48,10 +48,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signOut = async () => {
     try {
-      await supabase.auth.signOut({ scope: 'local' });
+      // Try to invalidate the server session, but ignore if it's already gone
+      await supabase.auth.signOut({ scope: 'global' }).catch(() => {})
+      // Always clear local session to prevent redirect loops
+      await supabase.auth.signOut({ scope: 'local' })
     } finally {
-      setSession(null);
-      setUser(null);
+      setSession(null)
+      setUser(null)
     }
   };
 
