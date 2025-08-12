@@ -1,32 +1,33 @@
 // src/pages/NewProject.tsx
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import { createProject, runDirector, runAudio } from "@/integrations/filmDirectorApi";
 import { supabase } from "@/integrations/supabase/client";
 
-const DEFAULT_SCRIPT = `EXT. PARK — DAY
-
+const DEFAULT_SCRIPT = `EXT. PARK – DAY
 NARRATOR: A gentle breeze moves through the trees as Mary and John walk.
 MARY: It's peaceful here.
-JOHN: Yeah, let's keep moving.`
+JOHN: Yeah, let's keep moving.`.trim();
 
 export default function NewProject() {
   const [title, setTitle] = useState("Untitled Project");
   const [script, setScript] = useState(DEFAULT_SCRIPT);
+
   const [doDirector, setDoDirector] = useState(true);
   const [doAudio, setDoAudio] = useState(false);
 
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState("");
-  const [projectId, setProjectId] = useState<string>("");
-  const [directorJson, setDirectorJson] = useState<any>(null);
-  const [error, setError] = useState<string>("");
+  const [projectId, setProjectId] = useState("");
+  const [directorJson, setDirectorJson] = useState<any[] | null>(null);
+  const [error, setError] = useState("");
 
   async function ensureSignedIn() {
-    const { data } = await supabase.auth.getUser();
+    const { data, error } = await supabase.auth.getUser();
+    if (error) throw error;
     if (!data.user) throw new Error("Please sign in first.");
   }
 
-  async function onSubmit(e: React.FormEvent) {
+  async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setBusy(true);
     setStatus("");
@@ -35,96 +36,93 @@ export default function NewProject() {
 
     try {
       await ensureSignedIn();
+
       setStatus("Creating project…");
-      const pid = await createProject({ title, script });
-      setProjectId(pid);
+      const id = await createProject({ title, script });
+      setProjectId(id);
 
       if (doDirector) {
-        setStatus("Analyzing script with AI Director…");
-        const json = await runDirector(pid, script);
-        setDirectorJson(json);
+        setStatus("Analyzing script (AI Director)...");
+        const dj = await runDirector(id, script);
+        setDirectorJson(dj);
       }
 
       if (doAudio) {
         setStatus("Generating audio…");
-        await runAudio(projectId || pid, directorJson || undefined);
+        await runAudio(projectId || id, directorJson ?? undefined);
       }
 
-      setStatus("All done! You can return to the dashboard.");
+      setStatus("Done!");
     } catch (err: any) {
       console.error(err);
-      setError(err?.message || "Unexpected error");
+      setError(err?.message || "Something went wrong");
+      setStatus("");
     } finally {
       setBusy(false);
     }
   }
 
   return (
-    <div className="container mx-auto max-w-3xl p-6 space-y-6">
-      <h1 className="text-2xl font-bold">New Project</h1>
+    <div className="container mx-auto max-w-3xl px-4 py-10 space-y-6">
+      <h1 className="text-3xl font-semibold">Create New Project</h1>
 
       <form onSubmit={onSubmit} className="space-y-4">
-        <div className="space-y-2">
-          <label className="block text-sm font-medium">Title</label>
+        <div>
+          <label className="block text-sm mb-1">Title</label>
           <input
-            className="w-full rounded-md border bg-transparent p-2"
+            className="w-full rounded-md bg-neutral-900 border border-neutral-700 px-3 py-2"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Project title"
           />
         </div>
 
-        <div className="space-y-2">
-          <label className="block text-sm font-medium">Script</label>
+        <div>
+          <label className="block text-sm mb-1">Script</label>
           <textarea
-            className="w-full h-56 rounded-md border bg-transparent p-2 font-mono text-sm"
+            className="w-full h-48 rounded-md bg-neutral-900 border border-neutral-700 px-3 py-2"
             value={script}
             onChange={(e) => setScript(e.target.value)}
           />
         </div>
 
         <div className="flex items-center gap-6">
-          <label className="flex items-center gap-2">
+          <label className="inline-flex items-center gap-2">
             <input
               type="checkbox"
               checked={doDirector}
               onChange={(e) => setDoDirector(e.target.checked)}
             />
-            Run AI Director (JSON)
+            <span>Run AI Director</span>
           </label>
-          <label className="flex items-center gap-2">
+
+          <label className="inline-flex items-center gap-2">
             <input
               type="checkbox"
               checked={doAudio}
               onChange={(e) => setDoAudio(e.target.checked)}
             />
-            Generate audio
+            <span>Generate Audio</span>
           </label>
         </div>
 
         <button
           type="submit"
           disabled={busy}
-          className="rounded-md bg-yellow-400 px-4 py-2 font-semibold text-black disabled:opacity-50"
+          className="rounded-md bg-gradient-to-r from-yellow-400 to-blue-500 px-4 py-2 font-medium disabled:opacity-60"
         >
-          {busy ? "Working…" : "Create"}
+          {busy ? "Working…" : "Create Project"}
         </button>
       </form>
 
-      {!!status && <p className="text-sm text-blue-400">{status}</p>}
-      {!!error && <p className="text-sm text-red-400">{error}</p>}
+      {status && <p className="text-sm text-blue-400">{status}</p>}
+      {projectId && <p className="text-sm">Project ID: <code>{projectId}</code></p>}
+      {error && <p className="text-sm text-red-400">{error}</p>}
 
-      {!!projectId && (
-        <div className="text-sm">
-          <div className="opacity-70">Project ID</div>
-          <code className="break-all">{projectId}</code>
-        </div>
-      )}
-
-      {!!directorJson && (
-        <div className="space-y-2">
-          <div className="opacity-70">Director JSON</div>
-          <pre className="max-h-80 overflow-auto rounded-md border p-3 text-xs">
+      {directorJson && (
+        <div className="mt-6">
+          <h2 className="text-xl mb-2">Director JSON</h2>
+          <pre className="text-xs bg-neutral-900 border border-neutral-700 p-3 rounded-md overflow-auto">
             {JSON.stringify(directorJson, null, 2)}
           </pre>
         </div>
