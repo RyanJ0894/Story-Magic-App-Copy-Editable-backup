@@ -1,56 +1,48 @@
 // src/integrations/filmDirectorApi.ts
-// Client-side helpers for Supabase Edge Functions
+// Client-side helpers. Heavy lifting happens in Edge Functions.
 
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "../integrations/supabase/client";
 
-// Name your deployed Supabase Edge Functions here
-const EDGE_DIRECTOR_FN = "ai-director";   // returns the director JSON
-const EDGE_AUDIO_FN    = "generate-audio"; // returns { audio_url, ... } or similar
-
-const DEBUG = true;
-
-// ---- Types (kept loose so the app doesn't break if the server response changes) ----
 export type DirectorLine = {
   text: string;
-  voice_key?: string;
+  voice_key: string;
   style_prompt?: string;
 };
 
-export type DirectorJSON = any;
+export type DirectorJSON = {
+  lines: DirectorLine[];
+};
 
-// ---- Ask the AI Director (Edge Function) to analyze the script ----
-export async function getDirectorJSON(script: string, projectId: string) {
-  if (DEBUG) console.log("[AI Director] invoking", EDGE_DIRECTOR_FN, { projectId });
+// ---- create a project row and return the id ----
+export async function createProject(title: string, script: string): Promise<string> {
+  const { data, error } = await supabase
+    .from("user_projects")
+    .insert([{ title, script }])
+    .select("id")
+    .single();
 
-  const { data, error } = await supabase.functions.invoke(EDGE_DIRECTOR_FN, {
+  if (error) throw new Error(`Create project failed: ${error.message}`);
+  return data!.id as string;
+}
+
+// ---- call the AI director Edge Function, return its JSON ----
+export async function runDirector(projectId: string, script: string): Promise<DirectorJSON> {
+  const { data, error } = await supabase.functions.invoke("ai-director", {
     body: { project_id: projectId, script },
   });
 
-  if (error) {
-    console.error("[AI Director] getDirectorJSON error:", error);
-    throw error;
-  }
+  if (error) throw new Error(`ai-director error: ${error.message}`);
 
-  if (DEBUG) console.log("[AI Director] getDirectorJSON ok:", data);
-  return data as DirectorJSON;
+  // The function both updates the DB and returns a summary
+  return (data?.director_json as DirectorJSON) ?? { lines: [] };
 }
 
-// ---- Ask the audio generator (Edge Function) to produce audio for a project ----
-export async function generateAudio(projectId: string, directorJSON: DirectorJSON) {
-  if (DEBUG) console.log("[Audio] invoking", EDGE_AUDIO_FN, { projectId });
-
-  const { data, error } = await supabase.functions.invoke(EDGE_AUDIO_FN, {
-    body: {
-      project_id: projectId,
-      director: directorJSON, // send whatever the director returned
-    },
+// ---- call the audio generator Edge Function (optional) ----
+export async function runAudio(projectId: string, directorJSON: DirectorJSON): Promise<any> {
+  const { data, error } = await supabase.functions.invoke("generate-audio", {
+    body: { project_id: projectId, director: directorJSON },
   });
 
-  if (error) {
-    console.error("[Audio] generateAudio error:", error);
-    throw error;
-  }
-
-  if (DEBUG) console.log("[Audio] generateAudio ok:", data);
+  if (error) throw new Error(`generate-audio error: ${error.message}`);
   return data;
 }
