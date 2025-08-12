@@ -6,8 +6,8 @@ import { supabase } from "@/integrations/supabase/client";
 const DEFAULT_SCRIPT = `EXT. PARK — DAY
 
 NARRATOR: A gentle breeze moves through the trees as Mary and John walk.
-MARY: It’s peaceful here.
-JOHN: Yeah, let’s keep moving.`
+MARY: It's peaceful here.
+JOHN: Yeah, let's keep moving.`
 
 export default function NewProject() {
   const [title, setTitle] = useState("Untitled Project");
@@ -16,7 +16,7 @@ export default function NewProject() {
   const [doAudio, setDoAudio] = useState(false);
 
   const [busy, setBusy] = useState(false);
-  const [status, setStatus] = useState<string>("");
+  const [status, setStatus] = useState("");
   const [projectId, setProjectId] = useState<string>("");
   const [directorJson, setDirectorJson] = useState<any>(null);
   const [error, setError] = useState<string>("");
@@ -35,106 +35,96 @@ export default function NewProject() {
 
     try {
       await ensureSignedIn();
-
       setStatus("Creating project…");
-      const id = await createProject({ title, script });
-      setProjectId(id);
+      const pid = await createProject({ title, script });
+      setProjectId(pid);
 
       if (doDirector) {
         setStatus("Analyzing script with AI Director…");
-        const dj = await runDirector({ projectId: id, script });
-        setDirectorJson(dj);
+        const json = await runDirector(pid, script);
+        setDirectorJson(json);
       }
 
       if (doAudio) {
         setStatus("Generating audio…");
-        const res = await runAudio({
-          projectId: id,
-          directorJSON: directorJson,
-        });
-        setStatus(`Audio job started: ${JSON.stringify(res)}`);
+        await runAudio(projectId || pid, directorJson || undefined);
       }
 
-      setStatus("Done!");
+      setStatus("All done! You can return to the dashboard.");
     } catch (err: any) {
       console.error(err);
-      setError(err?.message || "Something went wrong.");
+      setError(err?.message || "Unexpected error");
     } finally {
       setBusy(false);
     }
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 space-y-8">
-      <h1 className="text-3xl font-bold">New Project</h1>
+    <div className="container mx-auto max-w-3xl p-6 space-y-6">
+      <h1 className="text-2xl font-bold">New Project</h1>
 
-      <form onSubmit={onSubmit} className="grid gap-6 max-w-3xl">
-        <label className="grid gap-2">
-          <span className="font-medium">Title</span>
+      <form onSubmit={onSubmit} className="space-y-4">
+        <div className="space-y-2">
+          <label className="block text-sm font-medium">Title</label>
           <input
-            className="border rounded px-3 py-2 bg-background"
+            className="w-full rounded-md border bg-transparent p-2"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            disabled={busy}
+            placeholder="Project title"
           />
-        </label>
+        </div>
 
-        <label className="grid gap-2">
-          <span className="font-medium">Script</span>
+        <div className="space-y-2">
+          <label className="block text-sm font-medium">Script</label>
           <textarea
-            className="border rounded px-3 py-2 min-h-[180px] bg-background"
+            className="w-full h-56 rounded-md border bg-transparent p-2 font-mono text-sm"
             value={script}
             onChange={(e) => setScript(e.target.value)}
-            disabled={busy}
           />
-        </label>
+        </div>
 
         <div className="flex items-center gap-6">
-          <label className="inline-flex items-center gap-2">
+          <label className="flex items-center gap-2">
             <input
               type="checkbox"
               checked={doDirector}
               onChange={(e) => setDoDirector(e.target.checked)}
-              disabled={busy}
             />
-            <span>Analyze with AI Director</span>
+            Run AI Director (JSON)
           </label>
-          <label className="inline-flex items-center gap-2">
+          <label className="flex items-center gap-2">
             <input
               type="checkbox"
               checked={doAudio}
               onChange={(e) => setDoAudio(e.target.checked)}
-              disabled={busy}
             />
-            <span>Generate audio after analysis</span>
+            Generate audio
           </label>
         </div>
 
         <button
           type="submit"
           disabled={busy}
-          className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-primary-foreground disabled:opacity-50"
+          className="rounded-md bg-yellow-400 px-4 py-2 font-semibold text-black disabled:opacity-50"
         >
           {busy ? "Working…" : "Create"}
         </button>
       </form>
 
-      {/* Status + Errors */}
-      {status && <p className="text-sm text-muted-foreground">Status: {status}</p>}
-      {error && <p className="text-sm text-red-500">Error: {error}</p>}
+      {!!status && <p className="text-sm text-blue-400">{status}</p>}
+      {!!error && <p className="text-sm text-red-400">{error}</p>}
 
-      {/* Output preview */}
-      {projectId && (
-        <div className="border rounded p-4">
-          <h2 className="font-semibold mb-2">Project Created</h2>
-          <p className="text-sm break-all">id: {projectId}</p>
+      {!!projectId && (
+        <div className="text-sm">
+          <div className="opacity-70">Project ID</div>
+          <code className="break-all">{projectId}</code>
         </div>
       )}
 
-      {directorJson && (
-        <div className="border rounded p-4">
-          <h2 className="font-semibold mb-2">Director JSON</h2>
-          <pre className="text-xs whitespace-pre-wrap">
+      {!!directorJson && (
+        <div className="space-y-2">
+          <div className="opacity-70">Director JSON</div>
+          <pre className="max-h-80 overflow-auto rounded-md border p-3 text-xs">
             {JSON.stringify(directorJson, null, 2)}
           </pre>
         </div>
