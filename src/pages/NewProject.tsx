@@ -1,7 +1,7 @@
 // src/pages/NewProject.tsx
 import { useState, type FormEvent } from "react";
-import { createProject, runDirector, runAudio } from "@/integrations/filmDirectorApi";
-import { supabase } from "@/integrations/supabase/client";
+import { createProject, runDirector, runAudio } from "../integrations/filmDirectorApi";
+import { supabase } from "../integrations/supabase/client";
 
 const DEFAULT_SCRIPT = `EXT. PARK – DAY
 NARRATOR: A gentle breeze moves through the trees as Mary and John walk.
@@ -49,7 +49,7 @@ export default function NewProject() {
 
       if (doAudio) {
         setStatus("Generating audio…");
-        await runAudio(projectId || id, directorJson ?? undefined);
+        await runAudio(id, directorJson ?? undefined);
       }
 
       setStatus("Done!");
@@ -96,7 +96,7 @@ export default function NewProject() {
             <span>Run AI Director</span>
           </label>
 
-          <label className="inline-flex items-center gap-2">
+        <label className="inline-flex items-center gap-2">
             <input
               type="checkbox"
               checked={doAudio}
