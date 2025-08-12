@@ -1,5 +1,6 @@
 // src/pages/App.tsx
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Toaster } from "@/components/ui/toaster";
 
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
@@ -17,6 +18,7 @@ function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/projects/new" element={<NewProject />} />
       </Routes>
+      <Toaster />
     </BrowserRouter>
   );
 }
