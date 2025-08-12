@@ -1,10 +1,10 @@
 // src/pages/App.tsx
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
-import Index from "./Index";
-import Auth from "./Auth";
-import Dashboard from "./Dashboard";
-import NewProject from "./NewProject";
+import Index from "./pages/Index";
+import Auth from "./pages/Auth";
+import Dashboard from "./pages/Dashboard";
+import NewProject from "./pages/NewProject";
 
 function App() {
   return (

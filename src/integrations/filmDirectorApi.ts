@@ -14,7 +14,7 @@ export type DirectorJSON = {
 };
 
 // ---- create a project row and return the id ----
-export async function createProject(title: string, script: string): Promise<string> {
+export async function createProject(title: string, script: string): Promise<{ id: string }> {
   const { data, error } = await supabase
     .from("user_projects")
     .insert([{ title, script }])
@@ -22,8 +22,12 @@ export async function createProject(title: string, script: string): Promise<stri
     .single();
 
   if (error) throw new Error(`Create project failed: ${error.message}`);
-  return data!.id as string;
+  return { id: data!.id as string };
 }
+
+// Legacy exports for compatibility
+export const getDirectorJSON = runDirector;
+export const generateAudio = runAudio;
 
 // ---- call the AI director Edge Function, return its JSON ----
 export async function runDirector(projectId: string, script: string): Promise<DirectorJSON> {

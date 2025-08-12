@@ -46,7 +46,7 @@ export default function NewProject() {
       await ensureSignedIn();
 
       setStatus("Creating project…");
-      const created = await createProject({ title, script });
+      const created = await createProject(title, script);
       setProjectId(created.id);
 
       let dirJson: any | null = null;
