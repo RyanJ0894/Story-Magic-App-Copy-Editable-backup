@@ -1,5 +1,7 @@
 // src/pages/NewProject.tsx
 import { useState } from "react";
+import { Link } from "react-router-dom";
+import { Film, ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { createProject, runDirector, runAudio } from "../integrations/filmDirectorApi";
 
@@ -73,8 +75,29 @@ export default function NewProject() {
   }
 
   return (
-    <div className="min-h-screen max-w-4xl mx-auto px-6 py-10">
-      <h1 className="text-3xl font-bold mb-6">Create New Project</h1>
+    <div className="min-h-screen bg-background text-foreground">
+      {/* Navigation Header */}
+      <header className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-lg">
+        <div className="container mx-auto flex h-16 items-center justify-between px-4">
+          <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+            <Film className="h-8 w-8 text-cinema-gold" />
+            <h1 className="text-xl font-bold bg-gradient-accent bg-clip-text text-transparent">
+              Story Magic
+            </h1>
+          </Link>
+          
+          <Link 
+            to="/dashboard" 
+            className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to Dashboard
+          </Link>
+        </div>
+      </header>
+
+      <div className="max-w-4xl mx-auto px-6 py-10">
+        <h1 className="text-3xl font-bold mb-6">Create New Project</h1>
 
       <form onSubmit={onSubmit} className="space-y-6">
         <div>
@@ -153,6 +176,7 @@ export default function NewProject() {
           </pre>
         </div>
       )}
+      </div>
     </div>
   );
 }
