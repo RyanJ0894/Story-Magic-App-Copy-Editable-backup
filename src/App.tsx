@@ -1,11 +1,10 @@
-// src/App.tsx
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
-import Auth from "./pages/Auth";
-import Dashboard from "./pages/Dashboard";
-import NewProject from "./pages/NewProject";
+import Index from "@/pages/Index";
+import Auth from "@/pages/Auth";
+import Dashboard from "@/pages/Dashboard";
 
-export default function App() {
+
+const App = () => {
   return (
     <BrowserRouter>
       <Routes>
@@ -14,8 +13,9 @@ export default function App() {
         <Route path="/signin" element={<Auth />} />
         <Route path="/signup" element={<Auth />} />
         <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/new" element={<NewProject />} />
       </Routes>
     </BrowserRouter>
   );
-}
+};
+
+export default App;
