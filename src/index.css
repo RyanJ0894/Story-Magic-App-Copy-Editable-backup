@@ -18,8 +18,8 @@ All colors MUST be HSL.
     --popover: 222 22% 10%;
     --popover-foreground: 210 20% 92%;
 
-    --primary: 214 85% 55%;
-    --primary-foreground: 210 20% 92%;
+    --primary: 45 90% 65%;
+    --primary-foreground: 222 22% 8%;
 
     --secondary: 222 15% 15%;
     --secondary-foreground: 210 20% 92%;
@@ -33,12 +33,9 @@ All colors MUST be HSL.
     --destructive: 0 75% 55%;
     --destructive-foreground: 210 20% 92%;
 
-    --success: 142 76% 36%;
-    --success-foreground: 210 20% 92%;
-
     --border: 222 15% 15%;
     --input: 222 15% 15%;
-    --ring: 214 85% 55%;
+    --ring: 45 90% 65%;
 
     /* Custom design tokens */
     --cinema-gold: 45 90% 65%;
