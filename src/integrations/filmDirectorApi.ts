@@ -15,9 +15,16 @@ export type DirectorJSON = {
 
 // ---- create a project row and return the id ----
 export async function createProject(title: string, script: string): Promise<{ id: string }> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("User must be authenticated to create a project");
+
   const { data, error } = await supabase
     .from("user_projects")
-    .insert([{ title, script }])
+    .insert([{ 
+      project_name: title,
+      user_id: user.id,
+      // Note: script content should go in project_scripts table if needed
+    }])
     .select("id")
     .single();
 
