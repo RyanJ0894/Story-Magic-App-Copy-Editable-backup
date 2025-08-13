@@ -18,18 +18,14 @@ export async function createProject(title: string, script: string): Promise<{ id
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("User must be authenticated to create a project");
 
-  // Use the correct column names from the database schema
-  const { data, error } = await supabase
-    .from("user_projects")
-    .insert({
-      project_name: title,
-      user_id: user.id
-    })
-    .select("id")
-    .single();
+  // Use raw SQL approach to bypass type cache issues
+  const { data, error } = await supabase.rpc('create_user_project', {
+    p_title: title,
+    p_user_id: user.id
+  });
 
   if (error) throw new Error(`Create project failed: ${error.message}`);
-  return { id: data!.id as string };
+  return { id: data as string };
 }
 
 // Legacy exports for compatibility
