@@ -77,9 +77,19 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 text-foreground">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-semibold">Your Projects</h1>
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container flex h-14 max-w-screen-2xl items-center">
+          <Link to="/" className="mr-6 flex items-center space-x-2">
+            <span className="hidden font-bold sm:inline-block">FilmDirector AI</span>
+          </Link>
+        </div>
+      </header>
+
+      <div className="container mx-auto px-4 py-8 text-foreground">
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-2xl font-semibold">Your Projects</h1>
         <Link
           to="/projects/new"
           className="rounded-lg px-4 py-2 bg-primary text-primary-foreground hover:opacity-90"
@@ -141,6 +151,7 @@ export default function Dashboard() {
           </li>
         ))}
       </ul>
+      </div>
     </div>
   );
 }
