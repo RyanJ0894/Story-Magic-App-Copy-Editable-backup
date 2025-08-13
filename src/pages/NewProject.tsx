@@ -1,7 +1,7 @@
 // src/pages/NewProject.tsx
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Film, ArrowLeft } from "lucide-react";
+import { Film, ArrowLeft, Download } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { createProject, runDirector, runAudio } from "../integrations/filmDirectorApi";
 
@@ -33,11 +33,84 @@ export default function NewProject() {
   const [audioResult, setAudioResult] = useState<any | null>(null);
   const [error, setError] = useState<string>("");
   const [generatingAudio, setGeneratingAudio] = useState(false);
+  const [audioUrl, setAudioUrl] = useState<string>("");
 
   async function ensureSignedIn() {
     const { data } = await supabase.auth.getUser();
     if (!data.user) throw new Error("Please sign in first.");
   }
+
+  async function handleGenerateAudio() {
+    if (!projectId || !directorJson) return;
+    
+    setGeneratingAudio(true);
+    setError("");
+    
+    try {
+      setStatus("Generating audio…");
+      const audio = await runAudio(projectId, directorJson);
+      setAudioResult(audio);
+      
+      if (audio.success && audio.audio_url) {
+        // Update database with audio URL and status
+        await supabase
+          .from("user_projects")
+          .update({ 
+            audio_url: audio.audio_url,
+            status: "ready"
+          })
+          .eq("id", projectId);
+        
+        setAudioUrl(audio.audio_url);
+        setStatus("Audio generated successfully!");
+      } else {
+        throw new Error(audio.message || "Audio generation failed");
+      }
+    } catch (err: any) {
+      console.error("Audio generation failed:", err);
+      setError(err?.message ?? String(err));
+      setStatus("Audio generation failed.");
+    } finally {
+      setGeneratingAudio(false);
+    }
+  }
+
+  function downloadAudio() {
+    if (!audioUrl) return;
+    
+    const link = document.createElement('a');
+    link.href = `data:audio/wav;base64,${audioUrl}`;
+    link.download = 'story-magic.wav';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
+  // Load existing project data if we have a project ID
+  useEffect(() => {
+    if (!projectId) return;
+    
+    async function loadProjectData() {
+      try {
+        const { data, error } = await supabase
+          .from("user_projects")
+          .select("audio_url, status")
+          .eq("id", projectId)
+          .single();
+          
+        if (error) throw error;
+        
+        if (data?.audio_url) {
+          setAudioUrl(data.audio_url);
+          setAudioResult({ success: true, audio_url: data.audio_url });
+        }
+      } catch (err) {
+        console.error("Failed to load project data:", err);
+      }
+    }
+    
+    loadProjectData();
+  }, [projectId]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -60,14 +133,9 @@ export default function NewProject() {
         setDirectorJson(dirJson);
       }
 
+      // Auto-run audio generation if checked
       if (doAudio && dirJson) {
-        setStatus("Generating audio…");
-        const audio = await runAudio(created.id, dirJson);
-        setAudioResult(audio);
-      }
-
-      // If "Generate Audio after analysis" was checked, navigate to project detail
-      if (doAudio && dirJson) {
+        await handleGenerateAudio();
         setStatus("Redirecting to project…");
         setTimeout(() => navigate(`/projects/${created.id}`), 1500);
       } else {
@@ -189,25 +257,7 @@ export default function NewProject() {
           
           {!doAudio && !audioResult && (
             <button
-              onClick={async () => {
-                if (!projectId || !directorJson) return;
-                
-                setGeneratingAudio(true);
-                setError("");
-                
-                try {
-                  setStatus("Generating audio…");
-                  const audio = await runAudio(projectId, directorJson);
-                  setAudioResult(audio);
-                  setStatus("Audio generated successfully!");
-                } catch (err: any) {
-                  console.error("Audio generation failed:", err);
-                  setError(err?.message ?? String(err));
-                  setStatus("Audio generation failed.");
-                } finally {
-                  setGeneratingAudio(false);
-                }
-              }}
+              onClick={handleGenerateAudio}
               disabled={generatingAudio || !projectId}
               className="mt-4 rounded-md px-4 py-2 bg-yellow-400 text-black disabled:opacity-60 flex items-center gap-2"
             >
@@ -224,12 +274,27 @@ export default function NewProject() {
         </div>
       )}
 
-      {audioResult && (
+      {audioResult && audioUrl && (
         <div className="mt-8">
-          <h2 className="text-xl font-semibold mb-2">Audio Result</h2>
-          <pre className="text-xs bg-black/30 rounded-md p-3 overflow-auto max-h-80">
-            {JSON.stringify(audioResult, null, 2)}
-          </pre>
+          <h2 className="text-xl font-semibold mb-4">Generated Audio</h2>
+          
+          <div className="bg-black/30 rounded-md p-4 space-y-4">
+            <audio 
+              controls 
+              className="w-full"
+              src={`data:audio/wav;base64,${audioUrl}`}
+            >
+              Your browser does not support the audio element.
+            </audio>
+            
+            <button
+              onClick={downloadAudio}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors"
+            >
+              <Download className="h-4 w-4" />
+              Download WAV
+            </button>
+          </div>
         </div>
       )}
       </div>
