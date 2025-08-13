@@ -17,64 +17,77 @@ export function AudioPlayerSimple({ audioUrl }: AudioPlayerProps) {
     }
 
     console.log('AudioPlayerSimple: Processing audio URL, length:', audioUrl.length);
-    console.log('AudioPlayerSimple: First 100 chars:', audioUrl.substring(0, 100));
+    console.log('AudioPlayerSimple: First 50 chars:', audioUrl.substring(0, 50));
 
-    // Try multiple approaches
-    const tryAudioFormats = async () => {
-      const formats = [
-        'audio/mpeg',
-        'audio/mp3', 
-        'audio/wav',
-        'audio/ogg',
-        'audio/webm'
-      ];
-
-      for (const format of formats) {
-        try {
-          console.log(`AudioPlayerSimple: Trying format: ${format}`);
-          
-          // Clean base64 and create blob URL
-          const cleanBase64 = audioUrl.replace(/\s/g, '');
-          const byteCharacters = atob(cleanBase64);
-          const byteNumbers = new Array(byteCharacters.length);
-          
-          for (let i = 0; i < byteCharacters.length; i++) {
-            byteNumbers[i] = byteCharacters.charCodeAt(i);
-          }
-          
-          const byteArray = new Uint8Array(byteNumbers);
-          console.log(`AudioPlayerSimple: Created byte array, length: ${byteArray.length}`);
-          
-          const blob = new Blob([byteArray], { type: format });
-          const url = URL.createObjectURL(blob);
-          
-          console.log(`AudioPlayerSimple: Created blob URL with ${format}:`, url);
-          setAudioSrc(url);
-          setError("");
-          
-          return () => {
-            console.log('AudioPlayerSimple: Cleaning up blob URL');
-            URL.revokeObjectURL(url);
-          };
-        } catch (err) {
-          console.error(`AudioPlayerSimple: Failed with format ${format}:`, err);
-          continue;
+    try {
+      // Decode base64 to examine the data
+      const cleanBase64 = audioUrl.replace(/\s/g, '');
+      const byteCharacters = atob(cleanBase64);
+      const byteArray = new Uint8Array(byteCharacters.length);
+      
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteArray[i] = byteCharacters.charCodeAt(i);
+      }
+      
+      console.log('AudioPlayerSimple: Byte array length:', byteArray.length);
+      console.log('AudioPlayerSimple: First 20 bytes:', Array.from(byteArray.slice(0, 20)).map(b => b.toString(16).padStart(2, '0')).join(' '));
+      
+      // Check for ID3 tag header (ID3v2 starts with "ID3")
+      const hasID3 = byteArray[0] === 0x49 && byteArray[1] === 0x44 && byteArray[2] === 0x33;
+      console.log('AudioPlayerSimple: Has ID3 tags:', hasID3);
+      
+      let processedData = byteArray;
+      
+      if (hasID3) {
+        console.log('AudioPlayerSimple: Attempting to strip ID3 tags');
+        // ID3v2 header is 10 bytes, followed by size in synchsafe integer format
+        const size = ((byteArray[6] & 0x7f) << 21) | 
+                    ((byteArray[7] & 0x7f) << 14) | 
+                    ((byteArray[8] & 0x7f) << 7) | 
+                    (byteArray[9] & 0x7f);
+        
+        const headerSize = 10;
+        const totalID3Size = headerSize + size;
+        console.log('AudioPlayerSimple: ID3 tag size:', totalID3Size);
+        
+        if (totalID3Size < byteArray.length) {
+          processedData = byteArray.slice(totalID3Size);
+          console.log('AudioPlayerSimple: Stripped ID3, new length:', processedData.length);
+          console.log('AudioPlayerSimple: New first 20 bytes:', Array.from(processedData.slice(0, 20)).map(b => b.toString(16).padStart(2, '0')).join(' '));
         }
       }
       
-      // If all blob approaches fail, try data URL
-      try {
-        console.log('AudioPlayerSimple: Trying data URL approach');
-        const dataUrl = `data:audio/mpeg;base64,${audioUrl}`;
-        setAudioSrc(dataUrl);
-        setError("");
-      } catch (err) {
-        console.error('AudioPlayerSimple: All approaches failed:', err);
-        setError('Failed to process audio data - format not supported');
+      // Look for MP3 frame sync (0xFF followed by 0xFB, 0xFA, or 0xF3)
+      let mp3Start = -1;
+      for (let i = 0; i < processedData.length - 1; i++) {
+        if (processedData[i] === 0xFF && (processedData[i + 1] & 0xE0) === 0xE0) {
+          mp3Start = i;
+          console.log('AudioPlayerSimple: Found MP3 sync at byte:', i);
+          break;
+        }
       }
-    };
+      
+      if (mp3Start > 0) {
+        processedData = processedData.slice(mp3Start);
+        console.log('AudioPlayerSimple: Trimmed to MP3 sync, new length:', processedData.length);
+      }
+      
+      // Create blob with processed data
+      const blob = new Blob([processedData], { type: 'audio/mpeg' });
+      const url = URL.createObjectURL(blob);
+      
+      console.log('AudioPlayerSimple: Created processed blob URL:', url);
+      setAudioSrc(url);
+      setError("");
 
-    tryAudioFormats();
+      return () => {
+        console.log('AudioPlayerSimple: Cleaning up blob URL');
+        URL.revokeObjectURL(url);
+      };
+    } catch (err) {
+      console.error('AudioPlayerSimple: Failed to process audio:', err);
+      setError('Failed to process audio data');
+    }
   }, [audioUrl]);
 
   const handleAudioError = (e: any) => {
