@@ -60,7 +60,18 @@ export default function ProjectDetail() {
 
     setGeneratingAudio(true);
     try {
-      const directorJson = JSON.parse(project.ai_director_json);
+      // Safely parse the director JSON
+      let directorJson;
+      try {
+        if (typeof project.ai_director_json === 'string') {
+          directorJson = JSON.parse(project.ai_director_json);
+        } else {
+          directorJson = project.ai_director_json;
+        }
+      } catch (parseError) {
+        throw new Error("Invalid director JSON data");
+      }
+
       await runAudio(project.id, directorJson);
       
       // Refresh project data to get the new audio_url
@@ -95,6 +106,21 @@ export default function ProjectDetail() {
     if (project.ai_director_json && project.audio_url) return "Complete";
     if (project.ai_director_json) return "Analyzed";
     return "Draft";
+  };
+
+  const safeParseDirectorJson = () => {
+    if (!project?.ai_director_json) return null;
+    
+    try {
+      if (typeof project.ai_director_json === 'string') {
+        return JSON.parse(project.ai_director_json);
+      } else {
+        return project.ai_director_json;
+      }
+    } catch (error) {
+      console.error("Failed to parse director JSON:", error);
+      return { error: "Invalid JSON data", raw: project.ai_director_json };
+    }
   };
 
   if (loading) {
@@ -199,7 +225,7 @@ export default function ProjectDetail() {
               
               {directorExpanded && (
                 <pre className="mt-4 text-xs bg-muted rounded-md p-4 overflow-auto max-h-96 whitespace-pre-wrap">
-                  {JSON.stringify(JSON.parse(project.ai_director_json), null, 2)}
+                  {JSON.stringify(safeParseDirectorJson(), null, 2)}
                 </pre>
               )}
             </div>
