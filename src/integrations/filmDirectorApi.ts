@@ -22,8 +22,7 @@ export async function createProject(title: string, script: string): Promise<{ id
     .from("user_projects")
     .insert([{ 
       project_name: title,
-      user_id: user.id,
-      // Note: script content should go in project_scripts table if needed
+      user_id: user.id
     }])
     .select("id")
     .single();
