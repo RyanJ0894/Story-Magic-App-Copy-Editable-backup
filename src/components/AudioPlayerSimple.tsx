@@ -19,37 +19,62 @@ export function AudioPlayerSimple({ audioUrl }: AudioPlayerProps) {
     console.log('AudioPlayerSimple: Processing audio URL, length:', audioUrl.length);
     console.log('AudioPlayerSimple: First 100 chars:', audioUrl.substring(0, 100));
 
-    try {
-      // Clean base64 and create blob URL
-      const cleanBase64 = audioUrl.replace(/\s/g, '');
-      console.log('AudioPlayerSimple: Cleaned base64, length:', cleanBase64.length);
-      
-      const byteCharacters = atob(cleanBase64);
-      const byteNumbers = new Array(byteCharacters.length);
-      
-      for (let i = 0; i < byteCharacters.length; i++) {
-        byteNumbers[i] = byteCharacters.charCodeAt(i);
+    // Try multiple approaches
+    const tryAudioFormats = async () => {
+      const formats = [
+        'audio/mpeg',
+        'audio/mp3', 
+        'audio/wav',
+        'audio/ogg',
+        'audio/webm'
+      ];
+
+      for (const format of formats) {
+        try {
+          console.log(`AudioPlayerSimple: Trying format: ${format}`);
+          
+          // Clean base64 and create blob URL
+          const cleanBase64 = audioUrl.replace(/\s/g, '');
+          const byteCharacters = atob(cleanBase64);
+          const byteNumbers = new Array(byteCharacters.length);
+          
+          for (let i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i);
+          }
+          
+          const byteArray = new Uint8Array(byteNumbers);
+          console.log(`AudioPlayerSimple: Created byte array, length: ${byteArray.length}`);
+          
+          const blob = new Blob([byteArray], { type: format });
+          const url = URL.createObjectURL(blob);
+          
+          console.log(`AudioPlayerSimple: Created blob URL with ${format}:`, url);
+          setAudioSrc(url);
+          setError("");
+          
+          return () => {
+            console.log('AudioPlayerSimple: Cleaning up blob URL');
+            URL.revokeObjectURL(url);
+          };
+        } catch (err) {
+          console.error(`AudioPlayerSimple: Failed with format ${format}:`, err);
+          continue;
+        }
       }
       
-      const byteArray = new Uint8Array(byteNumbers);
-      console.log('AudioPlayerSimple: Created byte array, length:', byteArray.length);
-      
-      // Try different MIME types
-      const blob = new Blob([byteArray], { type: 'audio/mpeg' });
-      const url = URL.createObjectURL(blob);
-      
-      console.log('AudioPlayerSimple: Created blob URL:', url);
-      setAudioSrc(url);
-      setError("");
+      // If all blob approaches fail, try data URL
+      try {
+        console.log('AudioPlayerSimple: Trying data URL approach');
+        const dataUrl = `data:audio/mpeg;base64,${audioUrl}`;
+        setAudioSrc(dataUrl);
+        setError("");
+      } catch (err) {
+        console.error('AudioPlayerSimple: All approaches failed:', err);
+        setError('Failed to process audio data - format not supported');
+      }
+    };
 
-      return () => {
-        console.log('AudioPlayerSimple: Cleaning up blob URL');
-        URL.revokeObjectURL(url);
-      };
-    } catch (err) {
-      console.error('AudioPlayerSimple: Failed to process audio:', err);
-      setError('Failed to process audio data');
-    }
+    tryAudioFormats();
   }, [audioUrl]);
 
   const handleAudioError = (e: any) => {
