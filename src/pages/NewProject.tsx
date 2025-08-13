@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Film, ArrowLeft, Download } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { createProject, runDirector, runAudio } from "../integrations/filmDirectorApi";
+import { AudioPlayerSimple } from "@/components/AudioPlayerSimple";
 
 // A tiny starter script so the form isn't empty
 const DEFAULT_SCRIPT = `EXT. PARK – DAY
@@ -77,12 +78,29 @@ export default function NewProject() {
   function downloadAudio() {
     if (!audioUrl) return;
     
-    const link = document.createElement('a');
-    link.href = `data:audio/mp3;base64,${audioUrl}`;
-    link.download = 'story-magic.mp3';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    try {
+      // Clean the base64 string and create blob
+      const cleanBase64 = audioUrl.replace(/\s/g, '');
+      const byteCharacters = atob(cleanBase64);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], { type: 'audio/mp3' });
+      
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'story-magic.mp3';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Download failed:', error);
+      setError('Failed to download audio file');
+    }
   }
 
   // Load existing project data if we have a project ID
@@ -278,13 +296,7 @@ export default function NewProject() {
           <h2 className="text-xl font-semibold mb-4">Generated Audio</h2>
           
           <div className="bg-black/30 rounded-md p-4 space-y-4">
-            <audio 
-              controls 
-              className="w-full"
-              src={`data:audio/mp3;base64,${audioUrl}`}
-            >
-              Your browser does not support the audio element.
-            </audio>
+            <AudioPlayerSimple audioUrl={audioUrl} />
             
             <button
               onClick={downloadAudio}
