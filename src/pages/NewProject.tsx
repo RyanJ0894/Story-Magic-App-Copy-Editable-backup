@@ -52,12 +52,11 @@ export default function NewProject() {
       setAudioResult(audio);
       
       if (audio.success && audio.audio_url) {
-        // Update database with audio URL and status
+        // Update database with audio URL only (status column doesn't exist)
         await supabase
           .from("user_projects")
           .update({ 
-            audio_url: audio.audio_url,
-            status: "ready"
+            audio_url: audio.audio_url
           })
           .eq("id", projectId);
         
@@ -79,8 +78,8 @@ export default function NewProject() {
     if (!audioUrl) return;
     
     const link = document.createElement('a');
-    link.href = `data:audio/wav;base64,${audioUrl}`;
-    link.download = 'story-magic.wav';
+    link.href = `data:audio/mp3;base64,${audioUrl}`;
+    link.download = 'story-magic.mp3';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -94,9 +93,9 @@ export default function NewProject() {
       try {
         const { data, error } = await supabase
           .from("user_projects")
-          .select("audio_url, status")
+          .select("audio_url")
           .eq("id", projectId)
-          .single();
+          .maybeSingle();
           
         if (error) throw error;
         
@@ -282,7 +281,7 @@ export default function NewProject() {
             <audio 
               controls 
               className="w-full"
-              src={`data:audio/wav;base64,${audioUrl}`}
+              src={`data:audio/mp3;base64,${audioUrl}`}
             >
               Your browser does not support the audio element.
             </audio>
@@ -292,7 +291,7 @@ export default function NewProject() {
               className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors"
             >
               <Download className="h-4 w-4" />
-              Download WAV
+              Download MP3
             </button>
           </div>
         </div>
