@@ -18,12 +18,13 @@ export async function createProject(title: string, script: string): Promise<{ id
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("User must be authenticated to create a project");
 
+  // Use the correct column names from the database schema
   const { data, error } = await supabase
     .from("user_projects")
-    .insert([{ 
+    .insert({
       project_name: title,
       user_id: user.id
-    }])
+    })
     .select("id")
     .single();
 
