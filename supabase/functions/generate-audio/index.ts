@@ -24,21 +24,23 @@ serve(async (req) => {
   try {
     const { project_id, director } = await req.json();
     console.log('Generate Audio: Processing project', project_id);
+    console.log('Generate Audio: Director structure:', JSON.stringify(director, null, 2));
 
     if (!project_id || !director) {
       throw new Error('Missing required parameters: project_id and director');
     }
 
-    // Extract dialogue from director JSON - it has a "lines" array structure
-    const dialogueText = director.lines
-      ? director.lines.map((line: any) => line.text || '').join(' ').trim()
-      : director.map?.((scene: any) => scene.dialogue || '').join(' ').trim() || '';
+    // Extract dialogue from director JSON - it's an array of scene objects with dialogue property
+    const dialogueText = Array.isArray(director) 
+      ? director.map((scene: any) => scene.dialogue || '').join(' ').trim()
+      : (director.lines || []).map((line: any) => line.text || '').join(' ').trim();
+
+    console.log('Generate Audio: Extracted dialogue:', dialogueText);
+    console.log('Generate Audio: Dialogue length:', dialogueText.length);
 
     if (!dialogueText) {
       throw new Error('No dialogue found in director JSON');
     }
-
-    console.log('Generate Audio: Dialogue extracted, length:', dialogueText.length);
 
     // Generate audio using ElevenLabs with browser-compatible settings
     const audioResponse = await fetch('https://api.elevenlabs.io/v1/text-to-speech/9BWtsMINqrJLrRacOk9x', {
