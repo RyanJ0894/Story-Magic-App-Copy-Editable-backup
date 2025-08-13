@@ -100,6 +100,7 @@ export type Database = {
           mood: string | null
           project_name: string
           script_url: string | null
+          title: string | null
           updated_at: string
           user_id: string
           voice_style: string | null
@@ -113,6 +114,7 @@ export type Database = {
           mood?: string | null
           project_name: string
           script_url?: string | null
+          title?: string | null
           updated_at?: string
           user_id: string
           voice_style?: string | null
@@ -126,6 +128,7 @@ export type Database = {
           mood?: string | null
           project_name?: string
           script_url?: string | null
+          title?: string | null
           updated_at?: string
           user_id?: string
           voice_style?: string | null
