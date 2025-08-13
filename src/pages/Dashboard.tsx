@@ -1,7 +1,7 @@
 // src/pages/Dashboard.tsx
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Trash2, AlertTriangle } from "lucide-react";
+import { Trash2, AlertTriangle, Film } from "lucide-react";
 import { supabase } from "../integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { 
@@ -79,10 +79,13 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-14 max-w-screen-2xl items-center">
-          <Link to="/" className="mr-6 flex items-center space-x-2">
-            <span className="hidden font-bold sm:inline-block">FilmDirector AI</span>
+      <header className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-lg">
+        <div className="container mx-auto flex h-16 items-center justify-between px-4">
+          <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+            <Film className="h-8 w-8 text-cinema-gold" />
+            <h1 className="text-xl font-bold bg-gradient-accent bg-clip-text text-transparent">
+              Story Magic
+            </h1>
           </Link>
         </div>
       </header>
