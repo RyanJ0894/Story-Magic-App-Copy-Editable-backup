@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Download, AlertCircle, FileAudio } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Download, AlertCircle, FileAudio, Play, Pause } from "lucide-react";
 
 interface AudioPlayerProps {
   audioUrl: string;
@@ -7,6 +7,46 @@ interface AudioPlayerProps {
 
 export function AudioPlayerSimple({ audioUrl }: AudioPlayerProps) {
   const [downloadError, setDownloadError] = useState<string>("");
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [audioObjectUrl, setAudioObjectUrl] = useState<string>("");
+  const audioRef = useRef<HTMLAudioElement>(null);
+
+  // Create audio object URL for playback
+  useEffect(() => {
+    if (!audioUrl) return;
+    
+    try {
+      // Clean and decode base64
+      const cleanBase64 = audioUrl.replace(/\s/g, '');
+      const byteCharacters = atob(cleanBase64);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], { type: 'audio/mpeg' });
+      
+      const url = URL.createObjectURL(blob);
+      setAudioObjectUrl(url);
+      
+      return () => {
+        URL.revokeObjectURL(url);
+      };
+    } catch (error) {
+      console.error('Failed to create audio URL:', error);
+    }
+  }, [audioUrl]);
+
+  const togglePlayback = () => {
+    if (!audioRef.current) return;
+    
+    if (isPlaying) {
+      audioRef.current.pause();
+    } else {
+      audioRef.current.play();
+    }
+    setIsPlaying(!isPlaying);
+  };
 
   const downloadAudio = async () => {
     if (!audioUrl) return;
@@ -43,6 +83,17 @@ export function AudioPlayerSimple({ audioUrl }: AudioPlayerProps) {
 
   return (
     <div className="space-y-4">
+      {/* Audio Element */}
+      {audioObjectUrl && (
+        <audio
+          ref={audioRef}
+          src={audioObjectUrl}
+          onPlay={() => setIsPlaying(true)}
+          onPause={() => setIsPlaying(false)}
+          onEnded={() => setIsPlaying(false)}
+        />
+      )}
+
       {/* Status Message */}
       <div className="flex items-start gap-3 p-4 bg-success/10 border border-success/20 rounded-lg">
         <FileAudio className="h-5 w-5 text-success flex-shrink-0 mt-0.5" />
@@ -51,7 +102,7 @@ export function AudioPlayerSimple({ audioUrl }: AudioPlayerProps) {
             Audio Generated Successfully
           </p>
           <p className="text-muted-foreground mb-2">
-            Your audio file is ready for download. Due to the current audio format, browser playback isn't supported, but the file will play perfectly in any audio player.
+            Your audio file is ready to play and download.
           </p>
           <div className="text-xs text-muted-foreground">
             File size: {fileSizeKB} KB • Format: MP3
@@ -59,14 +110,25 @@ export function AudioPlayerSimple({ audioUrl }: AudioPlayerProps) {
         </div>
       </div>
       
-      {/* Download Button */}
-      <button
-        onClick={downloadAudio}
-        className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-colors duration-200 shadow-lg hover:shadow-xl"
-      >
-        <Download className="h-5 w-5" />
-        <span className="font-medium">Download Audio File</span>
-      </button>
+      {/* Playback Controls */}
+      <div className="flex gap-3">
+        <button
+          onClick={togglePlayback}
+          disabled={!audioObjectUrl}
+          className="flex items-center justify-center gap-2 px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+          <span>{isPlaying ? 'Pause' : 'Play'}</span>
+        </button>
+        
+        <button
+          onClick={downloadAudio}
+          className="flex items-center justify-center gap-2 px-4 py-2 bg-secondary hover:bg-secondary/90 text-secondary-foreground rounded-lg transition-colors"
+        >
+          <Download className="h-4 w-4" />
+          <span>Download</span>
+        </button>
+      </div>
       
       {/* Error Display */}
       {downloadError && (
