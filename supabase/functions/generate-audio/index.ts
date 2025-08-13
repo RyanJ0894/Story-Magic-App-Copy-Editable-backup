@@ -25,15 +25,14 @@ serve(async (req) => {
     const { project_id, director } = await req.json();
     console.log('Generate Audio: Processing project', project_id);
 
-    if (!project_id || !director || !Array.isArray(director)) {
-      throw new Error('Missing required parameters: project_id and director array');
+    if (!project_id || !director) {
+      throw new Error('Missing required parameters: project_id and director');
     }
 
-    // Extract dialogue from director JSON
-    const dialogueText = director
-      .map((scene: any) => scene.dialogue || '')
-      .join(' ')
-      .trim();
+    // Extract dialogue from director JSON - it has a "lines" array structure
+    const dialogueText = director.lines
+      ? director.lines.map((line: any) => line.text || '').join(' ').trim()
+      : director.map?.((scene: any) => scene.dialogue || '').join(' ').trim() || '';
 
     if (!dialogueText) {
       throw new Error('No dialogue found in director JSON');
