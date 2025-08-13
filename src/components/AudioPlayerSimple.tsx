@@ -44,16 +44,16 @@ export function AudioPlayerSimple({ audioUrl }: AudioPlayerProps) {
   return (
     <div className="space-y-4">
       {/* Status Message */}
-      <div className="flex items-start gap-3 p-4 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg">
-        <FileAudio className="h-5 w-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+      <div className="flex items-start gap-3 p-4 bg-success/10 border border-success/20 rounded-lg">
+        <FileAudio className="h-5 w-5 text-success flex-shrink-0 mt-0.5" />
         <div className="text-sm">
-          <p className="font-medium text-blue-900 dark:text-blue-100 mb-1">
+          <p className="font-medium text-foreground mb-1">
             Audio Generated Successfully
           </p>
-          <p className="text-blue-700 dark:text-blue-300 mb-2">
+          <p className="text-muted-foreground mb-2">
             Your audio file is ready for download. Due to the current audio format, browser playback isn't supported, but the file will play perfectly in any audio player.
           </p>
-          <div className="text-xs text-blue-600 dark:text-blue-400">
+          <div className="text-xs text-muted-foreground">
             File size: {fileSizeKB} KB • Format: MP3
           </div>
         </div>
@@ -62,7 +62,7 @@ export function AudioPlayerSimple({ audioUrl }: AudioPlayerProps) {
       {/* Download Button */}
       <button
         onClick={downloadAudio}
-        className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl"
+        className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-colors duration-200 shadow-lg hover:shadow-xl"
       >
         <Download className="h-5 w-5" />
         <span className="font-medium">Download Audio File</span>
@@ -70,9 +70,9 @@ export function AudioPlayerSimple({ audioUrl }: AudioPlayerProps) {
       
       {/* Error Display */}
       {downloadError && (
-        <div className="flex items-center gap-2 p-3 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg">
-          <AlertCircle className="h-4 w-4 text-red-600 dark:text-red-400" />
-          <span className="text-sm text-red-700 dark:text-red-300">{downloadError}</span>
+        <div className="flex items-center gap-2 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+          <AlertCircle className="h-4 w-4 text-destructive" />
+          <span className="text-sm text-destructive">{downloadError}</span>
         </div>
       )}
       
