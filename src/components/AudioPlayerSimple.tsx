@@ -12,34 +12,25 @@ export function AudioPlayerSimple({ audioUrl }: AudioPlayerProps) {
   useEffect(() => {
     if (!audioUrl) return;
 
-    try {
-      // Clean the base64 string and create a blob URL
-      const cleanBase64 = audioUrl.replace(/\s/g, '');
-      const byteCharacters = atob(cleanBase64);
-      const byteNumbers = new Array(byteCharacters.length);
-      
-      for (let i = 0; i < byteCharacters.length; i++) {
-        byteNumbers[i] = byteCharacters.charCodeAt(i);
-      }
-      
-      const byteArray = new Uint8Array(byteNumbers);
-      const blob = new Blob([byteArray], { type: 'audio/mpeg' });
-      const url = URL.createObjectURL(blob);
-      
-      setAudioSrc(url);
-      setError("");
+    console.log('AudioPlayerSimple: Processing audio URL, length:', audioUrl.length);
+    console.log('AudioPlayerSimple: First 100 chars:', audioUrl.substring(0, 100));
 
-      // Cleanup function
-      return () => {
-        URL.revokeObjectURL(url);
-      };
+    try {
+      // First, try the simple data URL approach
+      const dataUrl = `data:audio/mpeg;base64,${audioUrl}`;
+      setAudioSrc(dataUrl);
+      setError("");
+      console.log('AudioPlayerSimple: Set data URL successfully');
+
     } catch (err) {
-      console.error('Failed to create audio URL:', err);
+      console.error('AudioPlayerSimple: Failed to create audio URL:', err);
       setError('Failed to load audio');
     }
   }, [audioUrl]);
 
-  const handleAudioError = () => {
+  const handleAudioError = (e: any) => {
+    console.error('AudioPlayerSimple: Audio element error:', e);
+    console.error('AudioPlayerSimple: Audio element error details:', e.target?.error);
     setError('Failed to play audio file');
   };
 
