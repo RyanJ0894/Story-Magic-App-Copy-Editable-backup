@@ -82,10 +82,11 @@ export default function Dashboard() {
       <header className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-lg">
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
           <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-            <Film className="h-8 w-8 text-cinema-gold" />
-            <h1 className="text-xl font-bold bg-gradient-accent bg-clip-text text-transparent">
-              Story Magic
-            </h1>
+            <img 
+              src="/lovable-uploads/2a81761c-efdc-4094-9e5d-f297e2f44571.png" 
+              alt="Story Magic" 
+              className="h-8"
+            />
           </Link>
         </div>
       </header>
