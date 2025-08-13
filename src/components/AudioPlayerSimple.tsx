@@ -16,24 +16,44 @@ export function AudioPlayerSimple({ audioUrl }: AudioPlayerProps) {
     if (!audioUrl) return;
     
     try {
+      console.log('AudioPlayer: Raw audioUrl length:', audioUrl.length);
+      console.log('AudioPlayer: First 100 chars:', audioUrl.substring(0, 100));
+      
       // Clean and decode base64
       const cleanBase64 = audioUrl.replace(/\s/g, '');
+      console.log('AudioPlayer: Cleaned base64 length:', cleanBase64.length);
+      
+      // Check if it's valid base64
+      if (!cleanBase64.match(/^[A-Za-z0-9+/]*={0,2}$/)) {
+        console.error('AudioPlayer: Invalid base64 format');
+        return;
+      }
+      
       const byteCharacters = atob(cleanBase64);
+      console.log('AudioPlayer: Decoded byte length:', byteCharacters.length);
+      
       const byteNumbers = new Array(byteCharacters.length);
       for (let i = 0; i < byteCharacters.length; i++) {
         byteNumbers[i] = byteCharacters.charCodeAt(i);
       }
       const byteArray = new Uint8Array(byteNumbers);
+      
+      // Check if it looks like MP3 data (should start with ID3 or sync frame)
+      const firstBytes = Array.from(byteArray.slice(0, 10)).map(b => b.toString(16).padStart(2, '0')).join('');
+      console.log('AudioPlayer: First 10 bytes (hex):', firstBytes);
+      
       const blob = new Blob([byteArray], { type: 'audio/mpeg' });
+      console.log('AudioPlayer: Blob size:', blob.size);
       
       const url = URL.createObjectURL(blob);
       setAudioObjectUrl(url);
+      console.log('AudioPlayer: Object URL created:', url);
       
       return () => {
         URL.revokeObjectURL(url);
       };
     } catch (error) {
-      console.error('Failed to create audio URL:', error);
+      console.error('AudioPlayer: Failed to create audio URL:', error);
     }
   }, [audioUrl]);
 
