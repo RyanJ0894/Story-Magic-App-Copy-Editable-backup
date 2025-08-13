@@ -109,7 +109,11 @@ export function AudioPlayerSimple({ audioUrl }: AudioPlayerProps) {
   // Try browser audio player first with ID3 tag stripping
   const createCleanAudioSrc = () => {
     try {
+      console.log('Creating clean audio source...');
       const cleanBase64 = audioUrl.replace(/\s/g, '');
+      console.log('Base64 length:', cleanBase64.length);
+      console.log('First 50 chars:', cleanBase64.substring(0, 50));
+      
       const byteCharacters = atob(cleanBase64);
       let byteArray = new Uint8Array(byteCharacters.length);
       
@@ -117,9 +121,12 @@ export function AudioPlayerSimple({ audioUrl }: AudioPlayerProps) {
         byteArray[i] = byteCharacters.charCodeAt(i);
       }
       
+      console.log('Original byte array length:', byteArray.length);
+      console.log('First 20 bytes (hex):', Array.from(byteArray.slice(0, 20)).map(b => b.toString(16).padStart(2, '0')).join(' '));
+      
       // Check for and strip ID3v2 tags
       if (byteArray[0] === 0x49 && byteArray[1] === 0x44 && byteArray[2] === 0x33) {
-        console.log('Detected ID3v2 tags, stripping...');
+        console.log('✓ Detected ID3v2 tags, stripping...');
         
         // ID3v2 size is in bytes 6-9 (synchsafe integer)
         const size = ((byteArray[6] & 0x7f) << 21) | 
@@ -129,31 +136,42 @@ export function AudioPlayerSimple({ audioUrl }: AudioPlayerProps) {
         
         const headerSize = 10;
         const totalID3Size = headerSize + size;
+        console.log('ID3 size calculated:', totalID3Size);
         
         if (totalID3Size < byteArray.length) {
           byteArray = byteArray.slice(totalID3Size);
-          console.log('Stripped ID3 tags, new size:', byteArray.length);
+          console.log('✓ Stripped ID3 tags, new size:', byteArray.length);
+          console.log('New first 20 bytes (hex):', Array.from(byteArray.slice(0, 20)).map(b => b.toString(16).padStart(2, '0')).join(' '));
+        } else {
+          console.error('❌ ID3 size larger than total data');
         }
+      } else {
+        console.log('No ID3v2 tags detected');
       }
       
       // Find MP3 frame sync (0xFF followed by 0xE0-0xFF)
       let mp3Start = 0;
-      for (let i = 0; i < byteArray.length - 1; i++) {
+      for (let i = 0; i < Math.min(byteArray.length - 1, 1000); i++) {
         if (byteArray[i] === 0xFF && (byteArray[i + 1] & 0xE0) === 0xE0) {
           mp3Start = i;
-          console.log('Found MP3 sync at:', i);
+          console.log('✓ Found MP3 sync at byte:', i);
           break;
         }
       }
       
       if (mp3Start > 0) {
         byteArray = byteArray.slice(mp3Start);
+        console.log('✓ Trimmed to MP3 sync, final size:', byteArray.length);
       }
       
+      console.log('Final audio data first 10 bytes:', Array.from(byteArray.slice(0, 10)).map(b => b.toString(16).padStart(2, '0')).join(' '));
+      
       const blob = new Blob([byteArray], { type: 'audio/mpeg' });
-      return URL.createObjectURL(blob);
+      const url = URL.createObjectURL(blob);
+      console.log('✓ Created blob URL:', url);
+      return url;
     } catch (error) {
-      console.error('Failed to create clean audio source:', error);
+      console.error('❌ Failed to create clean audio source:', error);
       return `data:audio/mpeg;base64,${audioUrl}`;
     }
   };
