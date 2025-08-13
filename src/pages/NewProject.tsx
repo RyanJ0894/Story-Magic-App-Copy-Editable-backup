@@ -32,6 +32,7 @@ export default function NewProject() {
   const [directorJson, setDirectorJson] = useState<any | null>(null);
   const [audioResult, setAudioResult] = useState<any | null>(null);
   const [error, setError] = useState<string>("");
+  const [generatingAudio, setGeneratingAudio] = useState(false);
 
   async function ensureSignedIn() {
     const { data } = await supabase.auth.getUser();
@@ -185,6 +186,41 @@ export default function NewProject() {
           <pre className="text-xs bg-black/30 rounded-md p-3 overflow-auto max-h-80">
             {JSON.stringify(directorJson, null, 2)}
           </pre>
+          
+          {!doAudio && !audioResult && (
+            <button
+              onClick={async () => {
+                if (!projectId || !directorJson) return;
+                
+                setGeneratingAudio(true);
+                setError("");
+                
+                try {
+                  setStatus("Generating audio…");
+                  const audio = await runAudio(projectId, directorJson);
+                  setAudioResult(audio);
+                  setStatus("Audio generated successfully!");
+                } catch (err: any) {
+                  console.error("Audio generation failed:", err);
+                  setError(err?.message ?? String(err));
+                  setStatus("Audio generation failed.");
+                } finally {
+                  setGeneratingAudio(false);
+                }
+              }}
+              disabled={generatingAudio || !projectId}
+              className="mt-4 rounded-md px-4 py-2 bg-yellow-400 text-black disabled:opacity-60 flex items-center gap-2"
+            >
+              {generatingAudio ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                  Generating Audio...
+                </>
+              ) : (
+                "Generate Audio"
+              )}
+            </button>
+          )}
         </div>
       )}
 
