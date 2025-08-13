@@ -13,6 +13,18 @@ export function AudioPlayerSimple({ audioUrl }: AudioPlayerProps) {
 
   const handleAudioError = (e: any) => {
     console.error('Audio playback error:', e.target?.error);
+    console.error('Audio error code:', e.target?.error?.code);
+    console.error('Audio src length:', audioUrl.length);
+    console.error('Audio src first 100 chars:', audioUrl.substring(0, 100));
+    
+    // Check if this looks like valid base64 MP3 data
+    try {
+      const decoded = atob(audioUrl.substring(0, 100));
+      console.error('Decoded first bytes as hex:', Array.from(new Uint8Array(decoded.split('').map(c => c.charCodeAt(0)))).map(b => b.toString(16).padStart(2, '0')).join(' '));
+    } catch (e) {
+      console.error('Failed to decode base64:', e);
+    }
+    
     setError('Browser audio playback failed');
     setShowFallback(true);
   };
