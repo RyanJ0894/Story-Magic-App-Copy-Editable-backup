@@ -1,6 +1,6 @@
 // src/pages/NewProject.tsx
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Film, ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { createProject, runDirector, runAudio } from "../integrations/filmDirectorApi";
@@ -18,6 +18,7 @@ JOHN: Yeah, let’s keep moving.`;
  * 3) Optionally invokes generate-audio with that director_json
  */
 export default function NewProject() {
+  const navigate = useNavigate();
   const [title, setTitle] = useState("Untitled Project");
   const [script, setScript] = useState(DEFAULT_SCRIPT);
 
@@ -58,17 +59,35 @@ export default function NewProject() {
         setDirectorJson(dirJson);
       }
 
-      if (doAudio) {
+      if (doAudio && dirJson) {
         setStatus("Generating audio…");
-        const audio = await runAudio(created.id, dirJson ?? []);
+        const audio = await runAudio(created.id, dirJson);
         setAudioResult(audio);
       }
 
-      setStatus("All done! You can head to your Dashboard.");
+      // If "Generate Audio after analysis" was checked, navigate to project detail
+      if (doAudio && dirJson) {
+        setStatus("Redirecting to project…");
+        setTimeout(() => navigate(`/projects/${created.id}`), 1500);
+      } else {
+        setStatus("All done! You can head to your Dashboard.");
+      }
     } catch (err: any) {
       console.error(err);
       setError(err?.message ?? String(err));
       setStatus("Something went wrong.");
+      
+      // Update project status to error if we have a project ID
+      if (projectId) {
+        try {
+          await supabase
+            .from("user_projects")
+            .update({ ai_director_json: JSON.stringify({ error: err?.message ?? String(err) }) })
+            .eq("id", projectId);
+        } catch (updateErr) {
+          console.error("Failed to update project with error status:", updateErr);
+        }
+      }
     } finally {
       setBusy(false);
     }

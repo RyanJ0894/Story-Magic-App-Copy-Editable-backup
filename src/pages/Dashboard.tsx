@@ -1,7 +1,7 @@
 // src/pages/Dashboard.tsx
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Trash2, AlertTriangle, Film } from "lucide-react";
+import { Trash2, AlertTriangle, Film, Eye } from "lucide-react";
 import { supabase } from "../integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { 
@@ -17,7 +17,13 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 
-type ProjectRow = { id: string; title: string | null; created_at: string };
+type ProjectRow = { 
+  id: string; 
+  title: string | null; 
+  created_at: string;
+  ai_director_json: string | null;
+  audio_url: string | null;
+};
 
 export default function Dashboard() {
   const [projects, setProjects] = useState<ProjectRow[]>([]);
@@ -32,7 +38,7 @@ export default function Dashboard() {
       try {
         const { data, error } = await supabase
           .from("user_projects")
-          .select("id,title,created_at")
+          .select("id,title,created_at,ai_director_json,audio_url")
           .order("created_at", { ascending: false });
         if (error) throw error;
         if (alive) setProjects(data as ProjectRow[]);
@@ -116,9 +122,20 @@ export default function Dashboard() {
               <div className="flex-1">
                 <div className="font-medium">{p.title || "Untitled Project"}</div>
                 <div className="text-sm opacity-70">{new Date(p.created_at).toLocaleString()}</div>
+                <div className="text-xs text-muted-foreground mt-1">
+                  Status: {p.ai_director_json ? (p.audio_url ? 'Complete' : 'Analyzed') : 'Draft'}
+                </div>
               </div>
               
-              <AlertDialog>
+              <div className="flex items-center gap-2">
+                <Link to={`/projects/${p.id}`}>
+                  <Button variant="outline" size="sm">
+                    <Eye className="h-4 w-4 mr-2" />
+                    View
+                  </Button>
+                </Link>
+                
+                <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button 
                     variant="ghost" 
@@ -151,6 +168,7 @@ export default function Dashboard() {
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
+              </div>
             </div>
           </li>
         ))}

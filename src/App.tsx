@@ -6,6 +6,7 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import NewProject from "./pages/NewProject";
+import ProjectDetail from "./pages/ProjectDetail";
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
         <Route path="/signup" element={<Auth />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/projects/new" element={<NewProject />} />
+        <Route path="/projects/:id" element={<ProjectDetail />} />
       </Routes>
       <Toaster />
     </BrowserRouter>
