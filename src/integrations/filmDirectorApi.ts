@@ -18,13 +18,13 @@ export async function createProject(title: string, script: string): Promise<{ id
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("User must be authenticated to create a project");
 
-  // Use direct SQL to bypass schema cache issues entirely
+  // Try the original column names that the cache expects
   const { data, error } = await supabase
     .from("user_projects")
     .insert({
-      project_name: title,
+      title: title,
       user_id: user.id
-    } as any)  // Type assertion to bypass TypeScript checks
+    } as any)
     .select("id")
     .single();
 
