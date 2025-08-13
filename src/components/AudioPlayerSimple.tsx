@@ -106,13 +106,64 @@ export function AudioPlayerSimple({ audioUrl }: AudioPlayerProps) {
     );
   }
 
-  // Try browser audio player first
+  // Try browser audio player first with ID3 tag stripping
+  const createCleanAudioSrc = () => {
+    try {
+      const cleanBase64 = audioUrl.replace(/\s/g, '');
+      const byteCharacters = atob(cleanBase64);
+      let byteArray = new Uint8Array(byteCharacters.length);
+      
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteArray[i] = byteCharacters.charCodeAt(i);
+      }
+      
+      // Check for and strip ID3v2 tags
+      if (byteArray[0] === 0x49 && byteArray[1] === 0x44 && byteArray[2] === 0x33) {
+        console.log('Detected ID3v2 tags, stripping...');
+        
+        // ID3v2 size is in bytes 6-9 (synchsafe integer)
+        const size = ((byteArray[6] & 0x7f) << 21) | 
+                    ((byteArray[7] & 0x7f) << 14) | 
+                    ((byteArray[8] & 0x7f) << 7) | 
+                    (byteArray[9] & 0x7f);
+        
+        const headerSize = 10;
+        const totalID3Size = headerSize + size;
+        
+        if (totalID3Size < byteArray.length) {
+          byteArray = byteArray.slice(totalID3Size);
+          console.log('Stripped ID3 tags, new size:', byteArray.length);
+        }
+      }
+      
+      // Find MP3 frame sync (0xFF followed by 0xE0-0xFF)
+      let mp3Start = 0;
+      for (let i = 0; i < byteArray.length - 1; i++) {
+        if (byteArray[i] === 0xFF && (byteArray[i + 1] & 0xE0) === 0xE0) {
+          mp3Start = i;
+          console.log('Found MP3 sync at:', i);
+          break;
+        }
+      }
+      
+      if (mp3Start > 0) {
+        byteArray = byteArray.slice(mp3Start);
+      }
+      
+      const blob = new Blob([byteArray], { type: 'audio/mpeg' });
+      return URL.createObjectURL(blob);
+    } catch (error) {
+      console.error('Failed to create clean audio source:', error);
+      return `data:audio/mpeg;base64,${audioUrl}`;
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div className="bg-background border rounded-md p-4">
         <audio 
           ref={audioRef}
-          src={`data:audio/mpeg;base64,${audioUrl}`}
+          src={createCleanAudioSrc()}
           onError={handleAudioError}
           onCanPlay={handleCanPlay}
           onPlay={() => setIsPlaying(true)}
