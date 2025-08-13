@@ -74,9 +74,15 @@ serve(async (req) => {
     const audioBuffer = await audioResponse.arrayBuffer();
     console.log('Generate Audio: Audio buffer size:', audioBuffer.byteLength);
 
-    // Convert to base64 - clean format without extra headers
+    // Convert to base64 using chunks to handle large files
     const audioArray = new Uint8Array(audioBuffer);
-    const base64Audio = btoa(String.fromCharCode(...audioArray));
+    let base64Audio = '';
+    const chunkSize = 8192;
+    
+    for (let i = 0; i < audioArray.length; i += chunkSize) {
+      const chunk = audioArray.slice(i, i + chunkSize);
+      base64Audio += btoa(String.fromCharCode.apply(null, Array.from(chunk)));
+    }
     
     console.log('Generate Audio: Base64 conversion complete, length:', base64Audio.length);
 
