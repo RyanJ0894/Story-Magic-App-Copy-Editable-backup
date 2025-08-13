@@ -88,7 +88,7 @@ const Auth = () => {
             <img 
               src="/lovable-uploads/2a81761c-efdc-4094-9e5d-f297e2f44571.png" 
               alt="Story Magic" 
-              className="h-21"
+              className="h-14"
             />
           </Link>
         </div>
