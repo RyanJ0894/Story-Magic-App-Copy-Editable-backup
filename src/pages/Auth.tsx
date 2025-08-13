@@ -81,7 +81,7 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <div className="w-full max-w-md space-y-4">
+      <div className="w-full max-w-md space-y-2">
         {/* Logo */}
         <div className="text-center">
           <Link to="/" className="inline-flex items-center gap-2 hover:opacity-80 transition-opacity">
