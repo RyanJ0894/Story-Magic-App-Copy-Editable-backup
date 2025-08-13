@@ -85,7 +85,7 @@ export default function Dashboard() {
             <img 
               src="/lovable-uploads/2a81761c-efdc-4094-9e5d-f297e2f44571.png" 
               alt="Story Magic" 
-              className="h-30"
+              className="h-15"
             />
           </Link>
         </div>
