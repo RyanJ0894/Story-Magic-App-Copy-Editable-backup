@@ -30,16 +30,38 @@ serve(async (req) => {
       throw new Error('Missing required parameters: project_id and director');
     }
 
-    // Extract dialogue from director JSON - it's an array of scene objects with dialogue property
-    const dialogueText = Array.isArray(director) 
-      ? director.map((scene: any) => scene.dialogue || '').join(' ').trim()
-      : (director.lines || []).map((line: any) => line.text || '').join(' ').trim();
+    // Extract dialogue from director JSON
+    let dialogueText = '';
+    
+    console.log('Generate Audio: Raw director data type:', typeof director);
+    console.log('Generate Audio: Is array?', Array.isArray(director));
+    
+    if (Array.isArray(director)) {
+      // If it's an array of scenes
+      dialogueText = director
+        .map((scene: any) => {
+          console.log('Generate Audio: Scene object keys:', Object.keys(scene || {}));
+          return scene?.dialogue || '';
+        })
+        .filter(d => d.length > 0)
+        .join(' ')
+        .trim();
+    } else if (director?.lines && Array.isArray(director.lines)) {
+      // If it's a director object with lines array
+      dialogueText = director.lines
+        .map((line: any) => line.text || line.dialogue || '')
+        .filter(d => d.length > 0)
+        .join(' ')
+        .trim();
+    } else {
+      console.error('Generate Audio: Unexpected director structure:', director);
+    }
 
     console.log('Generate Audio: Extracted dialogue:', dialogueText);
     console.log('Generate Audio: Dialogue length:', dialogueText.length);
 
-    if (!dialogueText) {
-      throw new Error('No dialogue found in director JSON');
+    if (!dialogueText || dialogueText.length === 0) {
+      throw new Error(`No dialogue found in director JSON. Structure: ${JSON.stringify(director, null, 2)}`);
     }
 
     // Generate audio using ElevenLabs with browser-compatible settings
