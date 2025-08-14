@@ -97,28 +97,34 @@ serve(async (req) => {
     const audioBuffer = await audioResponse.arrayBuffer();
     console.log('Generate Audio: Audio buffer size:', audioBuffer.byteLength);
 
-    // Use the full audio buffer without stripping ID3 tags
-    // Modern browsers and audio players handle ID3 tags correctly
-    const audioArray = new Uint8Array(audioBuffer);
-    console.log('Generate Audio: Using full audio data, size:', audioArray.length);
+    // Upload audio to Supabase Storage
+    const fileName = `${project_id}/${Date.now()}.mp3`;
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from('audio')
+      .upload(fileName, audioBuffer, {
+        contentType: 'audio/mpeg',
+        cacheControl: '3600'
+      });
 
-    // Convert to base64 properly without call stack issues
-    let binary = '';
-    
-    // Convert byte array to binary string without using apply()
-    for (let i = 0; i < audioArray.length; i++) {
-      binary += String.fromCharCode(audioArray[i]);
+    if (uploadError) {
+      console.error('Storage upload error:', uploadError);
+      throw new Error(`Failed to upload audio: ${uploadError.message}`);
     }
-    
-    // Convert to base64
-    const base64Audio = btoa(binary);
-    
-    console.log('Generate Audio: Base64 conversion complete, length:', base64Audio.length);
 
-    // Update the project in the database
+    console.log('Generate Audio: File uploaded successfully:', uploadData.path);
+
+    // Get public URL
+    const { data: publicUrlData } = supabase.storage
+      .from('audio')
+      .getPublicUrl(fileName);
+
+    const publicUrl = publicUrlData.publicUrl;
+    console.log('Generate Audio: Public URL:', publicUrl);
+
+    // Update the project in the database with public URL
     const { error: updateError } = await supabase
       .from('user_projects')
-      .update({ audio_url: base64Audio })
+      .update({ audio_url: publicUrl })
       .eq('id', project_id);
 
     if (updateError) {
@@ -131,7 +137,8 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: true,
-        audio_url: base64Audio,
+        path: uploadData.path,
+        public_url: publicUrl,
         message: 'Audio generated successfully',
         format: 'mp3_44100_128',
         size_bytes: audioBuffer.byteLength

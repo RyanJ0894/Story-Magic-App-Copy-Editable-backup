@@ -4,7 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Film, ArrowLeft, Download } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { createProject, runDirector, runAudio } from "../integrations/filmDirectorApi";
-import { AudioPlayerSimple } from "@/components/AudioPlayerSimple";
+
 
 // A tiny starter script so the form isn't empty
 const DEFAULT_SCRIPT = `EXT. PARK – DAY
@@ -52,16 +52,8 @@ export default function NewProject() {
       const audio = await runAudio(projectId, directorJson);
       setAudioResult(audio);
       
-      if (audio.success && audio.audio_url) {
-        // Update database with audio URL only (status column doesn't exist)
-        await supabase
-          .from("user_projects")
-          .update({ 
-            audio_url: audio.audio_url
-          })
-          .eq("id", projectId);
-        
-        setAudioUrl(audio.audio_url);
+      if (audio.success && audio.public_url) {
+        setAudioUrl(audio.public_url);
         setStatus("Audio generated successfully!");
       } else {
         throw new Error(audio.message || "Audio generation failed");
@@ -78,29 +70,13 @@ export default function NewProject() {
   function downloadAudio() {
     if (!audioUrl) return;
     
-    try {
-      // Clean the base64 string and create blob
-      const cleanBase64 = audioUrl.replace(/\s/g, '');
-      const byteCharacters = atob(cleanBase64);
-      const byteNumbers = new Array(byteCharacters.length);
-      for (let i = 0; i < byteCharacters.length; i++) {
-        byteNumbers[i] = byteCharacters.charCodeAt(i);
-      }
-      const byteArray = new Uint8Array(byteNumbers);
-      const blob = new Blob([byteArray], { type: 'audio/mp3' });
-      
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = 'story-magic.mp3';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error('Download failed:', error);
-      setError('Failed to download audio file');
-    }
+    const link = document.createElement('a');
+    link.href = audioUrl;
+    link.download = 'story-magic.mp3';
+    link.target = '_blank';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   }
 
   // Load existing project data if we have a project ID
@@ -119,7 +95,7 @@ export default function NewProject() {
         
         if (data?.audio_url) {
           setAudioUrl(data.audio_url);
-          setAudioResult({ success: true, audio_url: data.audio_url });
+          setAudioResult({ success: true, public_url: data.audio_url });
         }
       } catch (err) {
         console.error("Failed to load project data:", err);
@@ -152,9 +128,22 @@ export default function NewProject() {
 
       // Auto-run audio generation if checked
       if (doAudio && dirJson) {
-        await handleGenerateAudio();
-        setStatus("Redirecting to project…");
-        setTimeout(() => navigate(`/projects/${created.id}`), 1500);
+        setStatus("Generating audio…");
+        try {
+          const audio = await runAudio(created.id, dirJson);
+          if (audio.success && audio.public_url) {
+            setAudioUrl(audio.public_url);
+            setAudioResult(audio);
+            setStatus("Audio generated successfully! Redirecting to project…");
+            setTimeout(() => navigate(`/projects/${created.id}`), 1500);
+          } else {
+            throw new Error(audio.message || "Audio generation failed");
+          }
+        } catch (audioErr: any) {
+          console.error("Audio generation failed:", audioErr);
+          setError(audioErr?.message ?? String(audioErr));
+          setStatus("Project created, but audio generation failed.");
+        }
       } else {
         setStatus("All done! You can head to your Dashboard.");
       }
@@ -296,7 +285,9 @@ export default function NewProject() {
           <h2 className="text-xl font-semibold mb-4">Generated Audio</h2>
           
           <div className="bg-black/30 rounded-md p-4 space-y-4">
-            <AudioPlayerSimple audioUrl={audioUrl} />
+            <audio controls src={audioUrl} className="w-full">
+              Your browser does not support the audio element.
+            </audio>
             
             <button
               onClick={downloadAudio}
