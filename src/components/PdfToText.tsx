@@ -4,13 +4,10 @@ import {
   GlobalWorkerOptions,
   getDocument,
 } from "pdfjs-dist";
-import * as pdfjsLib from "pdfjs-dist";
+import workerSrc from "pdfjs-dist/build/pdf.worker.min.js?url";
 
-// Configure worker using same-origin bundle instead of CDN
-GlobalWorkerOptions.workerSrc = new URL(
-  'pdfjs-dist/build/pdf.worker.min.js',
-  import.meta.url,
-).toString();
+// Use Vite asset URL import for same-origin worker
+GlobalWorkerOptions.workerSrc = workerSrc;
 
 type Props = {
   onText: (txt: string, mode?: "replace" | "append") => void;
