@@ -97,23 +97,10 @@ serve(async (req) => {
     const audioBuffer = await audioResponse.arrayBuffer();
     console.log('Generate Audio: Audio buffer size:', audioBuffer.byteLength);
 
-    let audioArray = new Uint8Array(audioBuffer);
-    
-    // Strip ID3 tags if present (they start with "ID3")
-    if (audioArray[0] === 0x49 && audioArray[1] === 0x44 && audioArray[2] === 0x33) {
-      console.log('Generate Audio: Stripping ID3 tags');
-      // ID3v2 header is 10 bytes, then size is in bytes 6-9
-      const size = ((audioArray[6] & 0x7f) << 21) |
-                   ((audioArray[7] & 0x7f) << 14) |
-                   ((audioArray[8] & 0x7f) << 7) |
-                   (audioArray[9] & 0x7f);
-      const headerSize = 10;
-      const totalTagSize = headerSize + size;
-      console.log('Generate Audio: ID3 tag size:', totalTagSize);
-      
-      // Skip the ID3 tag
-      audioArray = audioArray.slice(totalTagSize);
-    }
+    // Use the full audio buffer without stripping ID3 tags
+    // Modern browsers and audio players handle ID3 tags correctly
+    const audioArray = new Uint8Array(audioBuffer);
+    console.log('Generate Audio: Using full audio data, size:', audioArray.length);
 
     // Convert to base64 properly without call stack issues
     let binary = '';
