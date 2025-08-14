@@ -1,4 +1,5 @@
 // src/pages/NewProject.tsx
+import PdfToText from "@/components/PdfToText";
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Film, ArrowLeft, Download } from "lucide-react";
