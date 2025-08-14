@@ -5,8 +5,11 @@ import {
   getDocument,
 } from "pdfjs-dist";
 
-// Use jsDelivr CDN with proper CORS headers for pdfjs-dist v5.4.54
-GlobalWorkerOptions.workerSrc = "https://cdn.jsdelivr.net/npm/pdfjs-dist@5.4.54/build/pdf.worker.min.js";
+// Set worker source to use bundled version
+GlobalWorkerOptions.workerSrc = new URL(
+  'pdfjs-dist/build/pdf.worker.min.mjs',
+  import.meta.url,
+).href;
 
 type Props = {
   onText: (txt: string, mode?: "replace" | "append") => void;
