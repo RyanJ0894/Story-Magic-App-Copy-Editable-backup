@@ -42,26 +42,49 @@ export default function NewProject() {
   }
 
   async function handleGenerateAudio() {
-    if (!projectId || !directorJson) return;
-    
-    setGeneratingAudio(true);
-    setError("");
-    
     try {
-      setStatus("Generating audio…");
-      const audio = await runAudio(projectId, directorJson);
-      setAudioResult(audio);
-      
-      if (audio.success && audio.public_url) {
-        setAudioUrl(audio.public_url);
-        setStatus("Audio generated successfully!");
-      } else {
-        throw new Error(audio.message || "Audio generation failed");
+      setGeneratingAudio(true);
+      setStatus("Generating audio...");
+      setError("");
+
+      if (!projectId) {
+        setError("No project id. Create a project first.");
+        setGeneratingAudio(false);
+        return;
       }
-    } catch (err: any) {
-      console.error("Audio generation failed:", err);
-      setError(err?.message ?? String(err));
-      setStatus("Audio generation failed.");
+      if (!directorJson) {
+        setError("No director JSON available. Run AI Director first.");
+        setGeneratingAudio(false);
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke("generate-audio", {
+        body: { project_id: projectId, director: directorJson },
+      });
+
+      if (error) {
+        setStatus("Audio generation failed");
+        setError(error.message || "Edge function error");
+        setGeneratingAudio(false);
+        return;
+      }
+
+      const ok = !!data?.success && !!data?.public_url;
+      if (!ok) {
+        setStatus("Audio generation failed");
+        setError(data?.message || "No public_url returned");
+        setGeneratingAudio(false);
+        return;
+      }
+
+      // success
+      setAudioUrl(data.public_url);
+      setAudioResult(data);
+      setStatus("Audio generated successfully");
+      setError("");
+    } catch (e: any) {
+      setStatus("Audio generation failed");
+      setError(e?.message || String(e));
     } finally {
       setGeneratingAudio(false);
     }
@@ -280,7 +303,7 @@ export default function NewProject() {
         </div>
       )}
 
-      {audioResult && audioUrl && (
+      {audioUrl && (
         <div className="mt-8">
           <h2 className="text-xl font-semibold mb-4">Generated Audio</h2>
           
@@ -289,13 +312,14 @@ export default function NewProject() {
               Your browser does not support the audio element.
             </audio>
             
-            <button
-              onClick={downloadAudio}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors"
+            <a
+              href={audioUrl}
+              download="story-magic.mp3"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors"
             >
               <Download className="h-4 w-4" />
               Download MP3
-            </button>
+            </a>
           </div>
         </div>
       )}
