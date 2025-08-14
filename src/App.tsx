@@ -9,6 +9,8 @@ import NewProject from "./pages/NewProject";
 import ProjectDetail from "./pages/ProjectDetail";
 
 function App() {
+  console.log('App component rendering...');
+  
   return (
     <BrowserRouter>
       <Routes>
