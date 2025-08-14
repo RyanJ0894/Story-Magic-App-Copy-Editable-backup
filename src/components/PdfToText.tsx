@@ -4,10 +4,13 @@ import {
   GlobalWorkerOptions,
   getDocument,
 } from "pdfjs-dist";
-import workerSrc from "pdfjs-dist/build/pdf.worker.min.js?url";
+import * as pdfjsLib from "pdfjs-dist";
 
-// Use a SAME-ORIGIN string URL, not a CDN or Worker object
-GlobalWorkerOptions.workerSrc = workerSrc;
+// Configure worker using same-origin bundle instead of CDN
+GlobalWorkerOptions.workerSrc = new URL(
+  'pdfjs-dist/build/pdf.worker.min.js',
+  import.meta.url,
+).toString();
 
 type Props = {
   onText: (txt: string, mode?: "replace" | "append") => void;
