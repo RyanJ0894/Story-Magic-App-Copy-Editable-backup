@@ -97,13 +97,20 @@ serve(async (req) => {
     const audioBuffer = await audioResponse.arrayBuffer();
     console.log('Generate Audio: Audio buffer size:', audioBuffer.byteLength);
 
-    // Upload audio to Supabase Storage
-    const fileName = `${project_id}/${Date.now()}.mp3`;
+    // Convert ArrayBuffer to Uint8Array for proper binary handling
+    const audioBytes = new Uint8Array(audioBuffer);
+    
+    // Create a proper blob with correct MIME type
+    const audioBlob = new Blob([audioBytes], { type: 'audio/mpeg' });
+
+    // Upload audio to Supabase Storage with proper path structure
+    const fileName = `projects/${project_id}/${Date.now()}.mp3`;
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from('audio')
-      .upload(fileName, audioBuffer, {
+      .upload(fileName, audioBlob, {
         contentType: 'audio/mpeg',
-        cacheControl: '3600'
+        cacheControl: '3600',
+        upsert: true
       });
 
     if (uploadError) {
