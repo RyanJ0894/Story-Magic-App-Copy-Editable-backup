@@ -1,11 +1,11 @@
 // src/pages/NewProject.tsx
 import PdfToText from "@/components/PdfToText";
+import { Textarea } from "@/components/ui/textarea";
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Film, ArrowLeft, Download } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { createProject, runDirector, runAudio } from "../integrations/filmDirectorApi";
-
 
 // A tiny starter script so the form isn't empty
 const DEFAULT_SCRIPT = `EXT. PARK – DAY
@@ -93,11 +93,10 @@ export default function NewProject() {
 
   function downloadAudio() {
     if (!audioUrl) return;
-    
-    const link = document.createElement('a');
+    const link = document.createElement("a");
     link.href = audioUrl;
-    link.download = 'story-magic.mp3';
-    link.target = '_blank';
+    link.download = "story-magic.mp3";
+    link.target = "_blank";
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -106,7 +105,7 @@ export default function NewProject() {
   // Load existing project data if we have a project ID
   useEffect(() => {
     if (!projectId) return;
-    
+
     async function loadProjectData() {
       try {
         const { data, error } = await supabase
@@ -114,9 +113,9 @@ export default function NewProject() {
           .select("audio_url")
           .eq("id", projectId)
           .maybeSingle();
-          
+
         if (error) throw error;
-        
+
         if (data?.audio_url) {
           setAudioUrl(data.audio_url);
           setAudioResult({ success: true, public_url: data.audio_url });
@@ -125,7 +124,7 @@ export default function NewProject() {
         console.error("Failed to load project data:", err);
       }
     }
-    
+
     loadProjectData();
   }, [projectId]);
 
@@ -175,7 +174,7 @@ export default function NewProject() {
       console.error(err);
       setError(err?.message ?? String(err));
       setStatus("Something went wrong.");
-      
+
       // Update project status to error if we have a project ID
       if (projectId) {
         try {
@@ -198,15 +197,15 @@ export default function NewProject() {
       <header className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-lg">
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
           <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-            <img 
-              src="/lovable-uploads/2a81761c-efdc-4094-9e5d-f297e2f44571.png" 
-              alt="Story Magic" 
+            <img
+              src="/lovable-uploads/2a81761c-efdc-4094-9e5d-f297e2f44571.png"
+              alt="Story Magic"
               className="h-28"
             />
           </Link>
-          
-          <Link 
-            to="/dashboard" 
+
+          <Link
+            to="/dashboard"
             className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
@@ -218,112 +217,138 @@ export default function NewProject() {
       <div className="max-w-4xl mx-auto px-6 py-10">
         <h1 className="text-3xl font-bold mb-6">Create New Project</h1>
 
-      <form onSubmit={onSubmit} className="space-y-6">
-        <div>
-          <label className="block text-sm font-medium mb-2">Title</label>
-          <input
-            className="w-full rounded-md border px-3 py-2 bg-black/20"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="My Project"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-2">Script</label>
-          <textarea
-            className="w-full h-56 rounded-md border px-3 py-2 bg-black/20"
-            value={script}
-            onChange={(e) => setScript(e.target.value)}
-          />
-        </div>
-
-        <div className="flex items-center gap-6">
-          <label className="inline-flex items-center gap-2">
+        <form onSubmit={onSubmit} className="space-y-6">
+          {/* Title */}
+          <div>
+            <label htmlFor="title" className="block text-sm font-medium mb-2">
+              Title
+            </label>
             <input
-              type="checkbox"
-              checked={doDirector}
-              onChange={(e) => setDoDirector(e.target.checked)}
+              id="title"
+              className="w-full rounded-md border px-3 py-2 bg-black/20"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="My Project"
             />
-            <span>Run AI Director (analyze script)</span>
-          </label>
-
-          <label className="inline-flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={doAudio}
-              onChange={(e) => setDoAudio(e.target.checked)}
-            />
-            <span>Generate Audio after analysis</span>
-          </label>
-        </div>
-
-        <button
-          type="submit"
-          disabled={busy}
-          className="rounded-md px-4 py-2 bg-yellow-400 text-black disabled:opacity-60"
-        >
-          {busy ? "Working…" : "Create Project"}
-        </button>
-      </form>
-
-      <div className="mt-8 space-y-3">
-        {status && <p className="text-sm opacity-80">Status: {status}</p>}
-        {projectId && (
-          <p className="text-sm">
-            Project ID: <code className="opacity-80">{projectId}</code>{" "}
-            (<a className="underline" href="/dashboard">Go to Dashboard</a>)
-          </p>
-        )}
-        {error && <p className="text-red-400 text-sm">Error: {error}</p>}
-      </div>
-
-      {directorJson && (
-        <div className="mt-8">
-          <h2 className="text-xl font-semibold mb-2">Director JSON (preview)</h2>
-          <pre className="text-xs bg-black/30 rounded-md p-3 overflow-auto max-h-80">
-            {JSON.stringify(directorJson, null, 2)}
-          </pre>
-          
-          {!doAudio && !audioResult && (
-            <button
-              onClick={handleGenerateAudio}
-              disabled={generatingAudio || !projectId}
-              className="mt-4 rounded-md px-4 py-2 bg-yellow-400 text-black disabled:opacity-60 flex items-center gap-2"
-            >
-              {generatingAudio ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
-                  Generating Audio...
-                </>
-              ) : (
-                "Generate Audio"
-              )}
-            </button>
-          )}
-        </div>
-      )}
-
-      {audioUrl && (
-        <div className="mt-8">
-          <h2 className="text-xl font-semibold mb-4">Generated Audio</h2>
-          
-          <div className="bg-black/30 rounded-md p-4 space-y-4">
-            <audio controls src={audioUrl} className="w-full">
-              Your browser does not support the audio element.
-            </audio>
-            
-            <a
-              href={audioUrl}
-              download="story-magic.mp3"
-              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors"
-            >
-              <Download className="h-4 w-4" />
-              Download MP3
-            </a>
           </div>
+
+          {/* PDF upload helper — shows Replace/Append, then fills the Script box */}
+          <div className="mb-2">
+            <PdfToText
+              onText={(txt: string, mode: "replace" | "append" = "replace") => {
+                if (mode === "replace") {
+                  setScript(txt);
+                } else {
+                  setScript((prev) => (prev ? `${prev}\n\n${txt}` : txt));
+                }
+              }}
+            />
+          </div>
+
+          {/* Script textarea */}
+          <div>
+            <label htmlFor="script" className="block text-sm font-medium mb-2">
+              Script
+            </label>
+            <Textarea
+              id="script"
+              rows={14}
+              placeholder="Paste your script here, or upload a PDF above…"
+              value={script}
+              onChange={(e) => setScript(e.target.value)}
+            />
+          </div>
+
+          {/* Options */}
+          <div className="flex items-center gap-6">
+            <label className="inline-flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={doDirector}
+                onChange={(e) => setDoDirector(e.target.checked)}
+              />
+              <span>Run AI Director (analyze script)</span>
+            </label>
+
+            <label className="inline-flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={doAudio}
+                onChange={(e) => setDoAudio(e.target.checked)}
+              />
+              <span>Generate Audio after analysis</span>
+            </label>
+          </div>
+
+          <button
+            type="submit"
+            disabled={busy}
+            className="rounded-md px-4 py-2 bg-yellow-400 text-black disabled:opacity-60"
+          >
+            {busy ? "Working…" : "Create Project"}
+          </button>
+        </form>
+
+        {/* Status / IDs / Errors */}
+        <div className="mt-8 space-y-3">
+          {status && <p className="text-sm opacity-80">Status: {status}</p>}
+          {projectId && (
+            <p className="text-sm">
+              Project ID: <code className="opacity-80">{projectId}</code>{" "}
+              (<a className="underline" href="/dashboard">Go to Dashboard</a>)
+            </p>
+          )}
+          {error && <p className="text-red-400 text-sm">Error: {error}</p>}
         </div>
-      )}
+
+        {/* Director JSON preview + manual Generate Audio */}
+        {directorJson && (
+          <div className="mt-8">
+            <h2 className="text-xl font-semibold mb-2">Director JSON (preview)</h2>
+            <pre className="text-xs bg-black/30 rounded-md p-3 overflow-auto max-h-80">
+              {JSON.stringify(directorJson, null, 2)}
+            </pre>
+
+            {!doAudio && !audioResult && (
+              <button
+                onClick={handleGenerateAudio}
+                disabled={generatingAudio || !projectId}
+                className="mt-4 rounded-md px-4 py-2 bg-yellow-400 text-black disabled:opacity-60 flex items-center gap-2"
+              >
+                {generatingAudio ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                    Generating Audio...
+                  </>
+                ) : (
+                  "Generate Audio"
+                )}
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Audio player & download */}
+        {audioUrl && (
+          <div className="mt-8">
+            <h2 className="text-xl font-semibold mb-4">Generated Audio</h2>
+
+            <div className="bg-black/30 rounded-md p-4 space-y-4">
+              <audio controls src={audioUrl} className="w-full">
+                Your browser does not support the audio element.
+              </audio>
+
+              <a
+                href={audioUrl}
+                download="story-magic.mp3"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors"
+              >
+                <Download className="h-4 w-4" />
+                Download MP3
+              </a>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
