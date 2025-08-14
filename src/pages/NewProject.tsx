@@ -3,9 +3,9 @@ import PdfToText from "@/components/PdfToText";
 import { Textarea } from "@/components/ui/textarea";
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Film, ArrowLeft, Download } from "lucide-react";
+import { ArrowLeft, Download } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { createProject, runDirector, runAudio } from "../integrations/filmDirectorApi";
+import { createProject, runDirector, runAudio } from "@/integrations/filmDirectorApi";
 
 // A tiny starter script so the form isn't empty
 const DEFAULT_SCRIPT = `EXT. PARK – DAY

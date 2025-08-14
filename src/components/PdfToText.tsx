@@ -16,9 +16,9 @@ export default function PdfToText({
   const [err, setErr] = useState<string | null>(null);
 
   async function extractPdfText(file: File): Promise<string> {
-    const pdfjsLib = await import("pdfjs-dist/build/pdf");
+    const pdfjsLib = await import("pdfjs-dist");
     // @ts-ignore - worker entry path for pdfjs
-    const pdfjsWorker = await import("pdfjs-dist/build/pdf.worker.entry");
+    const pdfjsWorker = await import("pdfjs-dist/build/pdf.worker.min.mjs");
     // @ts-ignore
     pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
