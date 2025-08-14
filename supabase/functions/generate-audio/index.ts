@@ -137,8 +137,8 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: true,
+        audio_url: publicUrl,
         path: uploadData.path,
-        public_url: publicUrl,
         message: 'Audio generated successfully',
         format: 'mp3_44100_128',
         size_bytes: audioBuffer.byteLength

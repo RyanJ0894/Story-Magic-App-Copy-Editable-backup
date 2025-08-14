@@ -69,16 +69,16 @@ export default function NewProject() {
         return;
       }
 
-      const ok = !!data?.success && !!data?.public_url;
+      const ok = !!data?.success && !!data?.audio_url;
       if (!ok) {
         setStatus("Audio generation failed");
-        setError(data?.message || "No public_url returned");
+        setError(data?.message || "No audio_url returned");
         setGeneratingAudio(false);
         return;
       }
 
       // success
-      setAudioUrl(data.public_url);
+      setAudioUrl(data.audio_url);
       setAudioResult(data);
       setStatus("Audio generated successfully");
       setError("");
