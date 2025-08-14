@@ -3,18 +3,11 @@ import React, { useRef, useState } from "react";
 import {
   GlobalWorkerOptions,
   getDocument,
-  version as pdfjsVersion,
-} from "pdfjs-dist/build/pdf";
+} from "pdfjs-dist";
+import workerSrc from "pdfjs-dist/build/pdf.worker.min.js?url";
 
-// ---- IMPORTANT ----
-// pdf.js expects a STRING URL here. If you give it a Worker object you’ll get
-// “Invalid 'workerSrc' type”. The line below uses a CDN string and works in Vite/React.
-GlobalWorkerOptions.workerSrc =
-  `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsVersion}/pdf.worker.min.js`;
-
-// If you prefer bundling the worker instead of using a CDN, this also works in Vite:
-//   import workerUrl from "pdfjs-dist/build/pdf.worker.min.js?url";
-//   GlobalWorkerOptions.workerSrc = workerUrl;
+// Use a SAME-ORIGIN string URL, not a CDN or Worker object
+GlobalWorkerOptions.workerSrc = workerSrc;
 
 type Props = {
   onText: (txt: string, mode?: "replace" | "append") => void;
