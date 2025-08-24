@@ -1,3 +1,4 @@
+
 project_id = "eyfxxhkbotkjsazvhxlj"
 
 [api]
@@ -8,4 +9,7 @@ extra_search_path = ["public", "extensions"]
 max_rows = 1000
 
 [functions.generate-audio]
+verify_jwt = false
+
+[functions.ai-director-callback]
 verify_jwt = false
