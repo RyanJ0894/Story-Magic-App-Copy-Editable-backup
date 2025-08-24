@@ -14,15 +14,32 @@ const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 serve(async (req) => {
-  console.log('🚀 AI Director Callback: Request received');
+  console.log('🚀🚀🚀 AI Director Callback: Request received at', new Date().toISOString());
   console.log('📋 Method:', req.method);
   console.log('🌐 URL:', req.url);
-  console.log('📡 Headers:', JSON.stringify([...req.headers.entries()]));
+  console.log('🔍 User-Agent:', req.headers.get('user-agent'));
+  console.log('📡 ALL Headers:', JSON.stringify([...req.headers.entries()], null, 2));
   
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     console.log('✅ Handling CORS preflight request');
     return new Response(null, { headers: corsHeaders });
+  }
+
+  // Add a simple health check
+  if (req.method === 'GET') {
+    console.log('📍 Health check requested');
+    return new Response(
+      JSON.stringify({
+        status: 'healthy',
+        timestamp: new Date().toISOString(),
+        function: 'ai-director-callback'
+      }),
+      {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    );
   }
 
   try {
