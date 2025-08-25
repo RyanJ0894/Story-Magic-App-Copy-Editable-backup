@@ -16,6 +16,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
+import { CallbackTester } from "@/components/CallbackTester";
 
 type ProjectRow = { 
   id: string; 
@@ -106,6 +107,11 @@ export default function Dashboard() {
         >
           + Create New Project
         </Link>
+      </div>
+
+      {/* Callback Tester - for debugging */}
+      <div className="mb-8">
+        <CallbackTester />
       </div>
 
       {loading && <div>Loading…</div>}
