@@ -9,6 +9,7 @@ import NewProject from "./pages/NewProject";
 import ProjectDetail from "./pages/ProjectDetail";
 
 function App() {
+  console.log("📱 App: Component rendering");
   
   return (
     <BrowserRouter>
