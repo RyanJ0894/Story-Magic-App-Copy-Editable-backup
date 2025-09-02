@@ -1,22 +1,10 @@
 // src/pages/Dashboard.tsx
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Trash2, AlertTriangle, Film, Eye } from "lucide-react";
 import { supabase } from "../integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { 
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
-import { CallbackTester } from "@/components/CallbackTester";
+import { DashboardTabs } from "@/components/dashboard/DashboardTabs";
+import { type PlanTier } from "@/types/plans";
 
 type ProjectRow = { 
   id: string; 
@@ -31,6 +19,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [currentPlan] = useState<PlanTier>('individual'); // TODO: Get from user data
   const { toast } = useToast();
 
   useEffect(() => {
@@ -83,6 +72,9 @@ export default function Dashboard() {
     }
   };
 
+  if (loading) return <div className="min-h-screen flex items-center justify-center">Loading…</div>;
+  if (err) return <div className="min-h-screen flex items-center justify-center text-destructive">{err}</div>;
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -98,87 +90,13 @@ export default function Dashboard() {
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-8 text-foreground">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-semibold">Your Projects</h1>
-        <Link
-          to="/projects/new"
-          className="rounded-lg px-4 py-2 bg-primary text-primary-foreground hover:opacity-90"
-        >
-          + Create New Project
-        </Link>
-      </div>
-
-      {/* Callback Tester - for debugging */}
-      <div className="mb-8">
-        <CallbackTester />
-      </div>
-
-      {loading && <div>Loading…</div>}
-      {err && <div className="text-red-500">{err}</div>}
-
-      {!loading && !err && projects.length === 0 && (
-        <div className="opacity-75">No projects yet. Create your first one.</div>
-      )}
-
-      <ul className="space-y-3">
-        {projects.map((p) => (
-          <li key={p.id} className="rounded-xl border border-border p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <div className="font-medium">{p.title || "Untitled Project"}</div>
-                <div className="text-sm opacity-70">{new Date(p.created_at).toLocaleString()}</div>
-                <div className="text-xs text-muted-foreground mt-1">
-                  Status: {p.ai_director_json ? (p.audio_url ? 'Complete' : 'Analyzed') : 'Draft'}
-                </div>
-              </div>
-              
-              <div className="flex items-center gap-2">
-                <Link to={`/projects/${p.id}`}>
-                  <Button variant="outline" size="sm">
-                    <Eye className="h-4 w-4 mr-2" />
-                    View
-                  </Button>
-                </Link>
-                
-                <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    disabled={deletingId === p.id}
-                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle className="flex items-center gap-2">
-                      <AlertTriangle className="h-5 w-5 text-destructive" />
-                      Delete Project
-                    </AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Are you sure you want to delete "{p.title || "Untitled Project"}"? 
-                      This action cannot be undone and will permanently remove all project data.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={() => handleDeleteProject(p.id, p.title || "Untitled Project")}
-                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                    >
-                      Delete Project
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-              </div>
-            </div>
-          </li>
-        ))}
-      </ul>
+      <div className="container mx-auto px-4 py-8">
+        <DashboardTabs
+          currentPlan={currentPlan}
+          projects={projects}
+          onDeleteProject={handleDeleteProject}
+          deletingId={deletingId}
+        />
       </div>
     </div>
   );
