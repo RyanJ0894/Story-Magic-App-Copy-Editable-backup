@@ -15,6 +15,7 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { DashboardTabs } from "@/components/dashboard/DashboardTabs";
 import { type PlanTier } from "@/types/plans";
+import { usePlanProtection } from "@/hooks/usePlanProtection";
 
 type ProjectRow = { 
   id: string; 
@@ -29,9 +30,12 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [currentPlan] = useState<PlanTier>('individual'); // TODO: Get from user data
   const [user, setUser] = useState<any>(null);
   const { toast } = useToast();
+  const { profile, loading: planLoading } = usePlanProtection();
+
+  // Derive current plan from profile
+  const currentPlan = (profile?.plan_type?.toLowerCase().replace(' ', '-') || 'individual') as PlanTier;
 
   useEffect(() => {
     let alive = true;
@@ -116,7 +120,7 @@ export default function Dashboard() {
     }
   };
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center">Loading…</div>;
+  if (loading || planLoading) return <div className="min-h-screen flex items-center justify-center">Loading…</div>;
   if (err) return <div className="min-h-screen flex items-center justify-center text-destructive">{err}</div>;
 
   return (
@@ -174,6 +178,35 @@ export default function Dashboard() {
       </header>
 
       <div className="container mx-auto px-4 py-8">
+        {/* Status Banners */}
+        {profile?.account_status === 'trial' && (
+          <div className="mb-6 p-4 bg-cinema-gold/10 border border-cinema-gold/20 rounded-lg">
+            <p className="text-center text-foreground">
+              <strong>Free Trial Active!</strong> 
+              {profile.trial_end_date && ` ${Math.ceil((new Date(profile.trial_end_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))} days remaining.`}
+              <Link to="/pricing" className="ml-2 text-cinema-gold hover:underline">
+                Upgrade anytime →
+              </Link>
+            </p>
+          </div>
+        )}
+        
+        {profile?.account_status === 'pending_enterprise_setup' && (
+          <div className="mb-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+            <p className="text-center text-foreground">
+              <strong>Enterprise setup in progress</strong> - we'll contact you within 24 hours to finalize your account.
+            </p>
+          </div>
+        )}
+        
+        {profile?.account_status === 'pending_academic_verification' && (
+          <div className="mb-6 p-4 bg-purple-500/10 border border-purple-500/20 rounded-lg">
+            <p className="text-center text-foreground">
+              <strong>Academic verification in progress</strong> - we'll review your status within 48 hours.
+            </p>
+          </div>
+        )}
+
         <DashboardTabs
           currentPlan={currentPlan}
           projects={projects}

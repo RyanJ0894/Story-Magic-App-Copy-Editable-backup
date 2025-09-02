@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Check, Star, Users, Shield, Zap, BookOpen } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Check, Star, Users, Shield, Zap, BookOpen, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -7,8 +7,54 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Link } from "react-router-dom";
 import { Header } from "@/components/Header";
+import { EnterpriseContactModal, AcademicVerificationModal } from "@/components/PlanSelectionModals";
+import { usePlanProtection } from "@/hooks/usePlanProtection";
+import { useToast } from "@/hooks/use-toast";
 export default function Pricing() {
   const [billingCycle, setBillingCycle] = useState<"monthly" | "annual">("monthly");
+  const [isNewUser, setIsNewUser] = useState(false);
+  const [enterpriseModalOpen, setEnterpriseModalOpen] = useState(false);
+  const [academicModalOpen, setAcademicModalOpen] = useState(false);
+  const [selectedEnterprisePlan, setSelectedEnterprisePlan] = useState("");
+  const { selectPlan } = usePlanProtection();
+  const { toast } = useToast();
+  
+  useEffect(() => {
+    // Check for newuser parameter
+    const urlParams = new URLSearchParams(window.location.search);
+    setIsNewUser(urlParams.get('newuser') === 'true');
+  }, []);
+
+  const handleIndividualTrial = async () => {
+    // Calculate trial end date (7 days from now)
+    const trialEndDate = new Date();
+    trialEndDate.setDate(trialEndDate.getDate() + 7);
+    
+    const success = await selectPlan('Individual', 'trial', trialEndDate.toISOString());
+    
+    if (success) {
+      toast({
+        title: "Welcome to Story Magic!",
+        description: "Your 7-day free trial has started. Enjoy full access to Individual features!",
+      });
+      window.location.href = "/dashboard";
+    } else {
+      toast({
+        title: "Selection Failed",
+        description: "Failed to start trial. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleEnterprisePlan = (planName: string) => {
+    setSelectedEnterprisePlan(planName);
+    setEnterpriseModalOpen(true);
+  };
+
+  const handleAcademicPlan = () => {
+    setAcademicModalOpen(true);
+  };
   const pricingCards = [{
     id: "individual",
     title: "Individual",
@@ -130,10 +176,20 @@ export default function Pricing() {
   };
   return <div className="min-h-screen bg-background">
       <Header />
-      {/* Header Section */}
-      <section className="border-b bg-gradient-subtle">
-        
-      </section>
+      
+      {/* New User Welcome Banner */}
+      {isNewUser && (
+        <section className="bg-gradient-to-r from-cinema-blue/10 to-cinema-gold/10 border-b border-cinema-gold/20">
+          <div className="container mx-auto px-4 py-4">
+            <div className="flex items-center justify-center gap-3 text-center">
+              <Sparkles className="w-6 h-6 text-cinema-gold" />
+              <p className="text-lg font-medium text-foreground">
+                Welcome to Story Magic! Please select a plan to access your dashboard and start creating.
+              </p>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Hero Section */}
       <section className="py-16">
@@ -196,9 +252,31 @@ export default function Pricing() {
                 </CardContent>
 
                 <CardFooter>
-                  <Button variant={card.ctaVariant} className="w-full" asChild>
-                    <Link to="/auth">{card.ctaText}</Link>
-                  </Button>
+                  {card.id === "individual" ? (
+                    <Button 
+                      variant={card.ctaVariant} 
+                      className="w-full"
+                      onClick={handleIndividualTrial}
+                    >
+                      {card.ctaText}
+                    </Button>
+                  ) : card.id === "university" ? (
+                    <Button 
+                      variant={card.ctaVariant} 
+                      className="w-full"
+                      onClick={handleAcademicPlan}
+                    >
+                      {card.ctaText}
+                    </Button>
+                  ) : (
+                    <Button 
+                      variant={card.ctaVariant} 
+                      className="w-full"
+                      onClick={() => handleEnterprisePlan(card.title)}
+                    >
+                      {card.ctaText}
+                    </Button>
+                  )}
                 </CardFooter>
               </Card>)}
           </div>
@@ -343,5 +421,17 @@ export default function Pricing() {
           </div>
         </div>
       </section>
+
+      {/* Modals */}
+      <EnterpriseContactModal
+        isOpen={enterpriseModalOpen}
+        onClose={() => setEnterpriseModalOpen(false)}
+        planName={selectedEnterprisePlan}
+      />
+      
+      <AcademicVerificationModal
+        isOpen={academicModalOpen}
+        onClose={() => setAcademicModalOpen(false)}
+      />
     </div>;
 }

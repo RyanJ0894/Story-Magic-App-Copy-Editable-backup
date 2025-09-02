@@ -70,7 +70,9 @@ const Auth = () => {
           }
           return;
         }
-        toast({ title: "Check your email", description: "Please confirm your email to complete registration." });
+        toast({ title: "Account created!", description: "Welcome to Story Magic! Let's select your plan." });
+        // New signups go to pricing page with newuser parameter
+        navigate("/pricing?newuser=true");
       }
     } catch (_) {
       setError("An unexpected error occurred. Please try again.");
