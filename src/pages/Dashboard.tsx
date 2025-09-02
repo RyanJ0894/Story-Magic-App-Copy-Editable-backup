@@ -1,8 +1,18 @@
 // src/pages/Dashboard.tsx
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { LogOut, User } from "lucide-react";
 import { supabase } from "../integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { DashboardTabs } from "@/components/dashboard/DashboardTabs";
 import { type PlanTier } from "@/types/plans";
 
@@ -20,11 +30,20 @@ export default function Dashboard() {
   const [err, setErr] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [currentPlan] = useState<PlanTier>('individual'); // TODO: Get from user data
+  const [user, setUser] = useState<any>(null);
   const { toast } = useToast();
 
   useEffect(() => {
     let alive = true;
-    (async () => {
+    
+    // Get current user
+    const getCurrentUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (alive) setUser(user);
+    };
+    
+    // Load projects
+    const loadProjects = async () => {
       try {
         const { data, error } = await supabase
           .from("user_projects")
@@ -37,7 +56,11 @@ export default function Dashboard() {
       } finally {
         if (alive) setLoading(false);
       }
-    })();
+    };
+
+    getCurrentUser();
+    loadProjects();
+    
     return () => {
       alive = false;
     };
@@ -72,6 +95,27 @@ export default function Dashboard() {
     }
   };
 
+  const handleLogout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      
+      toast({
+        title: "Logged out successfully",
+        description: "You have been signed out of your account.",
+      });
+      
+      // Redirect to home page
+      window.location.href = "/";
+    } catch (error: any) {
+      toast({
+        title: "Logout failed",
+        description: error.message || "Failed to sign out. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (loading) return <div className="min-h-screen flex items-center justify-center">Loading…</div>;
   if (err) return <div className="min-h-screen flex items-center justify-center text-destructive">{err}</div>;
 
@@ -87,6 +131,45 @@ export default function Dashboard() {
               className="h-28"
             />
           </Link>
+          
+          {/* User Menu */}
+          <div className="flex items-center gap-4">
+            {user && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                    <Avatar className="h-8 w-8">
+                      <AvatarFallback>
+                        {user.email?.charAt(0).toUpperCase() || 'U'}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56" align="end" forceMount>
+                  <div className="flex items-center justify-start gap-2 p-2">
+                    <div className="flex flex-col space-y-1 leading-none">
+                      <p className="font-medium">{user.email}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1).replace('-', ' ')} Plan
+                      </p>
+                    </div>
+                  </div>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link to="/profile" className="flex items-center">
+                      <User className="mr-2 h-4 w-4" />
+                      Profile Settings
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout} className="text-destructive">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Log out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+          </div>
         </div>
       </header>
 
