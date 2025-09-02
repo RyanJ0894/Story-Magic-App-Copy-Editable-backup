@@ -5,7 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { usePlanProtection } from "@/hooks/usePlanProtection";
+import { useNavigate } from "react-router-dom";
 
 interface EnterpriseContactModalProps {
   isOpen: boolean;
@@ -23,28 +24,20 @@ export function EnterpriseContactModal({ isOpen, onClose, planName }: Enterprise
     needs: ''
   });
   const { toast } = useToast();
+  const { selectPlan } = usePlanProtection();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
     try {
-      // Get current user
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('User not authenticated');
-
-      // Update profile with pending enterprise setup
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .upsert({
-          user_id: user.id,
-          plan_selected: true,
-          plan_type: planName,
-          account_status: 'pending_enterprise_setup',
-          selection_date: new Date().toISOString()
-        });
-
-      if (profileError) throw profileError;
+      // Use the selectPlan function to properly handle the database update
+      const success = await selectPlan(planName, 'pending_enterprise_setup');
+      
+      if (!success) {
+        throw new Error('Failed to update plan selection');
+      }
 
       toast({
         title: "Request Submitted!",
@@ -52,7 +45,7 @@ export function EnterpriseContactModal({ isOpen, onClose, planName }: Enterprise
       });
 
       // Redirect to dashboard
-      window.location.href = "/dashboard";
+      navigate("/dashboard");
     } catch (error: any) {
       console.error('Enterprise contact error:', error);
       toast({
@@ -148,28 +141,20 @@ export function AcademicVerificationModal({ isOpen, onClose }: AcademicVerificat
     verification: ''
   });
   const { toast } = useToast();
+  const { selectPlan } = usePlanProtection();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
     try {
-      // Get current user
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('User not authenticated');
-
-      // Update profile with pending academic verification
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .upsert({
-          user_id: user.id,
-          plan_selected: true,
-          plan_type: 'University Program',
-          account_status: 'pending_academic_verification',
-          selection_date: new Date().toISOString()
-        });
-
-      if (profileError) throw profileError;
+      // Use the selectPlan function to properly handle the database update
+      const success = await selectPlan('University Program', 'pending_academic_verification');
+      
+      if (!success) {
+        throw new Error('Failed to update plan selection');
+      }
 
       toast({
         title: "Verification Submitted!",
@@ -177,7 +162,7 @@ export function AcademicVerificationModal({ isOpen, onClose }: AcademicVerificat
       });
 
       // Redirect to dashboard
-      window.location.href = "/dashboard";
+      navigate("/dashboard");
     } catch (error: any) {
       console.error('Academic verification error:', error);
       toast({
