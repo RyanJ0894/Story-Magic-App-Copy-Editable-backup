@@ -31,11 +31,18 @@ const Auth = () => {
     const mode = params.get("mode");
     const path = location.pathname;
     
+    console.log("Auth page loaded with:", {
+      search: location.search,
+      pathname: location.pathname,
+      params: Object.fromEntries(params.entries())
+    });
+    
     // Check if this is a password reset flow (Supabase adds access_token and type=recovery)
     const accessToken = params.get("access_token");
     const type = params.get("type");
     
     if (type === "recovery" && accessToken) {
+      console.log("Password reset flow detected");
       setIsPasswordReset(true);
       return;
     }
@@ -105,8 +112,9 @@ const Auth = () => {
     setError("");
 
     try {
-      // Use the current app's actual URL instead of window.location.origin to avoid localhost issues
-      const redirectUrl = "https://42c2d000-de32-48e7-b507-d33337ef7686.sandbox.lovable.dev/auth";
+      // Get the current working URL dynamically
+      const currentUrl = window.location.href.split('?')[0]; // Remove query params
+      const redirectUrl = currentUrl; // Use the current auth page URL
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: redirectUrl,
       });
