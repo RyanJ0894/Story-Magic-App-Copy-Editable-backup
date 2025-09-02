@@ -112,9 +112,10 @@ const Auth = () => {
     setError("");
 
     try {
-      // Get the current working URL dynamically
-      const currentUrl = window.location.href.split('?')[0]; // Remove query params
-      const redirectUrl = currentUrl; // Use the current auth page URL
+      // Use the exact current domain and path for the redirect
+      const redirectUrl = `${window.location.protocol}//${window.location.host}/auth`;
+      console.log("Sending reset email with redirect URL:", redirectUrl);
+      
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: redirectUrl,
       });
