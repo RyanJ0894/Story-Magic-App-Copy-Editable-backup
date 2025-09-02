@@ -2,6 +2,8 @@ import { Button } from "@/components/ui/button";
 import { Film, Menu, LogOut } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { useState } from "react";
 
 export const Header = () => {
   const { user, signOut } = useAuth();
@@ -38,7 +40,7 @@ export const Header = () => {
               <span className="hidden md:flex text-sm text-muted-foreground">
                 {user.email}
               </span>
-              <Link to="/dashboard">
+              <Link to="/dashboard" className="hidden md:block">
                 <Button variant="ghost">
                   Dashboard
                 </Button>
@@ -53,6 +55,20 @@ export const Header = () => {
                 <LogOut className="h-4 w-4 mr-2" />
                 Sign Out
               </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="md:hidden">
+                    <Menu className="h-5 w-5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem asChild>
+                    <Link to="/dashboard" className="w-full">
+                      Dashboard
+                    </Link>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </>
           ) : (
             <>
@@ -66,11 +82,27 @@ export const Header = () => {
                   Get Started
                 </Button>
               </Link>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="md:hidden">
+                    <Menu className="h-5 w-5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem asChild>
+                    <Link to="/signin" className="w-full">
+                      Sign In
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/signup" className="w-full">
+                      Get Started
+                    </Link>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </>
           )}
-          <Button variant="ghost" size="icon" className="md:hidden">
-            <Menu className="h-5 w-5" />
-          </Button>
         </div>
       </div>
     </header>
