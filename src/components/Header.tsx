@@ -63,6 +63,26 @@ export const Header = () => {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
                   <DropdownMenuItem asChild>
+                    <a href="#features" className="w-full">
+                      Features
+                    </a>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <a href="#demo" className="w-full">
+                      Demo
+                    </a>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/pricing" className="w-full">
+                      Pricing
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <a href="#voices" className="w-full">
+                      Voice Marketplace
+                    </a>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
                     <Link to="/dashboard" className="w-full">
                       Dashboard
                     </Link>
@@ -89,6 +109,26 @@ export const Header = () => {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem asChild>
+                    <a href="#features" className="w-full">
+                      Features
+                    </a>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <a href="#demo" className="w-full">
+                      Demo
+                    </a>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/pricing" className="w-full">
+                      Pricing
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <a href="#voices" className="w-full">
+                      Voice Marketplace
+                    </a>
+                  </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link to="/signin" className="w-full">
                       Sign In
