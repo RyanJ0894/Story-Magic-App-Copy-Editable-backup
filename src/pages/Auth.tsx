@@ -16,6 +16,7 @@ const Auth = () => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [resetSent, setResetSent] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
@@ -73,6 +74,37 @@ const Auth = () => {
         toast({ title: "Account created!", description: "Welcome to Story Magic! Let's select your plan." });
         // New signups go to pricing page with newuser parameter
         navigate("/pricing?newuser=true");
+      }
+    } catch (_) {
+      setError("An unexpected error occurred. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!email) {
+      setError("Please enter your email address first.");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+
+    try {
+      const redirectUrl = `${window.location.origin}/auth`;
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: redirectUrl,
+      });
+
+      if (error) {
+        setError(error.message);
+      } else {
+        setResetSent(true);
+        toast({ 
+          title: "Reset email sent!", 
+          description: "Check your email for password reset instructions." 
+        });
       }
     } catch (_) {
       setError("An unexpected error occurred. Please try again.");
@@ -157,6 +189,19 @@ const Auth = () => {
               </form>
             )}
 
+            {isLogin && (
+              <div className="mt-4 text-center">
+                <Button
+                  variant="link"
+                  onClick={handleForgotPassword}
+                  disabled={loading || !email}
+                  className="text-cinema-gold hover:text-cinema-gold/80 text-sm"
+                >
+                  Forgot password?
+                </Button>
+              </div>
+            )}
+
             <div className="mt-6 text-center">
               <p className="text-muted-foreground">
                 {isLogin ? "Don't have an account?" : "Already have an account?"}
@@ -168,6 +213,7 @@ const Auth = () => {
                   setError("");
                   setEmail("");
                   setPassword("");
+                  setResetSent(false);
                 }}
                 className="text-cinema-gold hover:text-cinema-gold/80"
               >
