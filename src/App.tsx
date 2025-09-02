@@ -7,6 +7,7 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import NewProject from "./pages/NewProject";
 import ProjectDetail from "./pages/ProjectDetail";
+import Pricing from "./pages/Pricing";
 
 function App() {
   console.log("📱 App: Component rendering");
@@ -21,6 +22,7 @@ function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/projects/new" element={<NewProject />} />
         <Route path="/projects/:id" element={<ProjectDetail />} />
+        <Route path="/pricing" element={<Pricing />} />
       </Routes>
       <Toaster />
     </BrowserRouter>

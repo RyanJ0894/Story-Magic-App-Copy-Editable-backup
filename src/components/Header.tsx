@@ -24,6 +24,9 @@ export const Header = () => {
           <a href="#demo" className="text-muted-foreground hover:text-foreground transition-colors">
             Demo
           </a>
+          <Link to="/pricing" className="text-muted-foreground hover:text-foreground transition-colors">
+            Pricing
+          </Link>
           <a href="#voices" className="text-muted-foreground hover:text-foreground transition-colors">
             Voice Marketplace
           </a>
