@@ -84,13 +84,13 @@ export function DashboardTabs({ currentPlan, projects, onDeleteProject, deleting
               <TabsTrigger
                 key={planTier}
                 value={planTier}
-                disabled={!isUnlocked}
+                disabled={false}
                 onClick={!isUnlocked ? () => handleLockedTabClick(planTier) : undefined}
                 className={`
                   relative flex flex-col items-center gap-1 p-3 text-xs font-medium transition-all
                   ${isUnlocked 
                     ? 'text-foreground hover:bg-background hover:text-foreground' 
-                    : 'text-muted-foreground opacity-50 cursor-pointer hover:opacity-75'
+                    : 'text-muted-foreground opacity-75 cursor-pointer hover:opacity-90 hover:bg-muted/50'
                   }
                   ${isCurrent ? 'bg-background text-foreground ring-2 ring-primary' : ''}
                 `}
