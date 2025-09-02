@@ -194,10 +194,10 @@ const Auth = () => {
                 <Button
                   variant="link"
                   onClick={handleForgotPassword}
-                  disabled={loading || !email}
+                  disabled={loading}
                   className="text-cinema-gold hover:text-cinema-gold/80 text-sm"
                 >
-                  Forgot password?
+                  {loading ? "Sending..." : "Forgot password?"}
                 </Button>
               </div>
             )}
