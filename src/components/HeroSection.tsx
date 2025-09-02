@@ -18,7 +18,7 @@ export const HeroSection = () => {
       <div className="relative z-10 container mx-auto px-4 text-center max-w-4xl">
         <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-cinema-surface/50 backdrop-blur-sm px-4 py-2 text-sm text-cinema-blue border border-cinema-gold/20">
           <Mic className="h-4 w-4" />
-          Powered by AI Film Director
+          Powered by Our AI Director
         </div>
         
         <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight">
