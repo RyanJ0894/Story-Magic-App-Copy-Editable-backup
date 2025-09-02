@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Link } from "react-router-dom";
+import { Header } from "@/components/Header";
 
 export default function Pricing() {
   const [billingCycle, setBillingCycle] = useState<"monthly" | "annual">("monthly");
@@ -195,6 +196,7 @@ export default function Pricing() {
 
   return (
     <div className="min-h-screen bg-background">
+      <Header />
       {/* Header Section */}
       <section className="border-b bg-gradient-subtle">
         <div className="container mx-auto px-4 py-16 text-center">
