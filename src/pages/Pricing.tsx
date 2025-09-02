@@ -154,7 +154,7 @@ export default function Pricing() {
           <p className="text-xl text-muted-foreground mb-4 max-w-3xl mx-auto">
             From individual creators to major studios - find the perfect plan to revolutionize how you experience scripts
           </p>
-          <p className="text-lg text-cinema-gold font-medium max-w-3xl mx-auto">
+          <p className="text-lg font-medium max-w-3xl mx-auto text-sky-500">
             Stop reading scripts. Start experiencing them. Multitask while listening during commutes, workouts, meals, and more.
           </p>
         </div>
