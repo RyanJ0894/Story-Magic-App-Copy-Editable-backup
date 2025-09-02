@@ -48,10 +48,17 @@ export function usePlanProtection() {
         if (mounted) {
           setProfile(profileData);
           
-          // Check if user has selected a plan
+          // Only redirect to pricing if explicitly coming from signup, not for existing users
+          // Existing users should be able to access dashboard even without plan_selected flag
           if (!profileData.plan_selected) {
-            navigate('/pricing?newuser=true');
-            return;
+            // Check if this is a new user coming from signup
+            const urlParams = new URLSearchParams(window.location.search);
+            const isNewUser = urlParams.get('newuser') === 'true';
+            
+            if (isNewUser) {
+              navigate('/pricing?newuser=true');
+              return;
+            }
           }
         }
       } catch (error) {
