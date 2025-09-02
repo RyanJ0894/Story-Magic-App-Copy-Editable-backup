@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { X } from "lucide-react";
 import {
   Dialog,
@@ -8,19 +9,61 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PLAN_CONFIGS, type PlanTier } from "@/types/plans";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface UpgradeModalProps {
   isOpen: boolean;
   onClose: () => void;
   currentPlan: PlanTier;
   targetPlan: PlanTier | null;
+  onUpgradeSuccess: (newPlan: PlanTier) => void;
 }
 
-export function UpgradeModal({ isOpen, onClose, currentPlan, targetPlan }: UpgradeModalProps) {
+export function UpgradeModal({ isOpen, onClose, currentPlan, targetPlan, onUpgradeSuccess }: UpgradeModalProps) {
+  const [isUpgrading, setIsUpgrading] = useState(false);
+  const { toast } = useToast();
+  
   if (!targetPlan) return null;
 
   const currentConfig = PLAN_CONFIGS[currentPlan];
   const targetConfig = PLAN_CONFIGS[targetPlan];
+
+  const handleUpgrade = async () => {
+    setIsUpgrading(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({ 
+          plan_type: targetPlan,
+          account_status: 'active',
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Upgrade Successful!",
+        description: `You've been upgraded to ${targetConfig.name}. You now have access to all ${targetConfig.name} features.`,
+      });
+
+      onUpgradeSuccess(targetPlan);
+      onClose();
+    } catch (error) {
+      console.error('Upgrade error:', error);
+      toast({
+        title: "Upgrade Failed",
+        description: "There was an error upgrading your plan. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUpgrading(false);
+    }
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -94,11 +137,16 @@ export function UpgradeModal({ isOpen, onClose, currentPlan, targetPlan }: Upgra
 
           {/* Action Buttons */}
           <div className="flex gap-3 pt-4">
-            <Button className="flex-1" size="lg">
-              Upgrade Now
+            <Button 
+              className="flex-1" 
+              size="lg"
+              onClick={handleUpgrade}
+              disabled={isUpgrading}
+            >
+              {isUpgrading ? "Upgrading..." : "Upgrade Now"}
             </Button>
-            <Button variant="outline" size="lg">
-              Schedule Demo
+            <Button variant="outline" size="lg" onClick={onClose}>
+              Cancel
             </Button>
           </div>
 

@@ -31,12 +31,17 @@ const TAB_ICONS = {
 export function DashboardTabs({ currentPlan, projects, onDeleteProject, deletingId }: DashboardTabsProps) {
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
   const [selectedUpgradePlan, setSelectedUpgradePlan] = useState<PlanTier | null>(null);
+  const [userCurrentPlan, setUserCurrentPlan] = useState<PlanTier>(currentPlan);
 
-  const currentPlanIndex = PLAN_HIERARCHY.indexOf(currentPlan);
+  const currentPlanIndex = PLAN_HIERARCHY.indexOf(userCurrentPlan);
   
   const isTabUnlocked = (planTier: PlanTier): boolean => {
     const planIndex = PLAN_HIERARCHY.indexOf(planTier);
-    return planIndex <= currentPlanIndex || planTier === currentPlan;
+    return planIndex <= currentPlanIndex || planTier === userCurrentPlan;
+  };
+
+  const handleUpgradeSuccess = (newPlan: PlanTier) => {
+    setUserCurrentPlan(newPlan);
   };
 
   const handleLockedTabClick = (planTier: PlanTier) => {
@@ -67,13 +72,13 @@ export function DashboardTabs({ currentPlan, projects, onDeleteProject, deleting
 
   return (
     <>
-      <Tabs defaultValue={currentPlan} className="w-full">
+      <Tabs defaultValue={userCurrentPlan} className="w-full">
         <TabsList className="grid grid-cols-2 md:grid-cols-6 w-full h-auto p-1 bg-muted">
           {PLAN_HIERARCHY.map((planTier) => {
             const config = PLAN_CONFIGS[planTier];
             const Icon = TAB_ICONS[planTier];
             const isUnlocked = isTabUnlocked(planTier);
-            const isCurrent = planTier === currentPlan;
+            const isCurrent = planTier === userCurrentPlan;
             
             return (
               <TabsTrigger
@@ -137,8 +142,9 @@ export function DashboardTabs({ currentPlan, projects, onDeleteProject, deleting
       <UpgradeModal
         isOpen={upgradeModalOpen}
         onClose={() => setUpgradeModalOpen(false)}
-        currentPlan={currentPlan}
+        currentPlan={userCurrentPlan}
         targetPlan={selectedUpgradePlan}
+        onUpgradeSuccess={handleUpgradeSuccess}
       />
     </>
   );
