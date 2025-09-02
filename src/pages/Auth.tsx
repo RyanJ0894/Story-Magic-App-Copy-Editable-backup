@@ -112,8 +112,8 @@ const Auth = () => {
     setError("");
 
     try {
-      // Use the exact current domain and path for the redirect
-      const redirectUrl = `${window.location.protocol}//${window.location.host}/auth`;
+      // Set redirect to the dedicated reset password page
+      const redirectUrl = `${window.location.protocol}//${window.location.host}/reset-password`;
       console.log("Sending reset email with redirect URL:", redirectUrl);
       
       const { error } = await supabase.auth.resetPasswordForEmail(email, {

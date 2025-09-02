@@ -8,6 +8,7 @@ import Dashboard from "./pages/Dashboard";
 import NewProject from "./pages/NewProject";
 import ProjectDetail from "./pages/ProjectDetail";
 import Pricing from "./pages/Pricing";
+import ResetPassword from "./pages/ResetPassword";
 
 function App() {
   console.log("📱 App: Component rendering");
@@ -19,6 +20,7 @@ function App() {
         <Route path="/auth" element={<Auth />} />
         <Route path="/signin" element={<Auth />} />
         <Route path="/signup" element={<Auth />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/projects/new" element={<NewProject />} />
         <Route path="/projects/:id" element={<ProjectDetail />} />
