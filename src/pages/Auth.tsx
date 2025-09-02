@@ -105,7 +105,8 @@ const Auth = () => {
     setError("");
 
     try {
-      const redirectUrl = `${window.location.origin}/auth`;
+      // Use the current app's actual URL instead of window.location.origin to avoid localhost issues
+      const redirectUrl = "https://42c2d000-de32-48e7-b507-d33337ef7686.sandbox.lovable.dev/auth";
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: redirectUrl,
       });
