@@ -12,6 +12,9 @@ import { useAuth } from "@/hooks/useAuth";
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
+  const [isPasswordReset, setIsPasswordReset] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -22,11 +25,21 @@ const Auth = () => {
   const { toast } = useToast();
   const { user, loading: authLoading } = useAuth();
 
-  // Determine mode from URL (supports both /auth?mode= and /signin|/signup)
+  // Determine mode from URL and check for password reset
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const mode = params.get("mode");
     const path = location.pathname;
+    
+    // Check if this is a password reset flow (Supabase adds access_token and type=recovery)
+    const accessToken = params.get("access_token");
+    const type = params.get("type");
+    
+    if (type === "recovery" && accessToken) {
+      setIsPasswordReset(true);
+      return;
+    }
+    
     if (mode === "signup" || path.endsWith("/signup")) setIsLogin(false);
     else if (mode === "login" || path.endsWith("/signin")) setIsLogin(true);
   }, [location.search, location.pathname]);
@@ -113,6 +126,41 @@ const Auth = () => {
     }
   };
 
+  const handlePasswordReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newPassword !== confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+    if (newPassword.length < 6) {
+      setError("Password must be at least 6 characters long.");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+
+      if (error) {
+        setError(error.message);
+      } else {
+        toast({ 
+          title: "Password updated!", 
+          description: "Your password has been successfully reset." 
+        });
+        navigate("/dashboard");
+      }
+    } catch (_) {
+      setError("An unexpected error occurred. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-md space-y-0">
@@ -130,12 +178,15 @@ const Auth = () => {
         <Card className="bg-card border-border">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl font-bold text-foreground">
-              {isLogin ? "Welcome Back" : "Create Account"}
+              {isPasswordReset ? "Reset Password" : (isLogin ? "Welcome Back" : "Create Account")}
             </CardTitle>
             <CardDescription className="text-muted-foreground">
-              {isLogin
-                ? "Sign in to your account to continue"
-                : "Sign up to start creating amazing voice content"}
+              {isPasswordReset 
+                ? "Enter your new password below"
+                : (isLogin
+                  ? "Sign in to your account to continue"
+                  : "Sign up to start creating amazing voice content")
+              }
             </CardDescription>
           </CardHeader>
 
@@ -143,6 +194,51 @@ const Auth = () => {
             {/* If user is logged in already, prevent form flicker */}
             {authLoading ? (
               <div className="text-center text-muted-foreground">Loading...</div>
+            ) : isPasswordReset ? (
+              <form onSubmit={handlePasswordReset} className="space-y-4">
+                {error && (
+                  <Alert variant="destructive">
+                    <AlertDescription>{error}</AlertDescription>
+                  </Alert>
+                )}
+
+                <div className="space-y-2">
+                  <Label htmlFor="newPassword" className="text-foreground">New Password</Label>
+                  <Input
+                    id="newPassword"
+                    type="password"
+                    placeholder="Enter your new password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    required
+                    minLength={6}
+                    className="bg-background border-border text-foreground"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="confirmPassword" className="text-foreground">Confirm Password</Label>
+                  <Input
+                    id="confirmPassword"
+                    type="password"
+                    placeholder="Confirm your new password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    required
+                    minLength={6}
+                    className="bg-background border-border text-foreground"
+                  />
+                </div>
+
+                <Button
+                  type="submit"
+                  className="w-full"
+                  variant="cinema"
+                  disabled={loading}
+                >
+                  {loading ? "Updating..." : "Update Password"}
+                </Button>
+              </form>
             ) : (
               <form onSubmit={handleAuth} className="space-y-4">
                 {error && (
@@ -186,40 +282,40 @@ const Auth = () => {
                 >
                   {loading ? "Loading..." : (isLogin ? "Sign In" : "Sign Up")}
                 </Button>
+
+                {isLogin && (
+                  <div className="mt-4 text-center">
+                    <Button
+                      variant="link"
+                      onClick={handleForgotPassword}
+                      disabled={loading}
+                      className="text-cinema-gold hover:text-cinema-gold/80 text-sm"
+                    >
+                      {loading ? "Sending..." : "Forgot password?"}
+                    </Button>
+                  </div>
+                )}
+
+                <div className="mt-6 text-center">
+                  <p className="text-muted-foreground">
+                    {isLogin ? "Don't have an account?" : "Already have an account?"}
+                  </p>
+                  <Button
+                    variant="link"
+                    onClick={() => {
+                      setIsLogin(!isLogin);
+                      setError("");
+                      setEmail("");
+                      setPassword("");
+                      setResetSent(false);
+                    }}
+                    className="text-cinema-gold hover:text-cinema-gold/80"
+                  >
+                    {isLogin ? "Create an account" : "Sign in instead"}
+                  </Button>
+                </div>
               </form>
             )}
-
-            {isLogin && (
-              <div className="mt-4 text-center">
-                <Button
-                  variant="link"
-                  onClick={handleForgotPassword}
-                  disabled={loading}
-                  className="text-cinema-gold hover:text-cinema-gold/80 text-sm"
-                >
-                  {loading ? "Sending..." : "Forgot password?"}
-                </Button>
-              </div>
-            )}
-
-            <div className="mt-6 text-center">
-              <p className="text-muted-foreground">
-                {isLogin ? "Don't have an account?" : "Already have an account?"}
-              </p>
-              <Button
-                variant="link"
-                onClick={() => {
-                  setIsLogin(!isLogin);
-                  setError("");
-                  setEmail("");
-                  setPassword("");
-                  setResetSent(false);
-                }}
-                className="text-cinema-gold hover:text-cinema-gold/80"
-              >
-                {isLogin ? "Create an account" : "Sign in instead"}
-              </Button>
-            </div>
           </CardContent>
         </Card>
       </div>
