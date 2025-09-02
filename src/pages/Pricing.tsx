@@ -132,17 +132,7 @@ export default function Pricing() {
       <Header />
       {/* Header Section */}
       <section className="border-b bg-gradient-subtle">
-        <div className="container mx-auto px-4 py-16 text-center">
-          <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-4">
-            Story Magic
-          </h1>
-          <p className="text-xl font-semibold mb-2 text-sky-500">
-            Transform Scripts into Cinematic Audio Experiences
-          </p>
-          <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
-            AI-powered audio production for screenplays with realistic voices, ambient soundscapes, and immersive storytelling
-          </p>
-        </div>
+        
       </section>
 
       {/* Hero Section */}
