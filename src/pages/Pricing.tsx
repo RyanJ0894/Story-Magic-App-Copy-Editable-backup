@@ -7,195 +7,128 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Link } from "react-router-dom";
 import { Header } from "@/components/Header";
-
 export default function Pricing() {
   const [billingCycle, setBillingCycle] = useState<"monthly" | "annual">("monthly");
-
-  const pricingCards = [
-    {
-      id: "individual",
-      title: "Individual",
-      price: "$30",
-      period: "/month",
-      billing: "Monthly recurring",
-      target: "Perfect for freelancers, independent writers, and individual professionals",
-      features: [
-        "Full access to AI voice library",
-        "Unlimited script uploads",
-        "All ambient soundscapes & music",
-        "Sound effects library",
-        "Mobile & desktop access",
-        "Email support"
-      ],
-      ctaText: "Start Free Trial",
-      ctaVariant: "cinema" as const,
-      popular: false
-    },
-    {
-      id: "starter",
-      title: "Starter Enterprise",
-      price: "$2,400",
-      period: "/year",
-      perUser: "($20/user/month)",
-      billing: "Annual commitment - paid upfront",
-      target: "Small agencies, boutique production companies, university film departments",
-      includes: "10 user accounts",
-      features: [
-        "Admin dashboard & user management",
-        "Shared script library",
-        "Basic collaboration tools (comments, playlists)",
-        "Standard voice library (20+ voices)",
-        "Email support (48hr response)",
-        "Usage analytics"
-      ],
-      additionalUsers: "$20/month each (11-25 users: $15/month each)",
-      ctaText: "Contact Sales",
-      ctaVariant: "cinema-outline" as const,
-      popular: false
-    },
-    {
-      id: "professional",
-      title: "Professional Enterprise",
-      price: "$6,000",
-      period: "/year",
-      perUser: "($16.67/user/month)",
-      billing: "Annual commitment - paid upfront",
-      target: "Mid-size talent agencies, production companies, established film programs",
-      includes: "30 user accounts",
-      features: [
-        "Everything in Starter Enterprise, plus:",
-        "Premium voice library (50+ voices)",
-        "Custom voice cloning (up to 5 voices)",
-        "Advanced collaboration suite",
-        "Priority audio processing",
-        "Phone + email support (24hr response)",
-        "Custom ambient sound library (100+ environments)",
-        "Advanced analytics dashboard"
-      ],
-      additionalUsers: "$20/month each (31-75 users: $15/month each)",
-      ctaText: "Contact Sales",
-      ctaVariant: "cinema" as const,
-      popular: true
-    },
-    {
-      id: "studio",
-      title: "Studio Enterprise",
-      price: "$15,000",
-      period: "/year",
-      perUser: "($16.67/user/month)",
-      billing: "Annual commitment - paid upfront",
-      target: "Major talent agencies, film studios, large production companies",
-      includes: "75 user accounts",
-      features: [
-        "Everything in Professional Enterprise, plus:",
-        "Unlimited custom voice cloning",
-        "Dedicated account manager",
-        "24/7 priority support",
-        "Enterprise-grade security (SSO)",
-        "Custom ambient soundscapes",
-        "Advanced workflow automation",
-        "Detailed reporting suite"
-      ],
-      additionalUsers: "$20/month each (76-200 users: $15/month each)",
-      ctaText: "Contact Sales",
-      ctaVariant: "cinema-outline" as const,
-      popular: false
-    },
-    {
-      id: "unlimited",
-      title: "Enterprise Unlimited",
-      price: "Custom Pricing",
-      period: "",
-      billing: "Annual commitment - paid upfront",
-      target: "Major studios, large university systems, enterprise-wide implementations",
-      includes: "200+ user accounts",
-      features: [
-        "Everything in Studio Enterprise, plus:",
-        "Unlimited user accounts",
-        "Dedicated infrastructure",
-        "Custom feature development",
-        "Advanced compliance (SOC 2, GDPR)",
-        "Multiple admin hierarchies",
-        "Custom voice library development",
-        "Quarterly business reviews"
-      ],
-      baseFee: "Starting at $25,000/year",
-      ctaText: "Schedule Consultation",
-      ctaVariant: "cinema-outline" as const,
-      popular: false
-    },
-    {
-      id: "university",
-      title: "University Program",
-      price: "50% Off Enterprise",
-      period: "",
-      billing: "Academic year licensing",
-      target: "Accredited film schools and university programs",
-      options: [
-        "Academic Starter: $1,200/year (10 accounts)",
-        "Academic Professional: $3,000/year (30 accounts)"
-      ],
-      requirements: "Academic accreditation verification required",
-      ctaText: "Apply for Academic Pricing",
-      ctaVariant: "cinema-outline" as const,
-      popular: false
-    }
-  ];
-
+  const pricingCards = [{
+    id: "individual",
+    title: "Individual",
+    price: "$30",
+    period: "/month",
+    billing: "Monthly recurring",
+    target: "Perfect for freelancers, independent writers, and individual professionals",
+    features: ["Full access to AI voice library", "Unlimited script uploads", "All ambient soundscapes & music", "Sound effects library", "Mobile & desktop access", "Email support"],
+    ctaText: "Start Free Trial",
+    ctaVariant: "cinema" as const,
+    popular: false
+  }, {
+    id: "starter",
+    title: "Starter Enterprise",
+    price: "$2,400",
+    period: "/year",
+    perUser: "($20/user/month)",
+    billing: "Annual commitment - paid upfront",
+    target: "Small agencies, boutique production companies, university film departments",
+    includes: "10 user accounts",
+    features: ["Admin dashboard & user management", "Shared script library", "Basic collaboration tools (comments, playlists)", "Standard voice library (20+ voices)", "Email support (48hr response)", "Usage analytics"],
+    additionalUsers: "$20/month each (11-25 users: $15/month each)",
+    ctaText: "Contact Sales",
+    ctaVariant: "cinema-outline" as const,
+    popular: false
+  }, {
+    id: "professional",
+    title: "Professional Enterprise",
+    price: "$6,000",
+    period: "/year",
+    perUser: "($16.67/user/month)",
+    billing: "Annual commitment - paid upfront",
+    target: "Mid-size talent agencies, production companies, established film programs",
+    includes: "30 user accounts",
+    features: ["Everything in Starter Enterprise, plus:", "Premium voice library (50+ voices)", "Custom voice cloning (up to 5 voices)", "Advanced collaboration suite", "Priority audio processing", "Phone + email support (24hr response)", "Custom ambient sound library (100+ environments)", "Advanced analytics dashboard"],
+    additionalUsers: "$20/month each (31-75 users: $15/month each)",
+    ctaText: "Contact Sales",
+    ctaVariant: "cinema" as const,
+    popular: true
+  }, {
+    id: "studio",
+    title: "Studio Enterprise",
+    price: "$15,000",
+    period: "/year",
+    perUser: "($16.67/user/month)",
+    billing: "Annual commitment - paid upfront",
+    target: "Major talent agencies, film studios, large production companies",
+    includes: "75 user accounts",
+    features: ["Everything in Professional Enterprise, plus:", "Unlimited custom voice cloning", "Dedicated account manager", "24/7 priority support", "Enterprise-grade security (SSO)", "Custom ambient soundscapes", "Advanced workflow automation", "Detailed reporting suite"],
+    additionalUsers: "$20/month each (76-200 users: $15/month each)",
+    ctaText: "Contact Sales",
+    ctaVariant: "cinema-outline" as const,
+    popular: false
+  }, {
+    id: "unlimited",
+    title: "Enterprise Unlimited",
+    price: "Custom Pricing",
+    period: "",
+    billing: "Annual commitment - paid upfront",
+    target: "Major studios, large university systems, enterprise-wide implementations",
+    includes: "200+ user accounts",
+    features: ["Everything in Studio Enterprise, plus:", "Unlimited user accounts", "Dedicated infrastructure", "Custom feature development", "Advanced compliance (SOC 2, GDPR)", "Multiple admin hierarchies", "Custom voice library development", "Quarterly business reviews"],
+    baseFee: "Starting at $25,000/year",
+    ctaText: "Schedule Consultation",
+    ctaVariant: "cinema-outline" as const,
+    popular: false
+  }, {
+    id: "university",
+    title: "University Program",
+    price: "50% Off Enterprise",
+    period: "",
+    billing: "Academic year licensing",
+    target: "Accredited film schools and university programs",
+    options: ["Academic Starter: $1,200/year (10 accounts)", "Academic Professional: $3,000/year (30 accounts)"],
+    requirements: "Academic accreditation verification required",
+    ctaText: "Apply for Academic Pricing",
+    ctaVariant: "cinema-outline" as const,
+    popular: false
+  }];
   const addOnServices = {
-    comingSoon: [
-      { name: "Professional voice cloning", price: "$500 per voice" },
-      { name: "Expanded music library", price: "$200/month" },
-      { name: "Custom soundscape development", price: "$1,000 per environment" },
-      { name: "Professional SFX library", price: "$100/month" }
-    ],
-    professional: [
-      { name: "Dedicated onboarding", price: "$2,500 one-time" },
-      { name: "Voice coaching consultation", price: "$200/hour" }
-    ]
+    comingSoon: [{
+      name: "Professional voice cloning",
+      price: "$500 per voice"
+    }, {
+      name: "Expanded music library",
+      price: "$200/month"
+    }, {
+      name: "Custom soundscape development",
+      price: "$1,000 per environment"
+    }, {
+      name: "Professional SFX library",
+      price: "$100/month"
+    }],
+    professional: [{
+      name: "Dedicated onboarding",
+      price: "$2,500 one-time"
+    }, {
+      name: "Voice coaching consultation",
+      price: "$200/hour"
+    }]
   };
-
   const industryBenefits = {
     agencies: {
       title: "For Talent Agencies",
-      benefits: [
-        "Bulk voice cloning for client roster",
-        "Client progress tracking",
-        "Streamlined script review",
-        "Custom branding options"
-      ]
+      benefits: ["Bulk voice cloning for client roster", "Client progress tracking", "Streamlined script review", "Custom branding options"]
     },
     production: {
       title: "For Production Companies",
-      benefits: [
-        "Project-based organization",
-        "Distributed team collaboration",
-        "Version control for scripts",
-        "Production tool integrations"
-      ]
+      benefits: ["Project-based organization", "Distributed team collaboration", "Version control for scripts", "Production tool integrations"]
     },
     studios: {
       title: "For Film Studios",
-      benefits: [
-        "Enterprise-grade security",
-        "Advanced decision-making analytics",
-        "Scalable infrastructure",
-        "Custom workflow development"
-      ]
+      benefits: ["Enterprise-grade security", "Advanced decision-making analytics", "Scalable infrastructure", "Custom workflow development"]
     },
     universities: {
       title: "For Universities",
-      benefits: [
-        "Student portfolio tools",
-        "Professor oversight features",
-        "Curriculum alignment",
-        "Academic collaboration tools"
-      ]
+      benefits: ["Student portfolio tools", "Professor oversight features", "Curriculum alignment", "Academic collaboration tools"]
     }
   };
-
-  return (
-    <div className="min-h-screen bg-background">
+  return <div className="min-h-screen bg-background">
       <Header />
       {/* Header Section */}
       <section className="border-b bg-gradient-subtle">
@@ -203,7 +136,7 @@ export default function Pricing() {
           <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-4">
             Story Magic
           </h1>
-          <p className="text-xl text-cinema-gold font-semibold mb-2">
+          <p className="text-xl font-semibold mb-2 text-sky-500">
             Transform Scripts into Cinematic Audio Experiences
           </p>
           <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
@@ -231,14 +164,11 @@ export default function Pricing() {
       <section className="py-16">
         <div className="container mx-auto px-4">
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
-            {pricingCards.map((card) => (
-              <Card key={card.id} className={`relative ${card.popular ? 'border-cinema-gold shadow-glow' : ''}`}>
-                {card.popular && (
-                  <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-cinema-gold text-primary-foreground">
+            {pricingCards.map(card => <Card key={card.id} className={`relative ${card.popular ? 'border-cinema-gold shadow-glow' : ''}`}>
+                {card.popular && <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-cinema-gold text-primary-foreground">
                     <Star className="w-3 h-3 mr-1" />
                     Most Popular
-                  </Badge>
-                )}
+                  </Badge>}
                 
                 <CardHeader>
                   <CardTitle className="text-2xl font-bold">{card.title}</CardTitle>
@@ -247,59 +177,40 @@ export default function Pricing() {
                       <span className="text-3xl font-bold text-cinema-gold">{card.price}</span>
                       <span className="text-muted-foreground">{card.period}</span>
                     </div>
-                    {card.perUser && (
-                      <p className="text-sm text-muted-foreground">{card.perUser}</p>
-                    )}
+                    {card.perUser && <p className="text-sm text-muted-foreground">{card.perUser}</p>}
                     <p className="text-sm text-muted-foreground">{card.billing}</p>
                   </div>
                   <CardDescription className="text-sm">{card.target}</CardDescription>
-                  {card.includes && (
-                    <p className="text-sm font-medium text-cinema-gold">{card.includes}</p>
-                  )}
+                  {card.includes && <p className="text-sm font-medium text-cinema-gold">{card.includes}</p>}
                 </CardHeader>
 
                 <CardContent className="space-y-4">
                   <ul className="space-y-2">
-                    {card.features?.map((feature, index) => (
-                      <li key={index} className="flex items-start gap-2">
+                    {card.features?.map((feature, index) => <li key={index} className="flex items-start gap-2">
                         <Check className="w-4 h-4 text-cinema-gold mt-0.5 flex-shrink-0" />
                         <span className="text-sm">{feature}</span>
-                      </li>
-                    ))}
-                    {card.options?.map((option, index) => (
-                      <li key={index} className="flex items-start gap-2">
+                      </li>)}
+                    {card.options?.map((option, index) => <li key={index} className="flex items-start gap-2">
                         <Check className="w-4 h-4 text-cinema-gold mt-0.5 flex-shrink-0" />
                         <span className="text-sm">{option}</span>
-                      </li>
-                    ))}
+                      </li>)}
                   </ul>
                   
-                  {card.additionalUsers && (
-                    <p className="text-xs text-muted-foreground border-t pt-2">
+                  {card.additionalUsers && <p className="text-xs text-muted-foreground border-t pt-2">
                       Additional users: {card.additionalUsers}
-                    </p>
-                  )}
+                    </p>}
                   
-                  {card.baseFee && (
-                    <p className="text-sm font-medium text-cinema-gold">{card.baseFee}</p>
-                  )}
+                  {card.baseFee && <p className="text-sm font-medium text-cinema-gold">{card.baseFee}</p>}
                   
-                  {card.requirements && (
-                    <p className="text-xs text-muted-foreground">{card.requirements}</p>
-                  )}
+                  {card.requirements && <p className="text-xs text-muted-foreground">{card.requirements}</p>}
                 </CardContent>
 
                 <CardFooter>
-                  <Button 
-                    variant={card.ctaVariant} 
-                    className="w-full"
-                    asChild
-                  >
+                  <Button variant={card.ctaVariant} className="w-full" asChild>
                     <Link to="/auth">{card.ctaText}</Link>
                   </Button>
                 </CardFooter>
-              </Card>
-            ))}
+              </Card>)}
           </div>
         </div>
       </section>
@@ -319,12 +230,10 @@ export default function Pricing() {
               </CardHeader>
               <CardContent>
                 <ul className="space-y-3">
-                  {addOnServices.comingSoon.map((service, index) => (
-                    <li key={index} className="flex justify-between items-center">
+                  {addOnServices.comingSoon.map((service, index) => <li key={index} className="flex justify-between items-center">
                       <span>{service.name}</span>
                       <span className="font-medium text-cinema-gold">{service.price}</span>
-                    </li>
-                  ))}
+                    </li>)}
                 </ul>
               </CardContent>
             </Card>
@@ -338,12 +247,10 @@ export default function Pricing() {
               </CardHeader>
               <CardContent>
                 <ul className="space-y-3">
-                  {addOnServices.professional.map((service, index) => (
-                    <li key={index} className="flex justify-between items-center">
+                  {addOnServices.professional.map((service, index) => <li key={index} className="flex justify-between items-center">
                       <span>{service.name}</span>
                       <span className="font-medium text-cinema-gold">{service.price}</span>
-                    </li>
-                  ))}
+                    </li>)}
                 </ul>
               </CardContent>
             </Card>
@@ -364,25 +271,21 @@ export default function Pricing() {
               <TabsTrigger value="universities">Universities</TabsTrigger>
             </TabsList>
             
-            {Object.entries(industryBenefits).map(([key, industry]) => (
-              <TabsContent key={key} value={key} className="mt-8">
+            {Object.entries(industryBenefits).map(([key, industry]) => <TabsContent key={key} value={key} className="mt-8">
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-2xl">{industry.title}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <ul className="grid md:grid-cols-2 gap-4">
-                      {industry.benefits.map((benefit, index) => (
-                        <li key={index} className="flex items-start gap-2">
+                      {industry.benefits.map((benefit, index) => <li key={index} className="flex items-start gap-2">
                           <Check className="w-4 h-4 text-cinema-gold mt-0.5 flex-shrink-0" />
                           <span>{benefit}</span>
-                        </li>
-                      ))}
+                        </li>)}
                     </ul>
                   </CardContent>
                 </Card>
-              </TabsContent>
-            ))}
+              </TabsContent>)}
           </Tabs>
         </div>
       </section>
@@ -450,6 +353,5 @@ export default function Pricing() {
           </div>
         </div>
       </section>
-    </div>
-  );
+    </div>;
 }
