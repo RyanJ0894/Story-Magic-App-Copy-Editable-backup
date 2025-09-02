@@ -76,7 +76,6 @@ export function usePlanProtection() {
       if (!user) throw new Error('User not authenticated');
 
       const updateData: any = {
-        user_id: user.id,
         plan_selected: true,
         plan_type: planType,
         account_status: accountStatus,
@@ -87,11 +86,28 @@ export function usePlanProtection() {
         updateData.trial_end_date = trialEndDate;
       }
 
-      const { error } = await supabase
+      // Try to update first, if no rows affected then insert
+      const { data: updateResult, error: updateError } = await supabase
         .from('profiles')
-        .upsert(updateData);
+        .update(updateData)
+        .eq('user_id', user.id)
+        .select();
 
-      if (error) throw error;
+      if (updateError) throw updateError;
+
+      // If no rows were updated, insert a new profile
+      if (!updateResult || updateResult.length === 0) {
+        const insertData = {
+          user_id: user.id,
+          ...updateData
+        };
+
+        const { error: insertError } = await supabase
+          .from('profiles')
+          .insert(insertData);
+
+        if (insertError) throw insertError;
+      }
 
       // Update local state
       setProfile({
