@@ -6,7 +6,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useState } from "react";
 
 export const Header = () => {
-  const { user, signOut } = useAuth();
+  const { user, signOut, loading } = useAuth();
   const navigate = useNavigate();
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-lg">
@@ -35,7 +35,9 @@ export const Header = () => {
         </nav>
 
         <div className="flex items-center gap-3">
-          {user ? (
+          {loading ? (
+            <div className="w-20 h-8 bg-muted animate-pulse rounded"></div>
+          ) : user ? (
             <>
               <span className="hidden md:flex text-sm text-muted-foreground">
                 {user.email}

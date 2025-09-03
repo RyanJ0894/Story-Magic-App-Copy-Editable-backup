@@ -28,19 +28,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         (event, session) => {
           console.log("🔐 AuthProvider: Auth state changed", { event, hasSession: !!session });
           if (mounted) {
-            // Only update state if session actually changed to prevent unnecessary renders
-            setSession(prevSession => {
-              if (JSON.stringify(prevSession) !== JSON.stringify(session)) {
-                return session;
-              }
-              return prevSession;
-            });
+            setSession(session);
             setUser(session?.user ?? null);
-            
-            // Only set loading to false after first auth state change
-            if (loading) {
-              setLoading(false);
-            }
+            setLoading(false);
           }
         }
       );
@@ -48,7 +38,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       // Check for existing session
       supabase.auth.getSession().then(({ data: { session }, error }) => {
         console.log("🔐 AuthProvider: Initial session check", { hasSession: !!session, error });
-        if (mounted && !error) {
+        if (mounted) {
           setSession(session);
           setUser(session?.user ?? null);
           setLoading(false);
