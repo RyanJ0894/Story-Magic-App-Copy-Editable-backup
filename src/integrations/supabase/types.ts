@@ -10,167 +10,133 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "12.2.12 (cd3cf9e)"
+    PostgrestVersion: "13.0.4"
   }
   public: {
     Tables: {
-      multi_voice_data: {
+      agent_logs: {
         Row: {
-          audio_url: string | null
-          character_voices: Json | null
+          agent_name: string | null
+          agent_text: string | null
+          conversation_id: string | null
           created_at: string | null
-          id: string
-          project_id: string
-          script_text: string | null
-          updated_at: string | null
-          user_id: string
+          id: number
+          raw: Json | null
+          structured_json: Json | null
         }
         Insert: {
-          audio_url?: string | null
-          character_voices?: Json | null
+          agent_name?: string | null
+          agent_text?: string | null
+          conversation_id?: string | null
           created_at?: string | null
-          id?: string
-          project_id: string
-          script_text?: string | null
-          updated_at?: string | null
-          user_id: string
+          id?: never
+          raw?: Json | null
+          structured_json?: Json | null
         }
         Update: {
-          audio_url?: string | null
-          character_voices?: Json | null
+          agent_name?: string | null
+          agent_text?: string | null
+          conversation_id?: string | null
           created_at?: string | null
-          id?: string
-          project_id?: string
-          script_text?: string | null
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "multi_voice_data_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "user_projects"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      profiles: {
-        Row: {
-          account_status: string | null
-          created_at: string | null
-          id: string
-          plan_selected: boolean | null
-          plan_type: string | null
-          selection_date: string | null
-          trial_end_date: string | null
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          account_status?: string | null
-          created_at?: string | null
-          id?: string
-          plan_selected?: boolean | null
-          plan_type?: string | null
-          selection_date?: string | null
-          trial_end_date?: string | null
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          account_status?: string | null
-          created_at?: string | null
-          id?: string
-          plan_selected?: boolean | null
-          plan_type?: string | null
-          selection_date?: string | null
-          trial_end_date?: string | null
-          updated_at?: string | null
-          user_id?: string
+          id?: never
+          raw?: Json | null
+          structured_json?: Json | null
         }
         Relationships: []
       }
-      project_scripts: {
+      ai_events: {
         Row: {
-          created_at: string | null
+          agent_id: string | null
+          created_at: string
           id: string
-          project_id: string
-          script_text: string | null
-          updated_at: string | null
-          user_id: string
+          input: Json | null
+          metadata: Json | null
+          output: Json | null
+          run_id: string | null
         }
         Insert: {
-          created_at?: string | null
+          agent_id?: string | null
+          created_at?: string
           id?: string
-          project_id: string
-          script_text?: string | null
-          updated_at?: string | null
-          user_id: string
+          input?: Json | null
+          metadata?: Json | null
+          output?: Json | null
+          run_id?: string | null
         }
         Update: {
-          created_at?: string | null
+          agent_id?: string | null
+          created_at?: string
           id?: string
-          project_id?: string
-          script_text?: string | null
-          updated_at?: string | null
-          user_id?: string
+          input?: Json | null
+          metadata?: Json | null
+          output?: Json | null
+          run_id?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "project_scripts_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "user_projects"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
+      }
+      raw_webhooks: {
+        Row: {
+          content_type: string | null
+          created_at: string | null
+          headers: Json | null
+          id: number
+          method: string | null
+          raw_body: Json
+          raw_preview: string | null
+          timestamp: string | null
+          url: string | null
+        }
+        Insert: {
+          content_type?: string | null
+          created_at?: string | null
+          headers?: Json | null
+          id?: number
+          method?: string | null
+          raw_body: Json
+          raw_preview?: string | null
+          timestamp?: string | null
+          url?: string | null
+        }
+        Update: {
+          content_type?: string | null
+          created_at?: string | null
+          headers?: Json | null
+          id?: number
+          method?: string | null
+          raw_body?: Json
+          raw_preview?: string | null
+          timestamp?: string | null
+          url?: string | null
+        }
+        Relationships: []
       }
       user_projects: {
         Row: {
-          ai_director_json: string | null
+          ai_director_json: Json | null
           audio_url: string | null
           created_at: string
-          generation_count: number
           id: string
-          mood: string | null
-          project_name: string
-          script_url: string | null
-          status: string | null
+          script: string | null
           title: string | null
-          updated_at: string
-          user_id: string
-          voice_style: string | null
+          user_id: string | null
         }
         Insert: {
-          ai_director_json?: string | null
+          ai_director_json?: Json | null
           audio_url?: string | null
           created_at?: string
-          generation_count?: number
           id?: string
-          mood?: string | null
-          project_name: string
-          script_url?: string | null
-          status?: string | null
+          script?: string | null
           title?: string | null
-          updated_at?: string
-          user_id: string
-          voice_style?: string | null
+          user_id?: string | null
         }
         Update: {
-          ai_director_json?: string | null
+          ai_director_json?: Json | null
           audio_url?: string | null
           created_at?: string
-          generation_count?: number
           id?: string
-          mood?: string | null
-          project_name?: string
-          script_url?: string | null
-          status?: string | null
+          script?: string | null
           title?: string | null
-          updated_at?: string
-          user_id?: string
-          voice_style?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -179,10 +145,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      create_user_project: {
-        Args: { p_title: string; p_user_id: string }
-        Returns: string
-      }
+      [_ in never]: never
     }
     Enums: {
       [_ in never]: never
