@@ -53,8 +53,13 @@ serve(async (req) => {
 
     const voicesData = await response.json()
     
+    // Filter to only include user's actual voices (exclude premade and professional)
+    const userVoices = voicesData.voices.filter((voice: any) => 
+      voice.category === 'cloned' || voice.category === 'generated'
+    )
+    
     // Transform the voice data to include preview URLs and other useful info
-    const voices = voicesData.voices.map((voice: any) => ({
+    const voices = userVoices.map((voice: any) => ({
       voice_id: voice.voice_id,
       name: voice.name,
       category: voice.category,

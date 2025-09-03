@@ -8,6 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { useElevenLabsVoices, ElevenLabsVoice } from '@/hooks/useElevenLabsVoices'
 import { useToast } from '@/hooks/use-toast'
+import { USER_VOICE_CATEGORIES, categorizeVoice, UserVoiceCategory } from '@/config/userCategories'
 
 interface VoiceCardProps {
   voice: ElevenLabsVoice
@@ -50,7 +51,7 @@ const VoiceCard = ({ voice, isPlaying, isLoading, onPlay, onPause }: VoiceCardPr
       <div className="flex items-center gap-2 flex-shrink-0">
         <Volume2 className="h-3 w-3 text-muted-foreground" />
         <Badge variant="secondary" className="text-xs">
-          {voice.category}
+          {categorizeVoice(voice.name, voice.description)}
         </Badge>
       </div>
     </div>
@@ -87,18 +88,20 @@ export const VoiceLibrary = () => {
   const { toast } = useToast()
 
   // Filter voices based on search term
-  const filteredVoices = voices.filter(voice =>
-    voice.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    voice.category.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  const filteredVoices = voices.filter(voice => {
+    const userCategory = categorizeVoice(voice.name, voice.description)
+    return voice.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+           userCategory.toLowerCase().includes(searchTerm.toLowerCase()) ||
+           (voice.description && voice.description.toLowerCase().includes(searchTerm.toLowerCase()))
+  })
 
-  // Group voices by category
+  // Group voices by user-defined categories
   const voicesByCategory = filteredVoices.reduce((acc, voice) => {
-    const category = voice.category || 'Other'
+    const category = categorizeVoice(voice.name, voice.description)
     if (!acc[category]) acc[category] = []
     acc[category].push(voice)
     return acc
-  }, {} as Record<string, ElevenLabsVoice[]>)
+  }, {} as Record<UserVoiceCategory, ElevenLabsVoice[]>)
 
   const toggleCategory = (category: string) => {
     setExpandedCategories(prev => ({
@@ -248,41 +251,46 @@ export const VoiceLibrary = () => {
           </div>
         ) : (
           <div className="space-y-2">
-            {Object.entries(voicesByCategory).map(([category, categoryVoices]) => (
-              <Collapsible
-                key={category}
-                open={expandedCategories[category]}
-                onOpenChange={() => toggleCategory(category)}
-              >
-                <CollapsibleTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    className="w-full justify-between h-auto p-3 text-left font-medium hover:bg-accent/50"
-                  >
-                    <span className="text-sm font-semibold text-foreground uppercase tracking-wide">
-                      {category} ({categoryVoices.length})
-                    </span>
-                    {expandedCategories[category] ? (
-                      <ChevronDown className="h-4 w-4" />
-                    ) : (
-                      <ChevronRight className="h-4 w-4" />
-                    )}
-                  </Button>
-                </CollapsibleTrigger>
-                <CollapsibleContent className="space-y-2 mt-2 ml-2">
-                  {categoryVoices.map((voice) => (
-                    <VoiceCard
-                      key={voice.voice_id}
-                      voice={voice}
-                      isPlaying={playingVoice === voice.voice_id}
-                      isLoading={loadingVoice === voice.voice_id}
-                      onPlay={() => playVoice(voice)}
-                      onPause={pauseVoice}
-                    />
-                  ))}
-                </CollapsibleContent>
-              </Collapsible>
-            ))}
+            {USER_VOICE_CATEGORIES.map((category) => {
+              const categoryVoices = voicesByCategory[category] || []
+              if (categoryVoices.length === 0) return null
+              
+              return (
+                <Collapsible
+                  key={category}
+                  open={expandedCategories[category]}
+                  onOpenChange={() => toggleCategory(category)}
+                >
+                  <CollapsibleTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-between h-auto p-3 text-left font-medium hover:bg-accent/50"
+                    >
+                      <span className="text-sm font-semibold text-foreground uppercase tracking-wide">
+                        {category} ({categoryVoices.length})
+                      </span>
+                      {expandedCategories[category] ? (
+                        <ChevronDown className="h-4 w-4" />
+                      ) : (
+                        <ChevronRight className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="space-y-2 mt-2 ml-2">
+                    {categoryVoices.map((voice) => (
+                      <VoiceCard
+                        key={voice.voice_id}
+                        voice={voice}
+                        isPlaying={playingVoice === voice.voice_id}
+                        isLoading={loadingVoice === voice.voice_id}
+                        onPlay={() => playVoice(voice)}
+                        onPause={pauseVoice}
+                      />
+                    ))}
+                  </CollapsibleContent>
+                </Collapsible>
+              )
+            })}
           </div>
         )}
       </CardContent>
