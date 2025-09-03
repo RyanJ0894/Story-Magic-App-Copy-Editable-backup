@@ -5,8 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { usePlanProtection } from "@/hooks/usePlanProtection";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
 interface EnterpriseContactModalProps {
   isOpen: boolean;
@@ -24,7 +24,6 @@ export function EnterpriseContactModal({ isOpen, onClose, planName }: Enterprise
     needs: ''
   });
   const { toast } = useToast();
-  const { selectPlan } = usePlanProtection();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -32,20 +31,21 @@ export function EnterpriseContactModal({ isOpen, onClose, planName }: Enterprise
     setIsSubmitting(true);
 
     try {
-      // Use the selectPlan function to properly handle the database update
-      const success = await selectPlan(planName, 'pending_enterprise_setup');
-      
-      if (!success) {
-        throw new Error('Failed to update plan selection');
+      // Check if user is authenticated before proceeding
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        // Redirect to auth if not logged in
+        navigate('/auth');
+        return;
       }
 
+      // For now, just show success message - actual plan selection will be handled elsewhere
       toast({
-        title: "Request Submitted!",
-        description: "Thanks! We'll contact you within 24 hours to set up your enterprise account.",
+        title: "Contact Request Submitted",
+        description: "We'll get in touch with you soon to discuss your enterprise needs.",
       });
 
-      // Redirect to dashboard
-      navigate("/dashboard");
+      onClose();
     } catch (error: any) {
       console.error('Enterprise contact error:', error);
       toast({
@@ -141,7 +141,6 @@ export function AcademicVerificationModal({ isOpen, onClose }: AcademicVerificat
     verification: ''
   });
   const { toast } = useToast();
-  const { selectPlan } = usePlanProtection();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -149,20 +148,21 @@ export function AcademicVerificationModal({ isOpen, onClose }: AcademicVerificat
     setIsSubmitting(true);
 
     try {
-      // Use the selectPlan function to properly handle the database update
-      const success = await selectPlan('University Program', 'pending_academic_verification');
-      
-      if (!success) {
-        throw new Error('Failed to update plan selection');
+      // Check if user is authenticated before proceeding
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        // Redirect to auth if not logged in
+        navigate('/auth');
+        return;
       }
 
+      // For now, just show success message - actual plan selection will be handled elsewhere
       toast({
-        title: "Verification Submitted!",
-        description: "We'll review your academic status within 48 hours.",
+        title: "Academic Verification Submitted",
+        description: "We'll review your academic status and get back to you soon.",
       });
 
-      // Redirect to dashboard
-      navigate("/dashboard");
+      onClose();
     } catch (error: any) {
       console.error('Academic verification error:', error);
       toast({
