@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { VoiceLibrary } from "@/components/VoiceLibrary";
+import { useVoiceCount } from "@/hooks/useVoiceCount";
 interface IndividualTabProps {
   projects: any[];
   onDeleteProject: (id: string, title: string) => void;
@@ -14,6 +16,7 @@ export function IndividualTab({
   onDeleteProject,
   deletingId
 }: IndividualTabProps) {
+  const { count: voiceCount, loading: voiceCountLoading } = useVoiceCount();
   return <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -54,8 +57,10 @@ export function IndividualTab({
             <CardTitle className="text-sm font-medium">Voice Library</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">50+</div>
-            <p className="text-xs text-muted-foreground">Standard voices</p>
+            <div className="text-2xl font-bold">
+              {voiceCountLoading ? '...' : voiceCount}
+            </div>
+            <p className="text-xs text-muted-foreground">ElevenLabs voices</p>
           </CardContent>
         </Card>
       </div>
@@ -123,6 +128,9 @@ export function IndividualTab({
             </div>}
         </CardContent>
       </Card>
+
+      {/* Voice Library Section */}
+      <VoiceLibrary />
 
       {/* Upgrade Preview */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
