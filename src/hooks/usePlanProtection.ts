@@ -33,10 +33,29 @@ export function usePlanProtection() {
 
         if (error) {
           console.error('Profile fetch error:', error);
-          // If no profile exists, it will be created automatically by the trigger
-          // Just redirect to pricing for new users
-          if (mounted) {
-            navigate('/pricing?newuser=true');
+          // If profile doesn't exist, create it with default values
+          if (error.code === 'PGRST116') {
+            try {
+              const { error: insertError } = await supabase
+                .from('profiles')
+                .insert({
+                  user_id: user.id,
+                  plan_type: 'individual',
+                  account_status: 'active'
+                });
+              
+              if (!insertError) {
+                // Profile created successfully, set default values
+                if (mounted) {
+                  setProfile({
+                    plan_type: 'individual',
+                    account_status: 'active'
+                  });
+                }
+              }
+            } catch (insertErr) {
+              console.error('Failed to create profile:', insertErr);
+            }
           }
           return;
         }
