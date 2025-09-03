@@ -1,9 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { 
-  Eye, Trash2, AlertTriangle, Plus, Users, Mail, 
-  BarChart3, Share2, MessageSquare, Settings 
-} from "lucide-react";
+import { Eye, Trash2, AlertTriangle, Plus, Users, Mail, BarChart3, Share2, MessageSquare, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -11,29 +8,19 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 interface StarterEnterpriseTabProps {
   projects: any[];
   onDeleteProject: (id: string, title: string) => void;
   deletingId: string | null;
 }
-
-export function StarterEnterpriseTab({ projects, onDeleteProject, deletingId }: StarterEnterpriseTabProps) {
+export function StarterEnterpriseTab({
+  projects,
+  onDeleteProject,
+  deletingId
+}: StarterEnterpriseTabProps) {
   const [activeTeamTab, setActiveTeamTab] = useState("overview");
-
-  return (
-    <div className="space-y-6">
+  return <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -72,7 +59,7 @@ export function StarterEnterpriseTab({ projects, onDeleteProject, deletingId }: 
             <CardTitle className="text-sm font-medium">Voice Library</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">20+</div>
+            <div className="text-2xl font-bold">50+</div>
             <p className="text-xs text-muted-foreground">Standard voices</p>
           </CardContent>
         </Card>
@@ -253,17 +240,13 @@ export function StarterEnterpriseTab({ projects, onDeleteProject, deletingId }: 
               <CardDescription>Shared projects and collaboration</CardDescription>
             </CardHeader>
             <CardContent>
-              {projects.length === 0 ? (
-                <div className="text-center py-8 space-y-4">
+              {projects.length === 0 ? <div className="text-center py-8 space-y-4">
                   <div className="text-muted-foreground">No team projects yet. Create the first one.</div>
                   <Link to="/projects/new">
                     <Button>Create Team Project</Button>
                   </Link>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {projects.map((project) => (
-                    <div key={project.id} className="flex items-center justify-between p-3 border rounded-lg">
+                </div> : <div className="space-y-3">
+                  {projects.map(project => <div key={project.id} className="flex items-center justify-between p-3 border rounded-lg">
                       <div className="flex-1">
                         <div className="font-medium">{project.title || "Untitled Project"}</div>
                         <div className="text-sm text-muted-foreground">
@@ -271,7 +254,7 @@ export function StarterEnterpriseTab({ projects, onDeleteProject, deletingId }: 
                         </div>
                         <div className="flex gap-2 mt-1">
                           <Badge variant="outline">
-                            {project.ai_director_json ? (project.audio_url ? 'Complete' : 'Analyzed') : 'Draft'}
+                            {project.ai_director_json ? project.audio_url ? 'Complete' : 'Analyzed' : 'Draft'}
                           </Badge>
                           <Badge variant="secondary">Team</Badge>
                         </div>
@@ -289,12 +272,7 @@ export function StarterEnterpriseTab({ projects, onDeleteProject, deletingId }: 
                         </Link>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <Button 
-                              variant="ghost" 
-                              size="sm"
-                              disabled={deletingId === project.id}
-                              className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                            >
+                            <Button variant="ghost" size="sm" disabled={deletingId === project.id} className="text-destructive hover:text-destructive hover:bg-destructive/10">
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </AlertDialogTrigger>
@@ -311,20 +289,15 @@ export function StarterEnterpriseTab({ projects, onDeleteProject, deletingId }: 
                             </AlertDialogHeader>
                             <AlertDialogFooter>
                               <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction
-                                onClick={() => onDeleteProject(project.id, project.title || "Untitled Project")}
-                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                              >
+                              <AlertDialogAction onClick={() => onDeleteProject(project.id, project.title || "Untitled Project")} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
                                 Delete Project
                               </AlertDialogAction>
                             </AlertDialogFooter>
                           </AlertDialogContent>
                         </AlertDialog>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+                    </div>)}
+                </div>}
             </CardContent>
           </Card>
         </TabsContent>
@@ -357,6 +330,5 @@ export function StarterEnterpriseTab({ projects, onDeleteProject, deletingId }: 
           </Card>
         </TabsContent>
       </Tabs>
-    </div>
-  );
+    </div>;
 }
