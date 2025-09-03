@@ -1,68 +1,129 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Users, Play, RotateCcw, Crown } from "lucide-react";
+import { Users, Play, RotateCcw, Crown, Pause } from "lucide-react";
+import { useElevenLabsVoices, type ElevenLabsVoice } from "@/hooks/useElevenLabsVoices";
 
-interface Character {
+interface CharacterVoice {
   id: string;
   name: string;
   role: string;
-  voiceType: string;
   age: string;
   personality: string;
   avatar: string;
+  voiceId: string;
+  elevenlabsVoice?: ElevenLabsVoice;
 }
 
-const demoCharacters: Character[] = [
+const characterVoices: CharacterVoice[] = [
   {
     id: "1",
     name: "SARAH",
     role: "Lead",
-    voiceType: "Confident Female",
     age: "28-35",
     personality: "Determined entrepreneur",
-    avatar: "S"
+    avatar: "S",
+    voiceId: "EXAVITQu4vr4xnSDxMaL" // Sarah from ElevenLabs
   },
   {
     id: "2", 
     name: "MARCUS",
     role: "Supporting",
-    voiceType: "Warm Male",
     age: "45-50",
     personality: "Wise mentor figure",
-    avatar: "M"
+    avatar: "M",
+    voiceId: "nPczCjzI2devNBz1zQrb" // Brian from ElevenLabs
   },
   {
     id: "3",
     name: "ELENA",
     role: "Supporting",
-    voiceType: "Energetic Female",
     age: "22-28",
     personality: "Tech-savvy assistant",
-    avatar: "E"
+    avatar: "E",
+    voiceId: "9BWtsMINqrJLrRacOk9x" // Aria from ElevenLabs
   },
   {
     id: "4",
     name: "NARRATOR",
     role: "Narrator",
-    voiceType: "Cinematic Male",
     age: "40-45",
     personality: "Deep, authoritative",
-    avatar: "N"
+    avatar: "N",
+    voiceId: "TX3LPaxmHKxFdv7VOQHJ" // Liam from ElevenLabs
   }
 ];
 
 export const VoiceCasting = () => {
   const [selectedCharacter, setSelectedCharacter] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null);
+  const [playingVoiceId, setPlayingVoiceId] = useState<string | null>(null);
+  const [charactersWithVoices, setCharactersWithVoices] = useState<CharacterVoice[]>(characterVoices);
+  
+  const { voices, loading: voicesLoading } = useElevenLabsVoices();
+
+  // Match ElevenLabs voices with characters
+  useEffect(() => {
+    if (voices.length > 0) {
+      const updatedCharacters = characterVoices.map(character => ({
+        ...character,
+        elevenlabsVoice: voices.find(voice => voice.voice_id === character.voiceId)
+      }));
+      setCharactersWithVoices(updatedCharacters);
+    }
+  }, [voices]);
+
+  // Cleanup audio on unmount
+  useEffect(() => {
+    return () => {
+      if (currentAudio) {
+        currentAudio.pause();
+        currentAudio.src = '';
+      }
+    };
+  }, []);
 
   const handleRegenerateVoice = (characterId: string) => {
     setIsProcessing(true);
+    // In a real implementation, this would call an API to regenerate the voice
     setTimeout(() => {
       setIsProcessing(false);
     }, 1500);
+  };
+
+  const handlePreviewVoice = (character: CharacterVoice) => {
+    if (!character.elevenlabsVoice?.preview_url) return;
+
+    // Stop current audio if playing
+    if (currentAudio) {
+      currentAudio.pause();
+      currentAudio.src = '';
+      setCurrentAudio(null);
+      setPlayingVoiceId(null);
+    }
+
+    // If clicking the same voice, just stop
+    if (playingVoiceId === character.voiceId) {
+      return;
+    }
+
+    // Play new audio
+    const audio = new Audio(character.elevenlabsVoice.preview_url);
+    audio.onended = () => {
+      setPlayingVoiceId(null);
+      setCurrentAudio(null);
+    };
+    audio.onerror = () => {
+      setPlayingVoiceId(null);
+      setCurrentAudio(null);
+    };
+    
+    setCurrentAudio(audio);
+    setPlayingVoiceId(character.voiceId);
+    audio.play();
   };
 
   return (
@@ -93,8 +154,28 @@ export const VoiceCasting = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid gap-4">
-                {demoCharacters.map((character) => (
+              {voicesLoading ? (
+                <div className="grid gap-4">
+                  {[1, 2, 3, 4].map((i) => (
+                    <div key={i} className="p-4 rounded-lg border border-border animate-pulse">
+                      <div className="flex items-center gap-4">
+                        <div className="h-12 w-12 bg-muted rounded-full"></div>
+                        <div className="flex-1">
+                          <div className="h-4 bg-muted rounded w-20 mb-2"></div>
+                          <div className="h-3 bg-muted rounded w-32 mb-1"></div>
+                          <div className="h-3 bg-muted rounded w-16"></div>
+                        </div>
+                        <div className="flex gap-2">
+                          <div className="h-8 w-20 bg-muted rounded"></div>
+                          <div className="h-8 w-16 bg-muted rounded"></div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="grid gap-4">
+                  {charactersWithVoices.map((character) => (
                   <div 
                     key={character.id}
                     className={`p-4 rounded-lg border transition-all duration-200 cursor-pointer ${
@@ -126,9 +207,16 @@ export const VoiceCasting = () => {
                           <p className="text-sm text-muted-foreground mb-2">
                             {character.personality} • {character.age}
                           </p>
-                          <Badge variant="outline" className="text-xs">
-                            {character.voiceType}
-                          </Badge>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className="text-xs">
+                              {character.elevenlabsVoice?.name || 'Voice Loading...'}
+                            </Badge>
+                            {character.elevenlabsVoice && (
+                              <Badge variant="secondary" className="text-xs">
+                                {character.elevenlabsVoice.category}
+                              </Badge>
+                            )}
+                          </div>
                         </div>
                       </div>
                       
@@ -145,15 +233,28 @@ export const VoiceCasting = () => {
                           <RotateCcw className="h-4 w-4" />
                           Regenerate
                         </Button>
-                        <Button variant="ghost" size="sm">
-                          <Play className="h-4 w-4" />
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handlePreviewVoice(character);
+                          }}
+                          disabled={!character.elevenlabsVoice?.preview_url}
+                        >
+                          {playingVoiceId === character.voiceId ? (
+                            <Pause className="h-4 w-4" />
+                          ) : (
+                            <Play className="h-4 w-4" />
+                          )}
                           Preview
                         </Button>
                       </div>
                     </div>
                   </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
               
               <div className="mt-6 p-4 bg-cinema-surface/30 rounded-lg border border-cinema-gold/20">
                 <h4 className="font-medium mb-2 text-cinema-gold">
