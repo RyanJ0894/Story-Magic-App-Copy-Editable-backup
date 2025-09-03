@@ -84,6 +84,7 @@ export const VoiceLibrary = () => {
   const [playingVoice, setPlayingVoice] = useState<string | null>(null)
   const [loadingVoice, setLoadingVoice] = useState<string | null>(null)
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({})
+  const [isLibraryOpen, setIsLibraryOpen] = useState(false)
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const { toast } = useToast()
 
@@ -211,88 +212,110 @@ export const VoiceLibrary = () => {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle>Voice Library</CardTitle>
-            <p className="text-sm text-muted-foreground mt-1">
-              {loading ? 'Loading voices...' : `${count} voices available`}
-            </p>
-          </div>
-          {!loading && (
-            <Button onClick={retry} variant="outline" size="sm">
-              <RefreshCw className="h-4 w-4" />
-            </Button>
-          )}
-        </div>
-      </CardHeader>
-      
-      <CardContent className="space-y-4">
-        {!loading && voices.length > 0 && (
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search voices..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-        )}
-
-        {loading ? (
-          <VoiceLibrarySkeleton />
-        ) : voices.length === 0 ? (
-          <div className="text-center py-8">
-            <Volume2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground">No voices found in your ElevenLabs account.</p>
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {USER_VOICE_CATEGORIES.map((category) => {
-              const categoryVoices = voicesByCategory[category] || []
-              if (categoryVoices.length === 0) return null
-              
-              return (
-                <Collapsible
-                  key={category}
-                  open={expandedCategories[category]}
-                  onOpenChange={() => toggleCategory(category)}
+    <Collapsible open={isLibraryOpen} onOpenChange={setIsLibraryOpen}>
+      <CollapsibleTrigger asChild>
+        <Card className="cursor-pointer hover:bg-accent/50 transition-colors">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  Voice Library
+                  {isLibraryOpen ? (
+                    <ChevronDown className="h-4 w-4" />
+                  ) : (
+                    <ChevronRight className="h-4 w-4" />
+                  )}
+                </CardTitle>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {loading ? 'Loading voices...' : `${count} voices available`}
+                </p>
+              </div>
+              {!loading && (
+                <Button 
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    retry()
+                  }} 
+                  variant="outline" 
+                  size="sm"
                 >
-                  <CollapsibleTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      className="w-full justify-between h-auto p-3 text-left font-medium hover:bg-accent/50"
+                  <RefreshCw className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+          </CardHeader>
+        </Card>
+      </CollapsibleTrigger>
+
+      <CollapsibleContent>
+        <Card>
+          <CardContent className="space-y-4">
+            {!loading && voices.length > 0 && (
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search voices..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+            )}
+
+            {loading ? (
+              <VoiceLibrarySkeleton />
+            ) : voices.length === 0 ? (
+              <div className="text-center py-8">
+                <Volume2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground">No voices found in your ElevenLabs account.</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {USER_VOICE_CATEGORIES.map((category) => {
+                  const categoryVoices = voicesByCategory[category] || []
+                  if (categoryVoices.length === 0) return null
+                  
+                  return (
+                    <Collapsible
+                      key={category}
+                      open={expandedCategories[category]}
+                      onOpenChange={() => toggleCategory(category)}
                     >
-                      <span className="text-sm font-semibold text-foreground uppercase tracking-wide">
-                        {category} ({categoryVoices.length})
-                      </span>
-                      {expandedCategories[category] ? (
-                        <ChevronDown className="h-4 w-4" />
-                      ) : (
-                        <ChevronRight className="h-4 w-4" />
-                      )}
-                    </Button>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent className="space-y-2 mt-2 ml-2">
-                    {categoryVoices.map((voice) => (
-                      <VoiceCard
-                        key={voice.voice_id}
-                        voice={voice}
-                        isPlaying={playingVoice === voice.voice_id}
-                        isLoading={loadingVoice === voice.voice_id}
-                        onPlay={() => playVoice(voice)}
-                        onPause={pauseVoice}
-                      />
-                    ))}
-                  </CollapsibleContent>
-                </Collapsible>
-              )
-            })}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+                      <CollapsibleTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          className="w-full justify-between h-auto p-3 text-left font-medium hover:bg-accent/50"
+                        >
+                          <span className="text-sm font-semibold text-foreground uppercase tracking-wide">
+                            {category} ({categoryVoices.length})
+                          </span>
+                          {expandedCategories[category] ? (
+                            <ChevronDown className="h-4 w-4" />
+                          ) : (
+                            <ChevronRight className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent className="space-y-2 mt-2 ml-2">
+                        {categoryVoices.map((voice) => (
+                          <VoiceCard
+                            key={voice.voice_id}
+                            voice={voice}
+                            isPlaying={playingVoice === voice.voice_id}
+                            isLoading={loadingVoice === voice.voice_id}
+                            onPlay={() => playVoice(voice)}
+                            onPause={pauseVoice}
+                          />
+                        ))}
+                      </CollapsibleContent>
+                    </Collapsible>
+                  )
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </CollapsibleContent>
+    </Collapsible>
   )
 }
