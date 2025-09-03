@@ -6,11 +6,13 @@ import { runAudio } from "@/integrations/filmDirectorApi";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 
+import { Json } from "@/integrations/supabase/types";
+
 type ProjectData = {
   id: string;
   title: string | null;
   created_at: string;
-  ai_director_json: string | null;
+  ai_director_json: Json | null;
   audio_url: string | null;
   user_id: string;
 };

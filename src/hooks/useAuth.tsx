@@ -16,7 +16,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -24,15 +23,24 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     console.log("🔐 AuthProvider: Setting up auth state listener");
     
     try {
-      // Set up auth state listener
+      // Set up auth state listener first
       const { data: { subscription } } = supabase.auth.onAuthStateChange(
         (event, session) => {
           console.log("🔐 AuthProvider: Auth state changed", { event, hasSession: !!session });
           if (mounted) {
-            setSession(session);
+            // Only update state if session actually changed to prevent unnecessary renders
+            setSession(prevSession => {
+              if (JSON.stringify(prevSession) !== JSON.stringify(session)) {
+                return session;
+              }
+              return prevSession;
+            });
             setUser(session?.user ?? null);
-            setLoading(false);
-            setError(null);
+            
+            // Only set loading to false after first auth state change
+            if (loading) {
+              setLoading(false);
+            }
           }
         }
       );
@@ -40,11 +48,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       // Check for existing session
       supabase.auth.getSession().then(({ data: { session }, error }) => {
         console.log("🔐 AuthProvider: Initial session check", { hasSession: !!session, error });
-        if (mounted) {
-          if (error) {
-            console.error("🔐 AuthProvider: Session error:", error);
-            setError(error.message);
-          }
+        if (mounted && !error) {
           setSession(session);
           setUser(session?.user ?? null);
           setLoading(false);
@@ -52,7 +56,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }).catch((err) => {
         console.error("🔐 AuthProvider: Failed to get session:", err);
         if (mounted) {
-          setError(err.message);
           setLoading(false);
         }
       });
@@ -65,7 +68,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     } catch (err) {
       console.error("🔐 AuthProvider: Setup error:", err);
       if (mounted) {
-        setError(err instanceof Error ? err.message : 'Auth setup failed');
         setLoading(false);
       }
     }
@@ -90,25 +92,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     signOut,
   };
 
-  console.log("🔐 AuthProvider: Rendering", { loading, hasUser: !!user, error });
-
-  // Show error state if auth failed to initialize
-  if (error && !loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <div className="bg-card border border-border rounded-lg p-6 max-w-md w-full">
-          <h2 className="text-xl font-semibold text-foreground mb-4">Authentication Error</h2>
-          <p className="text-muted-foreground mb-4">{error}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="w-full bg-primary text-primary-foreground px-4 py-2 rounded hover:bg-primary/90"
-          >
-            Retry
-          </button>
-        </div>
-      </div>
-    );
-  }
+  console.log("🔐 AuthProvider: Rendering", { loading, hasUser: !!user });
 
   return (
     <AuthContext.Provider value={value}>

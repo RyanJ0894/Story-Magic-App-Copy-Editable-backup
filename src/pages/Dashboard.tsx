@@ -183,7 +183,6 @@ export default function Dashboard() {
           <div className="mb-6 p-4 bg-cinema-gold/10 border border-cinema-gold/20 rounded-lg">
             <p className="text-center text-foreground">
               <strong>Free Trial Active!</strong> 
-              {profile.trial_end_date && ` ${Math.ceil((new Date(profile.trial_end_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))} days remaining.`}
               <Link to="/pricing" className="ml-2 text-cinema-gold hover:underline">
                 Upgrade anytime →
               </Link>

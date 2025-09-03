@@ -9,8 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PLAN_CONFIGS, type PlanTier } from "@/types/plans";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import { useUpgrade } from "@/hooks/useUpgrade";
 
 interface UpgradeModalProps {
   isOpen: boolean;
@@ -21,8 +20,7 @@ interface UpgradeModalProps {
 }
 
 export function UpgradeModal({ isOpen, onClose, currentPlan, targetPlan, onUpgradeSuccess }: UpgradeModalProps) {
-  const [isUpgrading, setIsUpgrading] = useState(false);
-  const { toast } = useToast();
+  const { upgradeUserPlan, isUpgrading } = useUpgrade();
   
   if (!targetPlan) return null;
 
@@ -30,38 +28,10 @@ export function UpgradeModal({ isOpen, onClose, currentPlan, targetPlan, onUpgra
   const targetConfig = PLAN_CONFIGS[targetPlan];
 
   const handleUpgrade = async () => {
-    setIsUpgrading(true);
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('User not authenticated');
-
-      const { error } = await supabase
-        .from('profiles')
-        .update({ 
-          plan_type: targetPlan,
-          account_status: 'active',
-          updated_at: new Date().toISOString()
-        })
-        .eq('user_id', user.id);
-
-      if (error) throw error;
-
-      toast({
-        title: "Upgrade Successful!",
-        description: `You've been upgraded to ${targetConfig.name}. You now have access to all ${targetConfig.name} features.`,
-      });
-
+    const success = await upgradeUserPlan(targetPlan);
+    if (success) {
       onUpgradeSuccess(targetPlan);
       onClose();
-    } catch (error) {
-      console.error('Upgrade error:', error);
-      toast({
-        title: "Upgrade Failed",
-        description: "There was an error upgrading your plan. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsUpgrading(false);
     }
   };
 
