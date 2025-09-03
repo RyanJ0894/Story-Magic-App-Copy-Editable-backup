@@ -1,10 +1,11 @@
 import { useState, useRef, useEffect } from 'react'
-import { Play, Pause, Volume2, Search, RefreshCw, AlertCircle } from 'lucide-react'
+import { Play, Pause, Volume2, Search, RefreshCw, AlertCircle, ChevronDown, ChevronRight } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { useElevenLabsVoices, ElevenLabsVoice } from '@/hooks/useElevenLabsVoices'
 import { useToast } from '@/hooks/use-toast'
 
@@ -18,41 +19,41 @@ interface VoiceCardProps {
 
 const VoiceCard = ({ voice, isPlaying, isLoading, onPlay, onPause }: VoiceCardProps) => {
   return (
-    <Card className={`cursor-pointer transition-all hover:shadow-md ${isPlaying ? 'ring-2 ring-primary' : ''}`}>
-      <CardContent className="p-4">
-        <div className="flex items-center justify-between mb-2">
-          <h3 className="font-medium truncate pr-2">{voice.name}</h3>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={isPlaying ? onPause : onPlay}
-            disabled={isLoading}
-            className="flex-shrink-0"
-          >
-            {isLoading ? (
-              <RefreshCw className="h-4 w-4 animate-spin" />
-            ) : isPlaying ? (
-              <Pause className="h-4 w-4" />
-            ) : (
-              <Play className="h-4 w-4" />
-            )}
-          </Button>
-        </div>
+    <div className={`flex items-center justify-between p-3 rounded-lg border transition-all hover:bg-accent/50 ${isPlaying ? 'ring-2 ring-primary bg-accent/30' : 'bg-background'}`}>
+      <div className="flex items-center gap-3 flex-1 min-w-0">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={isPlaying ? onPause : onPlay}
+          disabled={isLoading}
+          className="flex-shrink-0 h-8 w-8 p-0"
+        >
+          {isLoading ? (
+            <RefreshCw className="h-3 w-3 animate-spin" />
+          ) : isPlaying ? (
+            <Pause className="h-3 w-3" />
+          ) : (
+            <Play className="h-3 w-3" />
+          )}
+        </Button>
         
-        <div className="flex items-center gap-2 mb-2">
-          <Volume2 className="h-3 w-3 text-muted-foreground" />
-          <Badge variant="secondary" className="text-xs">
-            {voice.category}
-          </Badge>
+        <div className="flex-1 min-w-0">
+          <h4 className="font-medium text-sm truncate">{voice.name}</h4>
+          {voice.description && (
+            <p className="text-xs text-muted-foreground truncate">
+              {voice.description}
+            </p>
+          )}
         </div>
-        
-        {voice.description && (
-          <p className="text-xs text-muted-foreground line-clamp-2">
-            {voice.description}
-          </p>
-        )}
-      </CardContent>
-    </Card>
+      </div>
+      
+      <div className="flex items-center gap-2 flex-shrink-0">
+        <Volume2 className="h-3 w-3 text-muted-foreground" />
+        <Badge variant="secondary" className="text-xs">
+          {voice.category}
+        </Badge>
+      </div>
+    </div>
   )
 }
 
@@ -81,6 +82,7 @@ export const VoiceLibrary = () => {
   const [searchTerm, setSearchTerm] = useState('')
   const [playingVoice, setPlayingVoice] = useState<string | null>(null)
   const [loadingVoice, setLoadingVoice] = useState<string | null>(null)
+  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({})
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const { toast } = useToast()
 
@@ -97,6 +99,13 @@ export const VoiceLibrary = () => {
     acc[category].push(voice)
     return acc
   }, {} as Record<string, ElevenLabsVoice[]>)
+
+  const toggleCategory = (category: string) => {
+    setExpandedCategories(prev => ({
+      ...prev,
+      [category]: !prev[category]
+    }))
+  }
 
   const playVoice = async (voice: ElevenLabsVoice) => {
     if (playingVoice === voice.voice_id) {
@@ -238,13 +247,29 @@ export const VoiceLibrary = () => {
             <p className="text-muted-foreground">No voices found in your ElevenLabs account.</p>
           </div>
         ) : (
-          <div className="space-y-6">
+          <div className="space-y-2">
             {Object.entries(voicesByCategory).map(([category, categoryVoices]) => (
-              <div key={category}>
-                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
-                  {category} ({categoryVoices.length})
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <Collapsible
+                key={category}
+                open={expandedCategories[category]}
+                onOpenChange={() => toggleCategory(category)}
+              >
+                <CollapsibleTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-between h-auto p-3 text-left font-medium hover:bg-accent/50"
+                  >
+                    <span className="text-sm font-semibold text-foreground uppercase tracking-wide">
+                      {category} ({categoryVoices.length})
+                    </span>
+                    {expandedCategories[category] ? (
+                      <ChevronDown className="h-4 w-4" />
+                    ) : (
+                      <ChevronRight className="h-4 w-4" />
+                    )}
+                  </Button>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="space-y-2 mt-2 ml-2">
                   {categoryVoices.map((voice) => (
                     <VoiceCard
                       key={voice.voice_id}
@@ -255,8 +280,8 @@ export const VoiceLibrary = () => {
                       onPause={pauseVoice}
                     />
                   ))}
-                </div>
-              </div>
+                </CollapsibleContent>
+              </Collapsible>
             ))}
           </div>
         )}

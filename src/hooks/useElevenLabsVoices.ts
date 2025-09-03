@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/integrations/supabase/client'
 import { useToast } from '@/hooks/use-toast'
+import { getCuratedVoiceIds } from '@/config/curatedVoices'
 
 export interface ElevenLabsVoice {
   voice_id: string
@@ -37,7 +38,28 @@ export const useElevenLabsVoices = () => {
         throw new Error('Not authenticated')
       }
 
-      const { data, error: invokeError } = await supabase.functions.invoke('fetch-elevenlabs-voices')
+      // First check for user's curated voice selections
+      const { data: userSelections, error: selectionsError } = await supabase
+        .from('user_voice_selections')
+        .select('voice_id')
+      
+      let curatedVoiceIds: string[] = []
+      
+      if (selectionsError) {
+        console.warn('Could not fetch user voice selections:', selectionsError)
+        // Fall back to default curated voices
+        curatedVoiceIds = getCuratedVoiceIds()
+      } else if (userSelections && userSelections.length > 0) {
+        // Use user's curated voices
+        curatedVoiceIds = userSelections.map(selection => selection.voice_id)
+      } else {
+        // Fall back to default curated voices if no user selections
+        curatedVoiceIds = getCuratedVoiceIds()
+      }
+
+      const { data, error: invokeError } = await supabase.functions.invoke('fetch-elevenlabs-voices', {
+        body: { curatedVoiceIds }
+      })
 
       if (invokeError) {
         throw new Error(invokeError.message)
@@ -47,13 +69,19 @@ export const useElevenLabsVoices = () => {
         throw new Error(data.error)
       }
 
-      setVoices(data.voices || [])
+      // Filter voices to only include curated ones
+      const allVoices = data.voices || []
+      const curatedVoices = allVoices.filter((voice: ElevenLabsVoice) => 
+        curatedVoiceIds.includes(voice.voice_id)
+      )
+
+      setVoices(curatedVoices)
       
-      if (data.voices.length === 0) {
+      if (curatedVoices.length === 0) {
         toast({
-          title: "No voices found",
-          description: "No voices were found in your ElevenLabs account.",
-          variant: "destructive"
+          title: "No curated voices found",
+          description: "No voices were found matching your curated selection.",
+          variant: "default"
         })
       }
 
