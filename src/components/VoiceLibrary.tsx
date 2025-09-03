@@ -8,7 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { useElevenLabsVoices, ElevenLabsVoice } from '@/hooks/useElevenLabsVoices'
 import { useToast } from '@/hooks/use-toast'
-import { USER_VOICE_CATEGORIES, categorizeVoice, UserVoiceCategory } from '@/config/userCategories'
+import { USER_VOICE_CATEGORIES, UserVoiceCategory } from '@/config/userCategories'
 
 interface VoiceCardProps {
   voice: ElevenLabsVoice
@@ -51,7 +51,7 @@ const VoiceCard = ({ voice, isPlaying, isLoading, onPlay, onPause }: VoiceCardPr
       <div className="flex items-center gap-2 flex-shrink-0">
         <Volume2 className="h-3 w-3 text-muted-foreground" />
         <Badge variant="secondary" className="text-xs">
-          {categorizeVoice(voice.name, voice.description)}
+          {voice.category}
         </Badge>
       </div>
     </div>
@@ -89,15 +89,14 @@ export const VoiceLibrary = () => {
 
   // Filter voices based on search term
   const filteredVoices = voices.filter(voice => {
-    const userCategory = categorizeVoice(voice.name, voice.description)
     return voice.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-           userCategory.toLowerCase().includes(searchTerm.toLowerCase()) ||
+           voice.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
            (voice.description && voice.description.toLowerCase().includes(searchTerm.toLowerCase()))
   })
 
-  // Group voices by user-defined categories
+  // Group voices by their already assigned category from the edge function
   const voicesByCategory = filteredVoices.reduce((acc, voice) => {
-    const category = categorizeVoice(voice.name, voice.description)
+    const category = voice.category as UserVoiceCategory
     if (!acc[category]) acc[category] = []
     acc[category].push(voice)
     return acc
