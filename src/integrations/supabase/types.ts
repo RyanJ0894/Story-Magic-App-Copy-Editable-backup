@@ -74,6 +74,30 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles: {
+        Row: {
+          account_status: string
+          created_at: string
+          plan_type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_status?: string
+          created_at?: string
+          plan_type?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_status?: string
+          created_at?: string
+          plan_type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       raw_webhooks: {
         Row: {
           content_type: string | null
