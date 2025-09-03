@@ -18,6 +18,7 @@ export default function Pricing() {
   const { toast } = useToast();
   
   useEffect(() => {
+    console.log("🎯 Pricing page loaded successfully");
     // Check for newuser parameter
     const urlParams = new URLSearchParams(window.location.search);
     setIsNewUser(urlParams.get('newuser') === 'true');
