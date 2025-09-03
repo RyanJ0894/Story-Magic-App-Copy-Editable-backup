@@ -31,10 +31,23 @@ const ResetPassword = () => {
     const refreshToken = params.get("refresh_token");
     const type = params.get("type");
 
-    if (type === "recovery" && accessToken) {
-      console.log("Valid password reset token detected");
+    if (type === "recovery" && accessToken && refreshToken) {
+      console.log("Valid password reset token detected, setting session");
+      
+      // Set the session with the tokens from the URL
+      supabase.auth.setSession({
+        access_token: accessToken,
+        refresh_token: refreshToken
+      }).then(({ error }) => {
+        if (error) {
+          console.error("Failed to set session:", error);
+          setError("Invalid or expired password reset link. Please request a new one.");
+        } else {
+          console.log("Session set successfully");
+        }
+      });
     } else {
-      console.log("No valid reset token found, redirecting to auth");
+      console.log("No valid reset token found");
       setError("Invalid or expired password reset link. Please request a new one.");
     }
   }, [location]);
