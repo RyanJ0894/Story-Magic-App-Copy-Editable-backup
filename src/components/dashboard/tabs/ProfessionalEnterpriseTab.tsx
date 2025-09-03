@@ -19,6 +19,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { VoiceLibrary } from "@/components/VoiceLibrary";
 
 interface ProfessionalEnterpriseTabProps {
   projects: any[];
@@ -98,6 +99,9 @@ export function ProfessionalEnterpriseTab({ projects, onDeleteProject, deletingI
           </CardContent>
         </Card>
       </div>
+
+      {/* Voice Library */}
+      <VoiceLibrary />
 
       {/* Main Content Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>

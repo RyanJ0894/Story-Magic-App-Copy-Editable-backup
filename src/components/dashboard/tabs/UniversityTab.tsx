@@ -19,6 +19,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { VoiceLibrary } from "@/components/VoiceLibrary";
 
 interface UniversityTabProps {
   projects: any[];
@@ -120,6 +121,9 @@ export function UniversityTab({ projects, onDeleteProject, deletingId }: Univers
           </div>
         </CardContent>
       </Card>
+
+      {/* Voice Library */}
+      <VoiceLibrary />
 
       {/* Main Content Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
