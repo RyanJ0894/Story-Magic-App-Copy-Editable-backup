@@ -44,24 +44,30 @@ export function usePlanProtection() {
                   account_status: 'active'
                 });
               
-              if (!insertError) {
+              if (!insertError && mounted) {
                 // Profile created successfully, set default values
-                if (mounted) {
-                  setProfile({
-                    plan_type: 'individual',
-                    account_status: 'active'
-                  });
-                }
+                setProfile({
+                  plan_type: 'individual',
+                  account_status: 'active'
+                });
               }
             } catch (insertErr) {
               console.error('Failed to create profile:', insertErr);
             }
+          } else {
+            // For other errors, set a default profile to prevent infinite loading
+            if (mounted) {
+              setProfile({
+                plan_type: 'individual',
+                account_status: 'active'
+              });
+            }
           }
-          return;
-        }
-
-        if (mounted) {
-          setProfile(profileData as UserProfile);
+        } else {
+          // No error, set the profile data
+          if (mounted) {
+            setProfile(profileData as UserProfile);
+          }
         }
       } catch (error) {
         console.error('Plan protection error:', error);
