@@ -1,4 +1,4 @@
-import React from 'react'
+import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
@@ -17,13 +17,13 @@ console.log('🎯 main.tsx: Root element found:', !!rootElement);
 if (rootElement) {
   console.log('🔄 main.tsx: Creating React root');
   createRoot(rootElement).render(
-    <React.StrictMode>
+    <StrictMode>
       <ErrorBoundary>
         <AuthProvider>
           <App />
         </AuthProvider>
       </ErrorBoundary>
-    </React.StrictMode>
+    </StrictMode>
   );
   console.log('✅ main.tsx: React app rendered');
 } else {
