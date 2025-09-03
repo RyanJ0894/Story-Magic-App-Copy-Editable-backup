@@ -13,9 +13,6 @@ serve(async (req) => {
   }
 
   try {
-    // Parse request body (optional - curatedVoiceIds for potential future use)
-    const { curatedVoiceIds } = await req.json().catch(() => ({}))
-    
     // Get the authorization header
     const authorization = req.headers.get('Authorization')
     if (!authorization) {
