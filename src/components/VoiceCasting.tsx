@@ -17,15 +17,14 @@ interface CharacterVoice {
   elevenlabsVoice?: ElevenLabsVoice;
 }
 
-const characterVoices: CharacterVoice[] = [
+const characterRoles = [
   {
     id: "1",
     name: "SARAH",
     role: "Lead",
     age: "28-35",
     personality: "Determined entrepreneur",
-    avatar: "S",
-    voiceId: "EXAVITQu4vr4xnSDxMaL" // Sarah from ElevenLabs
+    avatar: "S"
   },
   {
     id: "2", 
@@ -33,8 +32,7 @@ const characterVoices: CharacterVoice[] = [
     role: "Supporting",
     age: "45-50",
     personality: "Wise mentor figure",
-    avatar: "M",
-    voiceId: "nPczCjzI2devNBz1zQrb" // Brian from ElevenLabs
+    avatar: "M"
   },
   {
     id: "3",
@@ -42,8 +40,7 @@ const characterVoices: CharacterVoice[] = [
     role: "Supporting",
     age: "22-28",
     personality: "Tech-savvy assistant",
-    avatar: "E",
-    voiceId: "9BWtsMINqrJLrRacOk9x" // Aria from ElevenLabs
+    avatar: "E"
   },
   {
     id: "4",
@@ -51,8 +48,7 @@ const characterVoices: CharacterVoice[] = [
     role: "Narrator",
     age: "40-45",
     personality: "Deep, authoritative",
-    avatar: "N",
-    voiceId: "TX3LPaxmHKxFdv7VOQHJ" // Liam from ElevenLabs
+    avatar: "N"
   }
 ];
 
@@ -61,17 +57,23 @@ export const VoiceCasting = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null);
   const [playingVoiceId, setPlayingVoiceId] = useState<string | null>(null);
-  const [charactersWithVoices, setCharactersWithVoices] = useState<CharacterVoice[]>(characterVoices);
+  const [charactersWithVoices, setCharactersWithVoices] = useState<CharacterVoice[]>([]);
   
   const { voices, loading: voicesLoading } = useElevenLabsVoices();
 
-  // Match ElevenLabs voices with characters
+  // Create characters using actual user voices
   useEffect(() => {
     if (voices.length > 0) {
-      const updatedCharacters = characterVoices.map(character => ({
+      // Get the first 4 voices that have preview URLs
+      const voicesWithPreviews = voices.filter(voice => voice.preview_url);
+      const selectedVoices = voicesWithPreviews.slice(0, 4);
+      
+      const updatedCharacters: CharacterVoice[] = characterRoles.slice(0, selectedVoices.length).map((character, index) => ({
         ...character,
-        elevenlabsVoice: voices.find(voice => voice.voice_id === character.voiceId)
+        voiceId: selectedVoices[index].voice_id,
+        elevenlabsVoice: selectedVoices[index]
       }));
+      
       setCharactersWithVoices(updatedCharacters);
     }
   }, [voices]);
@@ -94,36 +96,67 @@ export const VoiceCasting = () => {
     }, 1500);
   };
 
-  const handlePreviewVoice = (character: CharacterVoice) => {
-    if (!character.elevenlabsVoice?.preview_url) return;
-
-    // Stop current audio if playing
-    if (currentAudio) {
-      currentAudio.pause();
-      currentAudio.src = '';
-      setCurrentAudio(null);
-      setPlayingVoiceId(null);
-    }
-
-    // If clicking the same voice, just stop
-    if (playingVoiceId === character.voiceId) {
+  const handlePreviewVoice = async (character: CharacterVoice) => {
+    if (!character.elevenlabsVoice?.preview_url) {
+      console.error('No preview URL available for voice:', character.elevenlabsVoice?.name);
       return;
     }
 
-    // Play new audio
-    const audio = new Audio(character.elevenlabsVoice.preview_url);
-    audio.onended = () => {
+    try {
+      // Stop current audio if playing
+      if (currentAudio) {
+        currentAudio.pause();
+        currentAudio.currentTime = 0;
+        setCurrentAudio(null);
+        setPlayingVoiceId(null);
+      }
+
+      // If clicking the same voice, just stop
+      if (playingVoiceId === character.voiceId) {
+        return;
+      }
+
+      console.log('Playing voice preview:', character.elevenlabsVoice.name, character.elevenlabsVoice.preview_url);
+
+      // Create and play new audio
+      const audio = new Audio();
+      audio.crossOrigin = 'anonymous';
+      audio.preload = 'auto';
+      
+      audio.onloadstart = () => {
+        console.log('Audio loading started');
+      };
+      
+      audio.oncanplaythrough = () => {
+        console.log('Audio can play through');
+        audio.play().catch(error => {
+          console.error('Audio play failed:', error);
+          setPlayingVoiceId(null);
+          setCurrentAudio(null);
+        });
+      };
+      
+      audio.onended = () => {
+        console.log('Audio ended');
+        setPlayingVoiceId(null);
+        setCurrentAudio(null);
+      };
+      
+      audio.onerror = (error) => {
+        console.error('Audio error:', error);
+        setPlayingVoiceId(null);
+        setCurrentAudio(null);
+      };
+      
+      setCurrentAudio(audio);
+      setPlayingVoiceId(character.voiceId);
+      audio.src = character.elevenlabsVoice.preview_url;
+      
+    } catch (error) {
+      console.error('Error in handlePreviewVoice:', error);
       setPlayingVoiceId(null);
       setCurrentAudio(null);
-    };
-    audio.onerror = () => {
-      setPlayingVoiceId(null);
-      setCurrentAudio(null);
-    };
-    
-    setCurrentAudio(audio);
-    setPlayingVoiceId(character.voiceId);
-    audio.play();
+    }
   };
 
   return (
