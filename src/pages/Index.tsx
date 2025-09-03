@@ -14,11 +14,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { getDirectorJSON, generateAudio } from "@/integrations/filmDirectorApi";
 
 // Utility: try different orders safely without crashing if column doesn't exist
-async function selectLatestProjectId(userId?: string | null) {
-  const base = supabase.from("user_projects").select("id, created_at", { head: false });
+async function selectLatestProjectId(userId: string | null) {
+  if (!userId) {
+    throw new Error("User must be authenticated to access projects");
+  }
 
-  // If you have RLS by user, filter to that user
-  const scoped = userId ? base.eq("user_id", userId) : base;
+  const base = supabase.from("user_projects").select("id, created_at", { head: false });
+  const scoped = base.eq("user_id", userId);
 
   // Try common timestamp columns in order; if error, fall back to a plain select
   const orders = [
@@ -32,7 +34,7 @@ async function selectLatestProjectId(userId?: string | null) {
     if (!error && data && data.length > 0) return data[0].id as string;
   }
 
-  // Fallback: no order, just grab one row if policy allows
+  // Fallback: no order, just grab one row
   const { data } = await scoped.limit(1);
   if (data && data.length > 0) return data[0].id as string;
 
@@ -69,9 +71,17 @@ JOHN: Yeah, let’s keep moving.`,
       setErrorMsg(null);
 
       try {
-        // 1) Get auth user (ok if null)
+        // 1) Get auth user (must be authenticated)
         const { data: auth } = await supabase.auth.getUser();
-        const userId = auth?.user?.id ?? null;
+        const userId = auth?.user?.id;
+
+        if (!userId) {
+          if (mounted) {
+            setStatus(null);
+            setErrorMsg("Please sign in to access your projects.");
+          }
+          return;
+        }
 
         // 2) Try to find the latest project for this user (or any if no user)
         let projectId = await selectLatestProjectId(userId);
@@ -168,7 +178,11 @@ JOHN: Yeah, let’s keep moving.`,
               setAudioOut(null);
               // re-run the auto-resolve flow
               const { data: auth } = await supabase.auth.getUser();
-              const userId = auth?.user?.id ?? null;
+              const userId = auth?.user?.id;
+              if (!userId) {
+                setErrorMsg("Please sign in to access your projects.");
+                return;
+              }
               let pid = await selectLatestProjectId(userId);
               if (!pid) {
                 const { data: inserted } = await supabase
