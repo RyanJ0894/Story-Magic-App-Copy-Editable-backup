@@ -53,10 +53,26 @@ serve(async (req) => {
 
     const voicesData = await response.json()
     
-    // Filter to only include user's actual voices (exclude premade and professional)
-    const userVoices = voicesData.voices.filter((voice: any) => 
-      voice.category === 'cloned' || voice.category === 'generated'
-    )
+    // Filter to ONLY include user's actual cloned/generated voices
+    // Exclude all premade, professional, and any default ElevenLabs voices
+    const userVoices = voicesData.voices.filter((voice: any) => {
+      // Only include cloned or generated voices
+      if (voice.category !== 'cloned' && voice.category !== 'generated') {
+        return false
+      }
+      
+      // Exclude any voices that might be shared/public
+      if (voice.sharing && voice.sharing.status === 'public') {
+        return false
+      }
+      
+      // Additional check: exclude voices that have no samples (likely not user's)
+      if (!voice.samples || voice.samples.length === 0) {
+        return false
+      }
+      
+      return true
+    })
     
     // Transform the voice data to include preview URLs and other useful info
     const voices = userVoices.map((voice: any) => ({
