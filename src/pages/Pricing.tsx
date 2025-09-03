@@ -8,7 +8,6 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Link } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { EnterpriseContactModal, AcademicVerificationModal } from "@/components/PlanSelectionModals";
-import { usePlanProtection } from "@/hooks/usePlanProtection";
 import { useToast } from "@/hooks/use-toast";
 export default function Pricing() {
   const [billingCycle, setBillingCycle] = useState<"monthly" | "annual">("monthly");
@@ -16,7 +15,6 @@ export default function Pricing() {
   const [enterpriseModalOpen, setEnterpriseModalOpen] = useState(false);
   const [academicModalOpen, setAcademicModalOpen] = useState(false);
   const [selectedEnterprisePlan, setSelectedEnterprisePlan] = useState("");
-  const { selectPlan } = usePlanProtection();
   const { toast } = useToast();
   
   useEffect(() => {
@@ -25,26 +23,9 @@ export default function Pricing() {
     setIsNewUser(urlParams.get('newuser') === 'true');
   }, []);
 
-  const handleIndividualTrial = async () => {
-    // Calculate trial end date (7 days from now)
-    const trialEndDate = new Date();
-    trialEndDate.setDate(trialEndDate.getDate() + 7);
-    
-    const success = await selectPlan('Individual', 'trial', trialEndDate.toISOString());
-    
-    if (success) {
-      toast({
-        title: "Welcome to Story Magic!",
-        description: "Your 7-day free trial has started. Enjoy full access to Individual features!",
-      });
-      window.location.href = "/dashboard";
-    } else {
-      toast({
-        title: "Selection Failed",
-        description: "Failed to start trial. Please try again.",
-        variant: "destructive",
-      });
-    }
+  const handleIndividualTrial = () => {
+    // Redirect to auth page to sign up/sign in before starting trial
+    window.location.href = "/auth";
   };
 
   const handleEnterprisePlan = (planName: string) => {
