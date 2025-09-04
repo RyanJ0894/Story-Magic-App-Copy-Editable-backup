@@ -17,6 +17,22 @@ export function useUpgrade() {
         throw new Error('User not authenticated');
       }
 
+      // Check current plan to prevent unnecessary upgrades
+      const { data: currentProfile } = await supabase
+        .from('profiles')
+        .select('plan_type, account_status')
+        .eq('user_id', session.user.id)
+        .single();
+
+      if (currentProfile?.plan_type === newPlan && currentProfile?.account_status === 'active') {
+        toast({
+          title: "Already Upgraded",
+          description: `You already have the ${newPlan} plan active.`,
+          variant: "default",
+        });
+        return true;
+      }
+
       // Use upsert to handle both insert and update scenarios
       const { error } = await supabase
         .from('profiles')

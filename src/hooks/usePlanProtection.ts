@@ -90,6 +90,21 @@ export function usePlanProtection() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
+      // Only allow plan selection if user hasn't selected a plan yet or is upgrading
+      const currentProfile = await supabase
+        .from('profiles')
+        .select('plan_type, account_status')
+        .eq('user_id', user.id)
+        .single();
+
+      // Prevent downgrading or repeated selection of the same plan
+      if (currentProfile.data && 
+          currentProfile.data.plan_type !== 'individual' && 
+          currentProfile.data.account_status === 'active') {
+        console.log('User already has an active plan, preventing change');
+        return false;
+      }
+
       const { error } = await supabase
         .from('profiles')
         .update({

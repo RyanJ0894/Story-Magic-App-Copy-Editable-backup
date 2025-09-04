@@ -31,7 +31,36 @@ export function useUserRole() {
 
         if (profileError) {
           console.error('Profile fetch error:', profileError);
-          if (isMounted) {
+          // If profile doesn't exist, create one with Master role for first user
+          if (profileError.code === 'PGRST116') {
+            try {
+              const { error: insertError } = await supabase
+                .from('profiles')
+                .insert({
+                  user_id: session.user.id,
+                  role: 'Master',
+                  plan_type: 'individual',
+                  account_status: 'active'
+                });
+              
+              if (!insertError && isMounted) {
+                setProfile({
+                  user_id: session.user.id,
+                  role: 'Master',
+                  plan_type: 'individual',
+                  account_status: 'active',
+                  created_at: new Date().toISOString(),
+                  updated_at: new Date().toISOString()
+                } as UserProfile);
+                setError(null);
+              }
+            } catch (insertErr) {
+              console.error('Failed to create profile:', insertErr);
+              if (isMounted) {
+                setError('Failed to create profile');
+              }
+            }
+          } else if (isMounted) {
             setError(profileError.message);
           }
           return;
