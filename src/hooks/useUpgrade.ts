@@ -17,7 +17,7 @@ export function useUpgrade() {
   const [isUpgrading, setIsUpgrading] = useState(false);
   const { toast } = useToast();
 
-  const upgradeUserPlan = async (newPlan: PlanTier): Promise<boolean> => {
+  const switchUserPlan = async (newPlan: PlanTier): Promise<boolean> => {
     setIsUpgrading(true);
     
     try {
@@ -27,7 +27,7 @@ export function useUpgrade() {
         throw new Error('User not authenticated');
       }
 
-      // Check current plan to ensure we only allow upgrades
+      // Check current plan
       const { data: currentProfile } = await supabase
         .from('profiles')
         .select('plan_type, account_status')
@@ -35,7 +35,7 @@ export function useUpgrade() {
         .single();
 
       if (currentProfile?.plan_type && currentProfile?.account_status === 'active') {
-        // If user already has the same plan, don't allow "re-upgrade"
+        // If user already has the same plan, don't allow switching to same plan
         if (currentProfile.plan_type === newPlan) {
           toast({
             title: "Already Active",
@@ -44,19 +44,9 @@ export function useUpgrade() {
           });
           return true;
         }
-        
-        // Prevent downgrades - only allow upgrades to better plans
-        if (!isPlanBetter(newPlan, currentProfile.plan_type as PlanTier)) {
-          toast({
-            title: "Invalid Upgrade",
-            description: `You already have ${currentProfile.plan_type}. You can only upgrade to higher tier plans.`,
-            variant: "destructive",
-          });
-          return false;
-        }
       }
 
-      // Proceed with upgrade to higher tier
+      // Allow switching to any plan (upgrade or downgrade)
       const { error } = await supabase
         .from('profiles')
         .upsert({ 
@@ -69,21 +59,23 @@ export function useUpgrade() {
         });
 
       if (error) {
-        console.error('Upgrade error:', error);
+        console.error('Plan switch error:', error);
         throw error;
       }
 
+      const isUpgrade = currentProfile?.plan_type ? isPlanBetter(newPlan, currentProfile.plan_type as PlanTier) : true;
+      
       toast({
-        title: "Upgrade Successful!",
-        description: `Congratulations! You've been upgraded to ${newPlan}. This upgrade is permanent.`,
+        title: "Plan Changed Successfully!",
+        description: `You've successfully ${isUpgrade ? 'upgraded to' : 'switched to'} ${newPlan}.`,
       });
 
       return true;
     } catch (error: any) {
-      console.error('Upgrade error:', error);
+      console.error('Plan switch error:', error);
       toast({
-        title: "Upgrade Failed",
-        description: error.message || "There was an error upgrading your plan. Please try again.",
+        title: "Plan Change Failed",
+        description: error.message || "There was an error changing your plan. Please try again.",
         variant: "destructive",
       });
       return false;
@@ -92,8 +84,12 @@ export function useUpgrade() {
     }
   };
 
+  // Keep the old method name for backward compatibility
+  const upgradeUserPlan = switchUserPlan;
+
   return {
     upgradeUserPlan,
+    switchUserPlan,
     isUpgrading
   };
 }

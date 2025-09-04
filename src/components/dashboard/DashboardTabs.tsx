@@ -45,9 +45,12 @@ export function DashboardTabs({ currentPlan, availablePackages, projects, onDele
     setUserCurrentPlan(newPlan);
   };
 
-  const handleLockedTabClick = (planTier: PlanTier) => {
-    setSelectedUpgradePlan(planTier);
-    setUpgradeModalOpen(true);
+  const handleTabClick = (planTier: PlanTier) => {
+    // Allow clicking any tab - will show upgrade/switch modal
+    if (planTier !== userCurrentPlan) {
+      setSelectedUpgradePlan(planTier);
+      setUpgradeModalOpen(true);
+    }
   };
 
   const renderTabContent = (planTier: PlanTier) => {
@@ -85,13 +88,13 @@ export function DashboardTabs({ currentPlan, availablePackages, projects, onDele
               <TabsTrigger
                 key={planTier}
                 value={planTier}
-                disabled={!isUnlocked}
-                onClick={!isUnlocked ? () => handleLockedTabClick(planTier) : undefined}
+                disabled={false}
+                onClick={() => handleTabClick(planTier)}
                 className={`
-                  relative flex flex-col items-center gap-1 p-3 text-xs font-medium transition-all
+                  relative flex flex-col items-center gap-1 p-3 text-xs font-medium transition-all cursor-pointer
                   ${isUnlocked 
                     ? 'text-foreground hover:bg-background hover:text-foreground' 
-                    : 'text-muted-foreground opacity-75 cursor-pointer hover:opacity-90 hover:bg-muted/50'
+                    : 'text-muted-foreground opacity-75 hover:opacity-90 hover:bg-muted/50'
                   }
                   ${isCurrent ? 'bg-background text-foreground ring-2 ring-primary' : ''}
                 `}
@@ -105,11 +108,6 @@ export function DashboardTabs({ currentPlan, availablePackages, projects, onDele
                   <Badge variant="default" className="absolute -top-1 -right-1 text-xs px-1 py-0">
                     Current
                   </Badge>
-                )}
-                {!isUnlocked && (
-                  <div className="absolute inset-0 bg-background/50 backdrop-blur-sm rounded-md flex items-center justify-center">
-                    <Lock className="h-4 w-4 text-muted-foreground" />
-                  </div>
                 )}
               </TabsTrigger>
             );
@@ -126,12 +124,12 @@ export function DashboardTabs({ currentPlan, availablePackages, projects, onDele
               ) : (
                 <div className="text-center py-12 space-y-4">
                   <Lock className="h-12 w-12 mx-auto text-muted-foreground" />
-                  <h3 className="text-lg font-semibold">Upgrade Required</h3>
+                  <h3 className="text-lg font-semibold">Plan Access Required</h3>
                   <p className="text-muted-foreground">
-                    Upgrade to {PLAN_CONFIGS[planTier].name} to access these features.
+                    Switch to {PLAN_CONFIGS[planTier].name} to access these features.
                   </p>
-                  <Button onClick={() => handleLockedTabClick(planTier)}>
-                    View Upgrade Options
+                  <Button onClick={() => handleTabClick(planTier)}>
+                    View Plan Options
                   </Button>
                 </div>
               )}
