@@ -91,7 +91,8 @@ export function TeamManagementTab({ userRole, permissions }: TeamManagementTabPr
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user) throw new Error('Not authenticated');
 
-      const { error } = await supabase
+      // First insert the invitation
+      const { error: insertError } = await supabase
         .from('team_invitations')
         .insert({
           email: inviteEmail,
@@ -100,7 +101,40 @@ export function TeamManagementTab({ userRole, permissions }: TeamManagementTabPr
           invited_by: session.user.id
         });
 
-      if (error) throw error;
+      if (insertError) throw insertError;
+
+      // Call edge function to send email (optional - for now just show the link)
+      try {
+        const { data: emailResult, error: emailError } = await supabase.functions.invoke('send-invitation', {
+          body: {
+            email: inviteEmail,
+            role: inviteRole,
+            token: token,
+            inviterName: 'Team Lead'
+          }
+        });
+
+        if (emailError) {
+          console.warn('Email sending failed:', emailError);
+        }
+
+        // For development - show the invitation link
+        if (emailResult?.invitationUrl) {
+          toast({
+            title: "Invitation Created!",
+            description: `Invitation link copied! Share: ${emailResult.invitationUrl.substring(0, 60)}...`,
+          });
+          
+          // Copy to clipboard for easy sharing during development
+          try {
+            await navigator.clipboard.writeText(emailResult.invitationUrl);
+          } catch (e) {
+            console.log('Could not copy to clipboard:', e);
+          }
+        }
+      } catch (emailError) {
+        console.warn('Email function failed:', emailError);
+      }
 
       toast({
         title: "Invitation Sent",

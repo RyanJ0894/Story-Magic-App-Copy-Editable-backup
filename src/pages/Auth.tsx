@@ -20,6 +20,7 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [resetSent, setResetSent] = useState(false);
+  const [invitationToken, setInvitationToken] = useState<string | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
@@ -30,12 +31,19 @@ const Auth = () => {
     const params = new URLSearchParams(location.search);
     const mode = params.get("mode");
     const path = location.pathname;
+    const invitation = params.get("invitation");
     
     console.log("Auth page loaded with:", {
       search: location.search,
       pathname: location.pathname,
       params: Object.fromEntries(params.entries())
     });
+    
+    // Check for invitation token
+    if (invitation) {
+      setInvitationToken(invitation);
+      setIsLogin(false); // Force signup mode for invitations
+    }
     
     // Check if this is a password reset flow (Supabase adds access_token and type=recovery)
     const accessToken = params.get("access_token");
@@ -91,9 +99,15 @@ const Auth = () => {
           }
           return;
         }
-        toast({ title: "Account created!", description: "Welcome to Story Magic! Let's select your plan." });
-        // New signups go to pricing page with newuser parameter
-        navigate("/pricing?newuser=true");
+        toast({ title: "Account created!", description: "Welcome to Story Magic!" });
+        
+        // If there's an invitation token, redirect to accept it
+        if (invitationToken) {
+          navigate(`/accept-invitation?token=${invitationToken}`);
+        } else {
+          // New signups go to pricing page with newuser parameter
+          navigate("/pricing?newuser=true");
+        }
       }
     } catch (_) {
       setError("An unexpected error occurred. Please try again.");
@@ -188,13 +202,15 @@ const Auth = () => {
         <Card className="bg-card border-border">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl font-bold text-foreground">
-              {isPasswordReset ? "Reset Password" : (isLogin ? "Welcome Back" : "Create Account")}
+              {isPasswordReset ? "Reset Password" : (isLogin ? "Welcome Back" : invitationToken ? "Complete Your Invitation" : "Create Account")}
             </CardTitle>
             <CardDescription className="text-muted-foreground">
               {isPasswordReset 
                 ? "Enter your new password below"
                 : (isLogin
                   ? "Sign in to your account to continue"
+                  : invitationToken
+                  ? "Create your account to accept the team invitation"
                   : "Sign up to start creating amazing voice content")
               }
             </CardDescription>

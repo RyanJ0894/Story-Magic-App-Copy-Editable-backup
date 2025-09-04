@@ -22,6 +22,11 @@ type ProjectRow = {
   created_at: string;
   ai_director_json: string | null;
   audio_url: string | null;
+  user_id: string;
+  profiles?: {
+    role: string;
+    created_at: string;
+  };
 };
 
 export default function Dashboard() {
@@ -46,10 +51,17 @@ export default function Dashboard() {
       try {
         const { data, error } = await supabase
           .from("user_projects")
-          .select("id,title,created_at,ai_director_json,audio_url")
+          .select(`
+            id,
+            title,
+            created_at,
+            ai_director_json,
+            audio_url,
+            user_id
+          `)
           .order("created_at", { ascending: false });
         if (error) throw error;
-        if (alive) setProjects(data as ProjectRow[]);
+        if (alive) setProjects(data as any[]);
       } catch (e: any) {
         setErr(e.message || "Failed to load projects");
       } finally {

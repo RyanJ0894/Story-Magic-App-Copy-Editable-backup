@@ -5,6 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { type UserRole, type RolePermissions } from "@/types/roles";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ProjectsTabProps {
   userRole: UserRole;
@@ -15,6 +17,33 @@ interface ProjectsTabProps {
 }
 
 export function ProjectsTab({ userRole, permissions, projects, onDeleteProject, deletingId }: ProjectsTabProps) {
+  const [teamMembers, setTeamMembers] = useState<{[key: string]: {role: string}}>({});
+  
+  // Load team member information for displaying project creators
+  useEffect(() => {
+    if (userRole === 'Master' || userRole === 'Team Lead') {
+      const loadTeamMembers = async () => {
+        try {
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('user_id, role');
+          
+          if (error) throw error;
+          
+          const memberMap = (data || []).reduce((acc: any, member: any) => {
+            acc[member.user_id] = { role: member.role };
+            return acc;
+          }, {});
+          
+          setTeamMembers(memberMap);
+        } catch (error) {
+          console.error('Error loading team members:', error);
+        }
+      };
+      
+      loadTeamMembers();
+    }
+  }, [userRole]);
   
   const getProjectStats = () => {
     const total = projects.length;
@@ -134,19 +163,20 @@ export function ProjectsTab({ userRole, permissions, projects, onDeleteProject, 
                       </Badge>
                     </div>
                     
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      <div className="flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        {new Date(project.created_at).toLocaleDateString()}
-                      </div>
-                      
-                      {(userRole === 'Master' || userRole === 'Team Lead') && (
-                        <div className="flex items-center gap-1">
-                          <Users className="h-3 w-3" />
-                          {userRole === 'Master' ? 'Organization' : 'Team'} Project
-                        </div>
-                      )}
-                    </div>
+                     <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                       <div className="flex items-center gap-1">
+                         <Clock className="h-3 w-3" />
+                         {new Date(project.created_at).toLocaleDateString()}
+                       </div>
+                       
+                       {/* Show creator info for team visibility */}
+                       {(userRole === 'Master' || userRole === 'Team Lead') && teamMembers[project.user_id] && (
+                         <div className="flex items-center gap-1">
+                           <Users className="h-3 w-3" />
+                           Created by {teamMembers[project.user_id].role}
+                         </div>
+                       )}
+                     </div>
                   </div>
 
                   <div className="flex items-center gap-2 ml-4">
