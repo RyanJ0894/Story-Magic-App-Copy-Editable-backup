@@ -27,6 +27,15 @@ export function TeamManagementTab({ userRole, permissions }: TeamManagementTabPr
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
+  console.log('TeamManagementTab render:', { 
+    userRole, 
+    permissions, 
+    inviteEmail, 
+    inviteRole, 
+    isInviting,
+    canInviteLength: permissions.canInvite.length 
+  });
+
   useEffect(() => {
     loadTeamData();
   }, []);
@@ -270,7 +279,10 @@ export function TeamManagementTab({ userRole, permissions }: TeamManagementTabPr
                   id="email"
                   type="email"
                   value={inviteEmail}
-                  onChange={(e) => setInviteEmail(e.target.value)}
+                  onChange={(e) => {
+                    console.log('Email input changed:', e.target.value);
+                    setInviteEmail(e.target.value);
+                  }}
                   placeholder="colleague@company.com"
                 />
               </div>
@@ -291,8 +303,11 @@ export function TeamManagementTab({ userRole, permissions }: TeamManagementTabPr
               </div>
               <div className="flex items-end">
                 <Button 
-                  onClick={sendInvitation}
-                  disabled={isInviting || !inviteEmail}
+                  onClick={() => {
+                    console.log('Button clicked!', { inviteEmail, inviteRole, isInviting });
+                    sendInvitation();
+                  }}
+                  disabled={isInviting || !inviteEmail.trim()}
                   className="w-full"
                 >
                   {isInviting ? (
