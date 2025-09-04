@@ -68,10 +68,9 @@ export const VoiceCasting = () => {
       
       const assignments = [];
       
-      // 1. STACY - find Stacy Clone voice
+      // 1. STACY - find Stacy voice (either Clone or African American)
       const stacyVoice = voices.find(voice => 
-        voice.name.toLowerCase().includes('stacy') && 
-        voice.name.toLowerCase().includes('clone')
+        voice.name.toLowerCase().includes('stacy')
       );
       if (stacyVoice) {
         assignments.push({
@@ -81,27 +80,18 @@ export const VoiceCasting = () => {
         });
       }
       
-      // 2. Male 20s to 30s (NOT Cody McAvoy and not the first one) - find a different male voice
+      // 2. LUCKY - find a male voice that's NOT Cody McAvoy
       const maleVoices = voices.filter(voice => 
         voice.category === 'Male 20s to 30s' &&
         !voice.name.toLowerCase().includes('cody') &&
         !voice.name.toLowerCase().includes('mcavoy')
       );
-      const maleVoice = maleVoices[1] || maleVoices[0]; // Get second one if available, otherwise first
-      if (maleVoice) {
-        // Clean up the name - remove descriptions after dashes or hyphens and remove "CLONE"
-        const cleanName = maleVoice.name
-          .split('-')[0]
-          .split('—')[0]
-          .replace(/clone/gi, '')
-          .trim()
-          .toUpperCase();
+      const luckyVoice = maleVoices[0]; // Take first available male voice for Lucky
+      if (luckyVoice) {
         assignments.push({
-          ...characterRoles[1],
-          name: cleanName,
-          avatar: cleanName.charAt(0).toUpperCase(),
-          voiceId: maleVoice.voice_id,
-          elevenlabsVoice: maleVoice
+          ...characterRoles[1], // This is LUCKY
+          voiceId: luckyVoice.voice_id,
+          elevenlabsVoice: luckyVoice
         });
       }
       
@@ -118,22 +108,16 @@ export const VoiceCasting = () => {
         });
       }
       
-      // 4. Female Narrator - find a female narrator voice
-      const femaleNarratorVoice = voices.find(voice => 
+      // 4. NATHANIEL C - find Nathaniel voice (any narrator with Nathaniel)
+      const nathanielVoice = voices.find(voice => 
         voice.category === 'Narrator' &&
-        (voice.name.toLowerCase().includes('female') || 
-         voice.name.toLowerCase().includes('woman') ||
-         !voice.name.toLowerCase().includes('male'))
+        voice.name.toLowerCase().includes('nathaniel')
       );
-      if (femaleNarratorVoice) {
-        // Clean up the name - remove descriptions after dashes or hyphens
-        const cleanName = femaleNarratorVoice.name.split('-')[0].split('—')[0].trim().toUpperCase();
+      if (nathanielVoice) {
         assignments.push({
-          ...characterRoles[3],
-          name: cleanName,
-          avatar: cleanName.charAt(0).toUpperCase(),
-          voiceId: femaleNarratorVoice.voice_id,
-          elevenlabsVoice: femaleNarratorVoice
+          ...characterRoles[3], // This is NATHANIEL C
+          voiceId: nathanielVoice.voice_id,
+          elevenlabsVoice: nathanielVoice
         });
       }
       
