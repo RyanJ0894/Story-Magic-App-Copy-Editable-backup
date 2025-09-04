@@ -70,10 +70,10 @@ export const VoiceCasting = () => {
       
       // Map exact voices to exact characters based on the demo voices available
       const voiceMap = {
-        'STACY': voices.find(v => v.name.toLowerCase().includes('stacy')), // Stacy (African American)
-        'LUCKY': voices.find(v => v.name === 'Jamahal'), // Jamahal for Lucky
-        'CODY MCAVOY': voices.find(v => v.name === 'Cody McAvoy'), // Exact match
-        'NATHANIEL C': voices.find(v => v.name.toLowerCase().includes('nathaniel')) // Nathaniel C
+        'STACY': voices.find(v => v.voice_id === '4D9Pkpgb8u9YXb1E2jKB'), // Stacy (African American)
+        'LUCKY': voices.find(v => v.voice_id === 'DTKMou8ccj1ZaWGBiotd'), // Jamahal for Lucky
+        'CODY MCAVOY': voices.find(v => v.voice_id === '1RVpBInY9YUYMLSUQReV'), // Cody McAvoy - exact match
+        'NATHANIEL C': voices.find(v => v.voice_id === 'AeRdCCKzvd23BpJoofzx') // Nathaniel C - exact match
       };
       
       // Create assignments for each character
