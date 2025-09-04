@@ -30,16 +30,16 @@ const characterRoles = [
     id: "2", 
     name: "PLACEHOLDER_MALE",
     role: "Supporting",
-    age: "45-50",
-    personality: "Wise mentor figure",
+    age: "28-35",
+    personality: "Tech-savvy assistant",
     avatar: "M"
   },
   {
     id: "3",
     name: "CODY MCAVOY",
     role: "Supporting",
-    age: "22-28",
-    personality: "Tech-savvy assistant",
+    age: "28-38",
+    personality: "Deep, calm",
     avatar: "C"
   },
   {
@@ -89,8 +89,13 @@ export const VoiceCasting = () => {
       );
       const maleVoice = maleVoices[1] || maleVoices[0]; // Get second one if available, otherwise first
       if (maleVoice) {
-        // Clean up the name - remove descriptions after dashes or hyphens
-        const cleanName = maleVoice.name.split('-')[0].split('—')[0].trim().toUpperCase();
+        // Clean up the name - remove descriptions after dashes or hyphens and remove "CLONE"
+        const cleanName = maleVoice.name
+          .split('-')[0]
+          .split('—')[0]
+          .replace(/clone/gi, '')
+          .trim()
+          .toUpperCase();
         assignments.push({
           ...characterRoles[1],
           name: cleanName,
