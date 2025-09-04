@@ -1,1 +1,4 @@
 project_id = "bcuhyyyerxwgkrkbrqbs"
+
+[functions.fetch-demo-voices]
+verify_jwt = false

@@ -27,17 +27,30 @@ export const useElevenLabsVoices = () => {
   const [error, setError] = useState<string | null>(null)
   const { toast } = useToast()
 
-  const fetchVoices = async () => {
+  const fetchVoices = async (isDemo = false) => {
     setLoading(true)
     setError(null)
 
     try {
       const { data: { session } } = await supabase.auth.getSession()
-      if (!session) {
-        throw new Error('Not authenticated')
+      
+      // If demo mode or no session, use public demo voices
+      if (isDemo || !session) {
+        const { data, error: invokeError } = await supabase.functions.invoke('fetch-demo-voices')
+
+        if (invokeError) {
+          throw new Error(invokeError.message)
+        }
+
+        if (data.error) {
+          throw new Error(data.error)
+        }
+
+        setVoices(data.voices || [])
+        return
       }
 
-      // Fetch only the user's actual voices from their ElevenLabs account
+      // Authenticated user - fetch their actual ElevenLabs voices
       const { data, error: invokeError } = await supabase.functions.invoke('fetch-elevenlabs-voices')
 
       if (invokeError) {
@@ -64,22 +77,31 @@ export const useElevenLabsVoices = () => {
       setError(errorMessage)
       console.error('Error fetching ElevenLabs voices:', err)
       
-      toast({
-        title: "Failed to load voices",
-        description: errorMessage,
-        variant: "destructive"
-      })
+      // Only show error toast for authenticated users, not demo users
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session && !isDemo) {
+        toast({
+          title: "Failed to load voices",
+          description: errorMessage,
+          variant: "destructive"
+        })
+      }
     } finally {
       setLoading(false)
     }
   }
 
-  const retry = () => {
-    fetchVoices()
+  const retry = (isDemo = false) => {
+    fetchVoices(isDemo)
   }
 
   useEffect(() => {
-    fetchVoices()
+    // Check if user is authenticated, if not use demo mode
+    const checkAuthAndFetch = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      fetchVoices(!session) // Use demo mode if no session
+    }
+    checkAuthAndFetch()
   }, [])
 
   return {

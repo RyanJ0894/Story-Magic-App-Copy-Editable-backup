@@ -202,7 +202,7 @@ export const VoiceLibrary = () => {
           <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
           <h3 className="text-lg font-semibold mb-2">Failed to Load Voice Library</h3>
           <p className="text-muted-foreground mb-4">{error}</p>
-          <Button onClick={retry} variant="outline">
+          <Button onClick={() => retry()} variant="outline">
             <RefreshCw className="h-4 w-4 mr-2" />
             Try Again
           </Button>
