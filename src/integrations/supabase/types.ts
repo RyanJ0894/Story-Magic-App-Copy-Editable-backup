@@ -78,25 +78,39 @@ export type Database = {
         Row: {
           account_status: string
           created_at: string
+          invited_by: string | null
           plan_type: string
+          role: string
           updated_at: string
           user_id: string
         }
         Insert: {
           account_status?: string
           created_at?: string
+          invited_by?: string | null
           plan_type?: string
+          role?: string
           updated_at?: string
           user_id: string
         }
         Update: {
           account_status?: string
           created_at?: string
+          invited_by?: string | null
           plan_type?: string
+          role?: string
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_invited_by_fkey"
+            columns: ["invited_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       raw_webhooks: {
         Row: {
@@ -133,6 +147,50 @@ export type Database = {
           url?: string | null
         }
         Relationships: []
+      }
+      team_invitations: {
+        Row: {
+          accepted_at: string | null
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          invited_by: string
+          role: string
+          status: string
+          token: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string
+          email: string
+          expires_at?: string
+          id?: string
+          invited_by: string
+          role: string
+          status?: string
+          token: string
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          invited_by?: string
+          role?: string
+          status?: string
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_invitations_invited_by_fkey"
+            columns: ["invited_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       user_projects: {
         Row: {
@@ -196,7 +254,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      can_see_user: {
+        Args: { target_user_id: string }
+        Returns: boolean
+      }
+      get_user_role: {
+        Args: { user_id_param?: string }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never
