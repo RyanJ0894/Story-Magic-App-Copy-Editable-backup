@@ -64,16 +64,29 @@ export const VoiceCasting = () => {
   // Create characters using actual user voices with specific assignments
   useEffect(() => {
     if (voices.length > 0) {
+      console.log('=== VOICE DEBUG INFO ===');
       console.log('Available voices:', voices.map(v => ({ name: v.name, category: v.category, id: v.voice_id })));
       
       const assignments = [];
       
-      // Map exact voices to exact characters based on the demo voices available
+      // Map exact voices - try both demo voice IDs AND name matching for compatibility
       const voiceMap = {
-        'STACY': voices.find(v => v.voice_id === '4D9Pkpgb8u9YXb1E2jKB'), // Stacy (African American)
-        'LUCKY': voices.find(v => v.voice_id === 'DTKMou8ccj1ZaWGBiotd'), // Jamahal for Lucky
-        'CODY MCAVOY': voices.find(v => v.voice_id === '1RVpBInY9YUYMLSUQReV'), // Cody McAvoy - exact match
-        'NATHANIEL C': voices.find(v => v.voice_id === 'AeRdCCKzvd23BpJoofzx') // Nathaniel C - exact match
+        'STACY': voices.find(v => 
+          v.voice_id === '4D9Pkpgb8u9YXb1E2jKB' || // Demo voice ID
+          v.name.toLowerCase().includes('stacy')     // Name fallback
+        ),
+        'LUCKY': voices.find(v => 
+          v.voice_id === 'DTKMou8ccj1ZaWGBiotd' || // Demo voice ID
+          v.name.toLowerCase() === 'jamahal'        // Name fallback
+        ),
+        'CODY MCAVOY': voices.find(v => 
+          v.voice_id === '1RVpBInY9YUYMLSUQReV' || // Demo voice ID
+          v.name.toLowerCase().includes('cody')     // Name fallback
+        ),
+        'NATHANIEL C': voices.find(v => 
+          v.voice_id === 'AeRdCCKzvd23BpJoofzx' || // Demo voice ID
+          v.name.toLowerCase().includes('nathaniel') // Name fallback
+        )
       };
       
       // Create assignments for each character

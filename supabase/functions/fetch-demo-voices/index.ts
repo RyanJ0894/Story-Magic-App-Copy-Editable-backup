@@ -38,8 +38,8 @@ serve(async (req) => {
       // Stacy (Female 20s to 30s)
       "4D9Pkpgb8u9YXb1E2jKB": "Female 20s to 30s", // Stacy (African American) - perfect match for STACY character
       
-      // Lucky (Male 20s to 30s) 
-      "DTKMou8ccj1ZaWGBiotd": "Male 20s to 30s", // Jamahal - will be assigned to LUCKY
+      // Lucky (Male Teen) - FIXED CATEGORY TO MATCH REAL API
+      "DTKMou8ccj1ZaWGBiotd": "Male Teen", // Jamahal - will be assigned to LUCKY
       
       // Cody McAvoy (Male 20s to 30s)
       "1RVpBInY9YUYMLSUQReV": "Male 20s to 30s", // Cody McAvoy - exact name match
