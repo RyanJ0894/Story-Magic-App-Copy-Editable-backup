@@ -33,38 +33,19 @@ serve(async (req) => {
 
     const voicesData = await response.json()
     
-    // Define a subset of demo voices for public showcase - using some of the best quality voices
+    // Demo voices that match exactly the characters shown in the Voice Cast Assignment
     const demoVoiceMapping: Record<string, string> = {
-      // Female 20s to 30s
-      "C3x1TEM7scV4p2AXJyrp": "Female 20s to 30s", // Zuri - New Yorker
-      "4D9Pkpgb8u9YXb1E2jKB": "Female 20s to 30s", // Stacy (African American)
-      "5BkEaSrc8SxSp7cOflae": "Female 20s to 30s", // Catherine - 20s to 30s British Female
+      // Stacy (Female 20s to 30s)
+      "4D9Pkpgb8u9YXb1E2jKB": "Female 20s to 30s", // Stacy (African American) - perfect match for STACY character
       
-      // Female Teen
-      "2bIeDnqItemdU7o6zCwq": "Female Teen", // Meagan Platt
-      "4amdp26YcC12p4g0caal": "Female Teen", // Jen
+      // Lucky (Male 20s to 30s) 
+      "DTKMou8ccj1ZaWGBiotd": "Male 20s to 30s", // Jamahal - will be assigned to LUCKY
       
-      // Male 20s to 30s
-      "1RVpBInY9YUYMLSUQReV": "Male 20s to 30s", // Cody McAvoy
-      "DTKMou8ccj1ZaWGBiotd": "Male 20s to 30s", // Jamahal (changed from Male Teen)
-      "3XOBzXhnDY98yeWQ3GdM": "Male 20s to 30s", // Brayden (changed from Male Teen)
+      // Cody McAvoy (Male 20s to 30s)
+      "1RVpBInY9YUYMLSUQReV": "Male 20s to 30s", // Cody McAvoy - exact name match
       
-      // Male Teen
-      "BFnAlAvxDrOEsXlGCLZ2": "Male Teen", // Chad - chill
-      "AtHOGgML51i4RHBVD0le": "Male Teen", // Jeff
-      
-      // Narrator
-      "AeRdCCKzvd23BpJoofzx": "Narrator", // Nathaniel C - Suspense, British calm
-      
-      // Older Female
-      "AFDn1vVPITHRYD7x7GhG": "Older Female", // Old Southern Black Woman (Mamma Bec 7)
-      "4eC0mcIIjlMstsKu8fMF": "Older Female", // Old Southern Woman (Mamma Bec 6)
-      "Blpxl6Q79PMW6Pr2PNq1": "Older Female", // Old Southern Black Woman (Mamma Bec 8)
-      
-      // Older Male
-      "00y4m1PbCBtjIPrwiynB": "Older Male", // Henry -actor (without CLONE)
-      "1G9Ya1Fy4Ju2EAKyjGYJ": "Older Male", // Old Southern Male (Henry 10)
-      "1muICAxikLeZXeIglHdH": "Older Male", // Old Southern Male (Henry 6)
+      // Nathaniel C (Narrator)
+      "AeRdCCKzvd23BpJoofzx": "Narrator", // Nathaniel C - exact name match
     }
 
     // Filter to ONLY include the demo voices

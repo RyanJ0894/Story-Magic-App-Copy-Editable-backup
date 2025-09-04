@@ -28,11 +28,11 @@ const characterRoles = [
   },
   {
     id: "2", 
-    name: "PLACEHOLDER_MALE",
+    name: "LUCKY",
     role: "Supporting",
     age: "28-35",
     personality: "Tech-savvy assistant",
-    avatar: "M"
+    avatar: "L"
   },
   {
     id: "3",
@@ -44,7 +44,7 @@ const characterRoles = [
   },
   {
     id: "4",
-    name: "PLACEHOLDER_NARRATOR",
+    name: "NATHANIEL C",
     role: "Narrator",
     age: "40-45",
     personality: "Deep, authoritative",
