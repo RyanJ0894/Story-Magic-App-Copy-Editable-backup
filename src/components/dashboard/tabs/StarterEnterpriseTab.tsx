@@ -25,7 +25,7 @@ export function StarterEnterpriseTab({
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold">Starter Enterprise Dashboard</h1>
+          <h1 className="text-2xl font-semibold">Master Dashboard</h1>
           <p className="text-muted-foreground">Team collaboration and project management for up to 10 users</p>
         </div>
         <Link to="/projects/new">
@@ -181,9 +181,9 @@ export function StarterEnterpriseTab({
                         <SelectValue placeholder="Select role" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="viewer">Viewer</SelectItem>
-                        <SelectItem value="editor">Editor</SelectItem>
-                        <SelectItem value="admin">Admin</SelectItem>
+                        <SelectItem value="Team Lead">Team Lead</SelectItem>
+                        <SelectItem value="Staff">Staff</SelectItem>
+                        <SelectItem value="Client">Client</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

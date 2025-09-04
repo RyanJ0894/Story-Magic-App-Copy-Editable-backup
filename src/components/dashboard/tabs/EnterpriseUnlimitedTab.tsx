@@ -38,7 +38,7 @@ export function EnterpriseUnlimitedTab({ projects, onDeleteProject, deletingId }
           <h1 className="text-2xl font-semibold flex items-center gap-2">
             <Crown className="h-6 w-6 text-primary" />
             <Infinity className="h-5 w-5 text-primary" />
-            Enterprise Unlimited
+            Master Dashboard
           </h1>
           <p className="text-muted-foreground">Unlimited scale, custom development, and executive-level service for 200+ users</p>
         </div>

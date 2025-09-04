@@ -37,7 +37,7 @@ export function StudioEnterpriseTab({ projects, onDeleteProject, deletingId }: S
         <div>
           <h1 className="text-2xl font-semibold flex items-center gap-2">
             <Crown className="h-6 w-6 text-primary" />
-            Studio Enterprise Dashboard
+            Master Dashboard
           </h1>
           <p className="text-muted-foreground">Enterprise-scale production tools with unlimited custom voices for up to 75 users</p>
         </div>

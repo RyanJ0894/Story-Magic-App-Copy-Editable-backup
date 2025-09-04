@@ -37,7 +37,7 @@ export function ProfessionalEnterpriseTab({ projects, onDeleteProject, deletingI
         <div>
           <h1 className="text-2xl font-semibold flex items-center gap-2">
             <Crown className="h-6 w-6 text-primary" />
-            Professional Enterprise Dashboard
+            Master Dashboard
           </h1>
           <p className="text-muted-foreground">Advanced team collaboration and premium voice features for up to 30 users</p>
         </div>

@@ -37,7 +37,7 @@ export function UniversityTab({ projects, onDeleteProject, deletingId }: Univers
         <div>
           <h1 className="text-2xl font-semibold flex items-center gap-2">
             <GraduationCap className="h-6 w-6 text-primary" />
-            University Program Dashboard
+            Master Dashboard
           </h1>
           <p className="text-muted-foreground">Academic-focused tools for film programs and educational institutions</p>
         </div>

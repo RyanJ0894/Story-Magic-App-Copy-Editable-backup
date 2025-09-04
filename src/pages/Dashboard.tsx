@@ -13,9 +13,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { RoleDashboard } from "@/components/dashboard/RoleDashboard";
-import { useUserRole } from "@/hooks/useUserRole";
-import { type UserRole } from "@/types/roles";
+import { DashboardTabs } from "@/components/dashboard/DashboardTabs";
+import { type PlanTier } from "@/types/plans";
 
 type ProjectRow = { 
   id: string; 
@@ -32,12 +31,11 @@ export default function Dashboard() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [user, setUser] = useState<any>(null);
   const { toast } = useToast();
-  const { profile, loading: profileLoading, error: profileError, currentRole } = useUserRole();
 
   useEffect(() => {
     let alive = true;
     
-    // Get current user
+    // Get current user and profile
     const getCurrentUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (alive) setUser(user);
@@ -117,8 +115,8 @@ export default function Dashboard() {
     }
   };
 
-  if (loading || profileLoading) return <div className="min-h-screen flex items-center justify-center">Loading…</div>;
-  if (err || profileError) return <div className="min-h-screen flex items-center justify-center text-destructive">{err || profileError}</div>;
+  if (loading) return <div className="min-h-screen flex items-center justify-center">Loading…</div>;
+  if (err) return <div className="min-h-screen flex items-center justify-center text-destructive">{err}</div>;
 
   return (
     <div className="min-h-screen bg-background">
@@ -151,7 +149,7 @@ export default function Dashboard() {
                     <div className="flex flex-col space-y-1 leading-none">
                       <p className="font-medium">{user.email}</p>
                       <p className="text-xs text-muted-foreground">
-                        {currentRole} Account
+                        Dashboard Account
                       </p>
                     </div>
                   </div>
@@ -176,7 +174,7 @@ export default function Dashboard() {
 
       <div className="container mx-auto px-4 py-8">
         {/* Status Banners */}
-        {profile?.account_status === 'trial' && (
+        {user?.user_metadata?.account_status === 'trial' && (
           <div className="mb-6 p-4 bg-cinema-gold/10 border border-cinema-gold/20 rounded-lg">
             <p className="text-center text-foreground">
               <strong>Free Trial Active!</strong> 
@@ -187,7 +185,7 @@ export default function Dashboard() {
           </div>
         )}
         
-        {profile?.account_status === 'pending_enterprise_setup' && (
+        {user?.user_metadata?.account_status === 'pending_enterprise_setup' && (
           <div className="mb-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
             <p className="text-center text-foreground">
               <strong>Enterprise setup in progress</strong> - we'll contact you within 24 hours to finalize your account.
@@ -195,7 +193,7 @@ export default function Dashboard() {
           </div>
         )}
         
-        {profile?.account_status === 'pending_academic_verification' && (
+        {user?.user_metadata?.account_status === 'pending_academic_verification' && (
           <div className="mb-6 p-4 bg-purple-500/10 border border-purple-500/20 rounded-lg">
             <p className="text-center text-foreground">
               <strong>Academic verification in progress</strong> - we'll review your status within 48 hours.
@@ -203,8 +201,8 @@ export default function Dashboard() {
           </div>
         )}
 
-        <RoleDashboard
-          userRole={currentRole}
+        <DashboardTabs
+          currentPlan={user?.user_metadata?.plan_type as PlanTier || 'individual'}
           projects={projects}
           onDeleteProject={handleDeleteProject}
           deletingId={deletingId}
