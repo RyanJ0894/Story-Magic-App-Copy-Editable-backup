@@ -72,12 +72,12 @@ export const VoiceCasting = () => {
       // Map exact voices - try both demo voice IDs AND name matching for compatibility
       const voiceMap = {
         'STACY': voices.find(v => 
-          v.voice_id === '4D9Pkpgb8u9YXb1E2jKB' || // Demo voice ID
-          v.name.toLowerCase().includes('stacy')     // Name fallback
+          v.voice_id === 'XhNlP8uwiH6XZSFnH1yL' || // Regular STACY voice (not African American)
+          (v.name.toLowerCase().includes('stacy') && !v.name.toLowerCase().includes('african'))
         ),
         'LUCKY': voices.find(v => 
-          v.voice_id === 'DTKMou8ccj1ZaWGBiotd' || // Demo voice ID
-          v.name.toLowerCase() === 'jamahal'        // Name fallback
+          v.voice_id === 'PSqRw3ln34TxQZrTS6Wt' || // LUCKY voice - Male 20s to 30s
+          v.name.toLowerCase().includes('lucky')
         ),
         'CODY MCAVOY': voices.find(v => 
           v.voice_id === '1RVpBInY9YUYMLSUQReV' || // Demo voice ID

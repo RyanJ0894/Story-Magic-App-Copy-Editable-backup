@@ -35,11 +35,11 @@ serve(async (req) => {
     
     // Demo voices that match exactly the characters shown in the Voice Cast Assignment
     const demoVoiceMapping: Record<string, string> = {
-      // Stacy (Female 20s to 30s)
-      "4D9Pkpgb8u9YXb1E2jKB": "Female 20s to 30s", // Stacy (African American) - perfect match for STACY character
+      // Stacy - use a different Female 20s to 30s voice (not African American)
+      "XhNlP8uwiH6XZSFnH1yL": "Female 20s to 30s", // Regular STACY voice (not African American)
       
-      // Lucky (Male Teen) - FIXED CATEGORY TO MATCH REAL API
-      "DTKMou8ccj1ZaWGBiotd": "Male Teen", // Jamahal - will be assigned to LUCKY
+      // Lucky - use a Male 20s to 30s voice (LUCKY CLONE)
+      "PSqRw3ln34TxQZrTS6Wt": "Male 20s to 30s", // LUCKY voice - Male 20s to 30s
       
       // Cody McAvoy (Male 20s to 30s)
       "1RVpBInY9YUYMLSUQReV": "Male 20s to 30s", // Cody McAvoy - exact name match
