@@ -14,6 +14,7 @@ import { UniversityTab } from "./tabs/UniversityTab";
 
 interface DashboardTabsProps {
   currentPlan: PlanTier;
+  availablePackages: PlanTier[];
   projects: any[];
   onDeleteProject: (id: string, title: string) => void;
   deletingId: string | null;
@@ -28,16 +29,16 @@ const TAB_ICONS = {
   'university-academic': GraduationCap
 };
 
-export function DashboardTabs({ currentPlan, projects, onDeleteProject, deletingId }: DashboardTabsProps) {
+export function DashboardTabs({ currentPlan, availablePackages, projects, onDeleteProject, deletingId }: DashboardTabsProps) {
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
   const [selectedUpgradePlan, setSelectedUpgradePlan] = useState<PlanTier | null>(null);
   const [userCurrentPlan, setUserCurrentPlan] = useState<PlanTier>(currentPlan);
 
-  const currentPlanIndex = PLAN_HIERARCHY.indexOf(userCurrentPlan);
+  console.log('DashboardTabs - currentPlan:', currentPlan);
+  console.log('DashboardTabs - availablePackages:', availablePackages);
   
   const isTabUnlocked = (planTier: PlanTier): boolean => {
-    const planIndex = PLAN_HIERARCHY.indexOf(planTier);
-    return planIndex <= currentPlanIndex || planTier === userCurrentPlan;
+    return availablePackages.includes(planTier);
   };
 
   const handleUpgradeSuccess = (newPlan: PlanTier) => {
@@ -72,7 +73,7 @@ export function DashboardTabs({ currentPlan, projects, onDeleteProject, deleting
 
   return (
     <>
-      <Tabs defaultValue={userCurrentPlan} className="w-full">
+      <Tabs value={userCurrentPlan} className="w-full">
         <TabsList className="grid grid-cols-2 md:grid-cols-6 w-full h-auto p-1 bg-muted">
           {PLAN_HIERARCHY.map((planTier) => {
             const config = PLAN_CONFIGS[planTier];
@@ -84,7 +85,7 @@ export function DashboardTabs({ currentPlan, projects, onDeleteProject, deleting
               <TabsTrigger
                 key={planTier}
                 value={planTier}
-                disabled={false}
+                disabled={!isUnlocked}
                 onClick={!isUnlocked ? () => handleLockedTabClick(planTier) : undefined}
                 className={`
                   relative flex flex-col items-center gap-1 p-3 text-xs font-medium transition-all

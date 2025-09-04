@@ -77,29 +77,38 @@ export type Database = {
       profiles: {
         Row: {
           account_status: string
+          available_packages: Json | null
           created_at: string
           invited_by: string | null
+          package_history: Json | null
           plan_type: string
           role: string
           updated_at: string
+          upgrade_date: string | null
           user_id: string
         }
         Insert: {
           account_status?: string
+          available_packages?: Json | null
           created_at?: string
           invited_by?: string | null
+          package_history?: Json | null
           plan_type?: string
           role?: string
           updated_at?: string
+          upgrade_date?: string | null
           user_id: string
         }
         Update: {
           account_status?: string
+          available_packages?: Json | null
           created_at?: string
           invited_by?: string | null
+          package_history?: Json | null
           plan_type?: string
           role?: string
           updated_at?: string
+          upgrade_date?: string | null
           user_id?: string
         }
         Relationships: [

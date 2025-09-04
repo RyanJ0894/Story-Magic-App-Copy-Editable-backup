@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { LogOut, User } from "lucide-react";
 import { supabase } from "../integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { usePlanProtection } from "@/hooks/usePlanProtection";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -36,6 +37,14 @@ export default function Dashboard() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [user, setUser] = useState<any>(null);
   const { toast } = useToast();
+  
+  // Get actual plan data from database
+  const { 
+    currentPlan, 
+    availablePackages, 
+    profile, 
+    loading: planLoading 
+  } = usePlanProtection();
 
   useEffect(() => {
     let alive = true;
@@ -127,7 +136,7 @@ export default function Dashboard() {
     }
   };
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center">Loading…</div>;
+  if (loading || planLoading) return <div className="min-h-screen flex items-center justify-center">Loading…</div>;
   if (err) return <div className="min-h-screen flex items-center justify-center text-destructive">{err}</div>;
 
   return (
@@ -186,7 +195,7 @@ export default function Dashboard() {
 
       <div className="container mx-auto px-4 py-8">
         {/* Status Banners */}
-        {user?.user_metadata?.account_status === 'trial' && (
+        {profile?.account_status === 'trial' && (
           <div className="mb-6 p-4 bg-cinema-gold/10 border border-cinema-gold/20 rounded-lg">
             <p className="text-center text-foreground">
               <strong>Free Trial Active!</strong> 
@@ -197,7 +206,7 @@ export default function Dashboard() {
           </div>
         )}
         
-        {user?.user_metadata?.account_status === 'pending_enterprise_setup' && (
+        {profile?.account_status === 'pending_enterprise_setup' && (
           <div className="mb-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
             <p className="text-center text-foreground">
               <strong>Enterprise setup in progress</strong> - we'll contact you within 24 hours to finalize your account.
@@ -205,7 +214,7 @@ export default function Dashboard() {
           </div>
         )}
         
-        {user?.user_metadata?.account_status === 'pending_academic_verification' && (
+        {profile?.account_status === 'pending_academic_verification' && (
           <div className="mb-6 p-4 bg-purple-500/10 border border-purple-500/20 rounded-lg">
             <p className="text-center text-foreground">
               <strong>Academic verification in progress</strong> - we'll review your status within 48 hours.
@@ -214,7 +223,8 @@ export default function Dashboard() {
         )}
 
         <DashboardTabs
-          currentPlan={user?.user_metadata?.plan_type as PlanTier || 'individual'}
+          currentPlan={currentPlan}
+          availablePackages={availablePackages}
           projects={projects}
           onDeleteProject={handleDeleteProject}
           deletingId={deletingId}

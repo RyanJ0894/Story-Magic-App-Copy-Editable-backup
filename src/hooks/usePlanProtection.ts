@@ -6,6 +6,13 @@ import { type PlanTier, PLAN_HIERARCHY } from '@/types/plans';
 interface UserProfile {
   plan_type: PlanTier;
   account_status: string;
+  available_packages: PlanTier[];
+  package_history: Array<{
+    plan: PlanTier;
+    date: string;
+    previous_plan?: PlanTier;
+  }>;
+  upgrade_date: string;
 }
 
 // Helper function to get plan hierarchy level (higher number = better plan)
@@ -37,7 +44,7 @@ export function usePlanProtection() {
 
         const { data: profileData, error } = await supabase
           .from('profiles')
-          .select('plan_type, account_status')
+          .select('plan_type, account_status, available_packages, package_history, upgrade_date')
           .eq('user_id', user.id)
           .single();
 
@@ -58,7 +65,10 @@ export function usePlanProtection() {
                 // Profile created successfully, set default values
                 setProfile({
                   plan_type: 'individual',
-                  account_status: 'active'
+                  account_status: 'active',
+                  available_packages: ['individual'],
+                  package_history: [],
+                  upgrade_date: new Date().toISOString()
                 });
               }
             } catch (insertErr) {
@@ -69,7 +79,10 @@ export function usePlanProtection() {
             if (mounted) {
               setProfile({
                 plan_type: 'individual',
-                account_status: 'active'
+                account_status: 'active',
+                available_packages: ['individual'],
+                package_history: [],
+                upgrade_date: new Date().toISOString()
               });
             }
           }
@@ -103,7 +116,7 @@ export function usePlanProtection() {
       // Get current profile to check existing plan
       const { data: currentProfile } = await supabase
         .from('profiles')
-        .select('plan_type, account_status')
+        .select('plan_type, account_status, available_packages')
         .eq('user_id', user.id)
         .single();
 
@@ -139,11 +152,16 @@ export function usePlanProtection() {
 
       if (error) throw error;
 
-      // Update local state
-      setProfile({
-        plan_type: planType,
-        account_status: accountStatus
-      });
+      // Fetch updated profile with new available_packages
+      const { data: updatedProfile } = await supabase
+        .from('profiles')
+        .select('plan_type, account_status, available_packages, package_history, upgrade_date')
+        .eq('user_id', user.id)
+        .single();
+
+      if (updatedProfile) {
+        setProfile(updatedProfile as UserProfile);
+      }
 
       return true;
     } catch (error) {
@@ -157,6 +175,8 @@ export function usePlanProtection() {
     loading,
     selectPlan,
     currentPlan: profile?.plan_type || 'individual',
+    availablePackages: profile?.available_packages || ['individual'],
+    packageHistory: profile?.package_history || [],
     isTrialActive: profile?.account_status === 'trial',
     isPending: profile?.account_status?.includes('pending') || false
   };
