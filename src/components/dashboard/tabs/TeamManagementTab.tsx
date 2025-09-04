@@ -64,7 +64,10 @@ export function TeamManagementTab({ userRole, permissions }: TeamManagementTabPr
   };
 
   const sendInvitation = async () => {
+    console.log('Send invitation clicked', { inviteEmail, inviteRole });
+    
     if (!inviteEmail || !inviteRole) {
+      console.log('Missing email or role');
       toast({
         title: "Missing Information",
         description: "Please provide email and role",
@@ -74,6 +77,7 @@ export function TeamManagementTab({ userRole, permissions }: TeamManagementTabPr
     }
 
     if (!permissions.canInvite.includes(inviteRole)) {
+      console.log('Invalid role for user permissions');
       toast({
         title: "Invalid Role",
         description: `You cannot invite ${inviteRole} users`,
@@ -82,16 +86,23 @@ export function TeamManagementTab({ userRole, permissions }: TeamManagementTabPr
       return;
     }
 
+    console.log('Starting invitation process...');
     setIsInviting(true);
     try {
       // Generate invitation token
       const token = crypto.randomUUID();
+      console.log('Generated token:', token);
 
       // Get current user ID first
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user) throw new Error('Not authenticated');
+      if (!session?.user) {
+        console.error('Not authenticated');
+        throw new Error('Not authenticated');
+      }
+      console.log('Current user:', session.user.id);
 
       // First insert the invitation
+      console.log('Inserting invitation to database...');
       const { error: insertError } = await supabase
         .from('team_invitations')
         .insert({
@@ -101,10 +112,15 @@ export function TeamManagementTab({ userRole, permissions }: TeamManagementTabPr
           invited_by: session.user.id
         });
 
-      if (insertError) throw insertError;
+      if (insertError) {
+        console.error('Database insert error:', insertError);
+        throw insertError;
+      }
+      console.log('Invitation inserted successfully');
 
       // Call edge function to send email (optional - for now just show the link)
       try {
+        console.log('Calling send-invitation edge function...');
         const { data: emailResult, error: emailError } = await supabase.functions.invoke('send-invitation', {
           body: {
             email: inviteEmail,
@@ -116,10 +132,13 @@ export function TeamManagementTab({ userRole, permissions }: TeamManagementTabPr
 
         if (emailError) {
           console.warn('Email sending failed:', emailError);
+        } else {
+          console.log('Email function result:', emailResult);
         }
 
         // For development - show the invitation link
         if (emailResult?.invitationUrl) {
+          console.log('Got invitation URL:', emailResult.invitationUrl);
           toast({
             title: "Invitation Created!",
             description: `Invitation link copied! Share: ${emailResult.invitationUrl.substring(0, 60)}...`,
@@ -128,6 +147,7 @@ export function TeamManagementTab({ userRole, permissions }: TeamManagementTabPr
           // Copy to clipboard for easy sharing during development
           try {
             await navigator.clipboard.writeText(emailResult.invitationUrl);
+            console.log('Copied to clipboard');
           } catch (e) {
             console.log('Could not copy to clipboard:', e);
           }
@@ -144,6 +164,7 @@ export function TeamManagementTab({ userRole, permissions }: TeamManagementTabPr
       setInviteEmail('');
       setInviteRole('Staff');
       loadTeamData();
+      console.log('Invitation process completed successfully');
     } catch (error: any) {
       console.error('Invitation error:', error);
       toast({
