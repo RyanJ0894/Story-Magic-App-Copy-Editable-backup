@@ -13,9 +13,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { DashboardTabs } from "@/components/dashboard/DashboardTabs";
-import { type PlanTier } from "@/types/plans";
-import { usePlanProtection } from "@/hooks/usePlanProtection";
+import { RoleDashboard } from "@/components/dashboard/RoleDashboard";
+import { useUserRole } from "@/hooks/useUserRole";
+import { type UserRole } from "@/types/roles";
 
 type ProjectRow = { 
   id: string; 
@@ -32,10 +32,7 @@ export default function Dashboard() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [user, setUser] = useState<any>(null);
   const { toast } = useToast();
-  const { profile, loading: planLoading } = usePlanProtection();
-
-  // Derive current plan from profile
-  const currentPlan = (profile?.plan_type?.toLowerCase().replace(' ', '-') || 'individual') as PlanTier;
+  const { profile, loading: profileLoading, error: profileError, currentRole } = useUserRole();
 
   useEffect(() => {
     let alive = true;
@@ -120,8 +117,8 @@ export default function Dashboard() {
     }
   };
 
-  if (loading || planLoading) return <div className="min-h-screen flex items-center justify-center">Loading…</div>;
-  if (err) return <div className="min-h-screen flex items-center justify-center text-destructive">{err}</div>;
+  if (loading || profileLoading) return <div className="min-h-screen flex items-center justify-center">Loading…</div>;
+  if (err || profileError) return <div className="min-h-screen flex items-center justify-center text-destructive">{err || profileError}</div>;
 
   return (
     <div className="min-h-screen bg-background">
@@ -154,7 +151,7 @@ export default function Dashboard() {
                     <div className="flex flex-col space-y-1 leading-none">
                       <p className="font-medium">{user.email}</p>
                       <p className="text-xs text-muted-foreground">
-                        {currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1).replace('-', ' ')} Plan
+                        {currentRole} Account
                       </p>
                     </div>
                   </div>
@@ -206,8 +203,8 @@ export default function Dashboard() {
           </div>
         )}
 
-        <DashboardTabs
-          currentPlan={currentPlan}
+        <RoleDashboard
+          userRole={currentRole}
           projects={projects}
           onDeleteProject={handleDeleteProject}
           deletingId={deletingId}
