@@ -68,61 +68,34 @@ export const VoiceCasting = () => {
       
       const assignments = [];
       
-      // 1. STACY - find Stacy voice (either Clone or African American)
-      const stacyVoice = voices.find(voice => 
-        voice.name.toLowerCase().includes('stacy')
-      );
-      if (stacyVoice) {
-        assignments.push({
-          ...characterRoles[0],
-          voiceId: stacyVoice.voice_id,
-          elevenlabsVoice: stacyVoice
-        });
-      }
+      // Map exact voices to exact characters based on the demo voices available
+      const voiceMap = {
+        'STACY': voices.find(v => v.name.toLowerCase().includes('stacy')), // Stacy (African American)
+        'LUCKY': voices.find(v => v.name === 'Jamahal'), // Jamahal for Lucky
+        'CODY MCAVOY': voices.find(v => v.name === 'Cody McAvoy'), // Exact match
+        'NATHANIEL C': voices.find(v => v.name.toLowerCase().includes('nathaniel')) // Nathaniel C
+      };
       
-      // 2. LUCKY - find a male voice that's NOT Cody McAvoy
-      const maleVoices = voices.filter(voice => 
-        voice.category === 'Male 20s to 30s' &&
-        !voice.name.toLowerCase().includes('cody') &&
-        !voice.name.toLowerCase().includes('mcavoy')
-      );
-      const luckyVoice = maleVoices[0]; // Take first available male voice for Lucky
-      if (luckyVoice) {
-        assignments.push({
-          ...characterRoles[1], // This is LUCKY
-          voiceId: luckyVoice.voice_id,
-          elevenlabsVoice: luckyVoice
-        });
-      }
+      // Create assignments for each character
+      characterRoles.forEach((character, index) => {
+        const voice = voiceMap[character.name];
+        if (voice) {
+          assignments.push({
+            ...character,
+            voiceId: voice.voice_id,
+            elevenlabsVoice: voice
+          });
+          console.log(`Assigned ${character.name} → ${voice.name} (${voice.category})`);
+        } else {
+          console.log(`No voice found for ${character.name}`);
+        }
+      });
       
-      // 3. CODY MCAVOY - find Cody McAvoy voice
-      const codyVoice = voices.find(voice => 
-        voice.name.toLowerCase().includes('cody') && 
-        voice.name.toLowerCase().includes('mcavoy')
-      );
-      if (codyVoice) {
-        assignments.push({
-          ...characterRoles[2],
-          voiceId: codyVoice.voice_id,
-          elevenlabsVoice: codyVoice
-        });
-      }
-      
-      // 4. NATHANIEL C - find Nathaniel voice (any narrator with Nathaniel)
-      const nathanielVoice = voices.find(voice => 
-        voice.category === 'Narrator' &&
-        voice.name.toLowerCase().includes('nathaniel')
-      );
-      if (nathanielVoice) {
-        assignments.push({
-          ...characterRoles[3], // This is NATHANIEL C
-          voiceId: nathanielVoice.voice_id,
-          elevenlabsVoice: nathanielVoice
-        });
-      }
-      
-      console.log('Voice assignments:', assignments);
+      console.log('Final voice assignments:', assignments.length);
       setCharactersWithVoices(assignments);
+    } else {
+      console.log('No voices available');
+      setCharactersWithVoices([]);
     }
   }, [voices]);
 
