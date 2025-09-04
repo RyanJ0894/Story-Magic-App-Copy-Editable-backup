@@ -20,7 +20,7 @@ interface CharacterVoice {
 const characterRoles = [
   {
     id: "1",
-    name: "SARAH",
+    name: "STACY",
     role: "Lead",
     age: "28-35",
     personality: "Determined entrepreneur",
@@ -28,7 +28,7 @@ const characterRoles = [
   },
   {
     id: "2", 
-    name: "MARCUS",
+    name: "PLACEHOLDER_MALE",
     role: "Supporting",
     age: "45-50",
     personality: "Wise mentor figure",
@@ -36,15 +36,15 @@ const characterRoles = [
   },
   {
     id: "3",
-    name: "ELENA",
+    name: "CODY MCAVOY",
     role: "Supporting",
     age: "22-28",
     personality: "Tech-savvy assistant",
-    avatar: "E"
+    avatar: "C"
   },
   {
     id: "4",
-    name: "NARRATOR",
+    name: "PLACEHOLDER_NARRATOR",
     role: "Narrator",
     age: "40-45",
     personality: "Deep, authoritative",
@@ -61,20 +61,71 @@ export const VoiceCasting = () => {
   
   const { voices, loading: voicesLoading } = useElevenLabsVoices();
 
-  // Create characters using actual user voices
+  // Create characters using actual user voices with specific assignments
   useEffect(() => {
     if (voices.length > 0) {
-      // Get the first 4 voices that have preview URLs
-      const voicesWithPreviews = voices.filter(voice => voice.preview_url);
-      const selectedVoices = voicesWithPreviews.slice(0, 4);
+      console.log('Available voices:', voices.map(v => ({ name: v.name, category: v.category, id: v.voice_id })));
       
-      const updatedCharacters: CharacterVoice[] = characterRoles.slice(0, selectedVoices.length).map((character, index) => ({
-        ...character,
-        voiceId: selectedVoices[index].voice_id,
-        elevenlabsVoice: selectedVoices[index]
-      }));
+      const assignments = [];
       
-      setCharactersWithVoices(updatedCharacters);
+      // 1. STACY - find Stacy Clone voice
+      const stacyVoice = voices.find(voice => 
+        voice.name.toLowerCase().includes('stacy') && 
+        voice.name.toLowerCase().includes('clone')
+      );
+      if (stacyVoice) {
+        assignments.push({
+          ...characterRoles[0],
+          voiceId: stacyVoice.voice_id,
+          elevenlabsVoice: stacyVoice
+        });
+      }
+      
+      // 2. Male 20s to 30s (NOT Cody McAvoy) - find a male voice that's not Cody
+      const maleVoice = voices.find(voice => 
+        voice.category === 'Male 20s to 30s' &&
+        !voice.name.toLowerCase().includes('cody') &&
+        !voice.name.toLowerCase().includes('mcavoy')
+      );
+      if (maleVoice) {
+        assignments.push({
+          ...characterRoles[1],
+          name: maleVoice.name.toUpperCase(),
+          avatar: maleVoice.name.charAt(0).toUpperCase(),
+          voiceId: maleVoice.voice_id,
+          elevenlabsVoice: maleVoice
+        });
+      }
+      
+      // 3. CODY MCAVOY - find Cody McAvoy voice
+      const codyVoice = voices.find(voice => 
+        voice.name.toLowerCase().includes('cody') && 
+        voice.name.toLowerCase().includes('mcavoy')
+      );
+      if (codyVoice) {
+        assignments.push({
+          ...characterRoles[2],
+          voiceId: codyVoice.voice_id,
+          elevenlabsVoice: codyVoice
+        });
+      }
+      
+      // 4. Narrator - find a narrator voice
+      const narratorVoice = voices.find(voice => 
+        voice.category === 'Narrator'
+      );
+      if (narratorVoice) {
+        assignments.push({
+          ...characterRoles[3],
+          name: narratorVoice.name.toUpperCase(),
+          avatar: narratorVoice.name.charAt(0).toUpperCase(),
+          voiceId: narratorVoice.voice_id,
+          elevenlabsVoice: narratorVoice
+        });
+      }
+      
+      console.log('Voice assignments:', assignments);
+      setCharactersWithVoices(assignments);
     }
   }, [voices]);
 
@@ -233,7 +284,7 @@ export const VoiceCasting = () => {
                             <Badge variant="secondary" className="text-xs">
                               {character.role}
                             </Badge>
-                            {character.name === "NARRATOR" && (
+                            {character.role === "Narrator" && (
                               <Crown className="h-4 w-4 text-cinema-gold" />
                             )}
                           </div>
@@ -241,9 +292,6 @@ export const VoiceCasting = () => {
                             {character.personality} • {character.age}
                           </p>
                           <div className="flex items-center gap-2">
-                            <Badge variant="outline" className="text-xs">
-                              {character.elevenlabsVoice?.name || 'Voice Loading...'}
-                            </Badge>
                             {character.elevenlabsVoice && (
                               <Badge variant="secondary" className="text-xs">
                                 {character.elevenlabsVoice.category}
