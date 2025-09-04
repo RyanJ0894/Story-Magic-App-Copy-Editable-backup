@@ -1,12 +1,22 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { type PlanTier } from '@/types/plans';
+import { type PlanTier, PLAN_HIERARCHY } from '@/types/plans';
 
 interface UserProfile {
   plan_type: PlanTier;
   account_status: string;
 }
+
+// Helper function to get plan hierarchy level (higher number = better plan)
+const getPlanLevel = (plan: PlanTier): number => {
+  return PLAN_HIERARCHY.indexOf(plan);
+};
+
+// Helper function to check if plan A is better than plan B
+const isPlanBetter = (planA: PlanTier, planB: PlanTier): boolean => {
+  return getPlanLevel(planA) > getPlanLevel(planB);
+};
 
 export function usePlanProtection() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -90,19 +100,33 @@ export function usePlanProtection() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
-      // Only allow plan selection if user hasn't selected a plan yet or is upgrading
-      const currentProfile = await supabase
+      // Get current profile to check existing plan
+      const { data: currentProfile } = await supabase
         .from('profiles')
         .select('plan_type, account_status')
         .eq('user_id', user.id)
         .single();
 
-      // Prevent downgrading or repeated selection of the same plan
-      if (currentProfile.data && 
-          currentProfile.data.plan_type !== 'individual' && 
-          currentProfile.data.account_status === 'active') {
-        console.log('User already has an active plan, preventing change');
-        return false;
+      // Allow plan selection only if:
+      // 1. No existing profile (first time)
+      // 2. Current plan is 'individual' (initial state)
+      // 3. New plan is better than current plan (upgrade only)
+      if (currentProfile) {
+        const current = currentProfile.plan_type as PlanTier;
+        const currentStatus = currentProfile.account_status;
+        
+        // If user has an active non-individual plan, only allow upgrades
+        if (current !== 'individual' && currentStatus === 'active') {
+          if (current === planType) {
+            console.log('User already has this plan');
+            return true; // Already have the plan
+          }
+          
+          if (!isPlanBetter(planType, current)) {
+            console.log('Cannot downgrade from', current, 'to', planType);
+            return false; // Prevent downgrades
+          }
+        }
       }
 
       const { error } = await supabase
