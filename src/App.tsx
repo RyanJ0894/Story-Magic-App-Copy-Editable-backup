@@ -9,6 +9,7 @@ import NewProject from "./pages/NewProject";
 import ProjectDetail from "./pages/ProjectDetail";
 import Pricing from "./pages/Pricing";
 import ResetPassword from "./pages/ResetPassword";
+import AcceptInvitation from "./pages/AcceptInvitation";
 
 function App() {
   console.log("📱 App: Component rendering");
@@ -22,6 +23,7 @@ function App() {
         <Route path="/signup" element={<Auth />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/accept-invitation" element={<AcceptInvitation />} />
         <Route path="/projects/new" element={<NewProject />} />
         <Route path="/projects/:id" element={<ProjectDetail />} />
         <Route path="/pricing" element={<Pricing />} />
