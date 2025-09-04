@@ -46,10 +46,10 @@ serve(async (req) => {
       
       // Male 20s to 30s
       "1RVpBInY9YUYMLSUQReV": "Male 20s to 30s", // Cody McAvoy
+      "DTKMou8ccj1ZaWGBiotd": "Male 20s to 30s", // Jamahal (changed from Male Teen)
+      "3XOBzXhnDY98yeWQ3GdM": "Male 20s to 30s", // Brayden (changed from Male Teen)
       
       // Male Teen
-      "DTKMou8ccj1ZaWGBiotd": "Male Teen", // Jamahal
-      "3XOBzXhnDY98yeWQ3GdM": "Male Teen", // Brayden - Conversational Older Teen
       "BFnAlAvxDrOEsXlGCLZ2": "Male Teen", // Chad - chill
       "AtHOGgML51i4RHBVD0le": "Male Teen", // Jeff
       
