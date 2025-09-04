@@ -81,8 +81,15 @@ const Auth = () => {
           setError(error.message);
           return;
         }
+        
         toast({ title: "Welcome back!", description: "You have successfully signed in." });
-        navigate("/dashboard");
+        
+        // Check if there's an invitation token to process after login
+        if (invitationToken) {
+          navigate(`/accept-invitation?token=${invitationToken}`);
+        } else {
+          navigate("/dashboard");
+        }
       } else {
         const redirectUrl = `${window.location.origin}/`;
         const { error } = await supabase.auth.signUp({
