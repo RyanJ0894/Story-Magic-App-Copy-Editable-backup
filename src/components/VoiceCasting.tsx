@@ -81,17 +81,20 @@ export const VoiceCasting = () => {
         });
       }
       
-      // 2. Male 20s to 30s (NOT Cody McAvoy) - find a male voice that's not Cody
-      const maleVoice = voices.find(voice => 
+      // 2. Male 20s to 30s (NOT Cody McAvoy and not the first one) - find a different male voice
+      const maleVoices = voices.filter(voice => 
         voice.category === 'Male 20s to 30s' &&
         !voice.name.toLowerCase().includes('cody') &&
         !voice.name.toLowerCase().includes('mcavoy')
       );
+      const maleVoice = maleVoices[1] || maleVoices[0]; // Get second one if available, otherwise first
       if (maleVoice) {
+        // Clean up the name - remove descriptions after dashes or hyphens
+        const cleanName = maleVoice.name.split('-')[0].split('—')[0].trim().toUpperCase();
         assignments.push({
           ...characterRoles[1],
-          name: maleVoice.name.toUpperCase(),
-          avatar: maleVoice.name.charAt(0).toUpperCase(),
+          name: cleanName,
+          avatar: cleanName.charAt(0).toUpperCase(),
           voiceId: maleVoice.voice_id,
           elevenlabsVoice: maleVoice
         });
@@ -110,17 +113,22 @@ export const VoiceCasting = () => {
         });
       }
       
-      // 4. Narrator - find a narrator voice
-      const narratorVoice = voices.find(voice => 
-        voice.category === 'Narrator'
+      // 4. Female Narrator - find a female narrator voice
+      const femaleNarratorVoice = voices.find(voice => 
+        voice.category === 'Narrator' &&
+        (voice.name.toLowerCase().includes('female') || 
+         voice.name.toLowerCase().includes('woman') ||
+         !voice.name.toLowerCase().includes('male'))
       );
-      if (narratorVoice) {
+      if (femaleNarratorVoice) {
+        // Clean up the name - remove descriptions after dashes or hyphens
+        const cleanName = femaleNarratorVoice.name.split('-')[0].split('—')[0].trim().toUpperCase();
         assignments.push({
           ...characterRoles[3],
-          name: narratorVoice.name.toUpperCase(),
-          avatar: narratorVoice.name.charAt(0).toUpperCase(),
-          voiceId: narratorVoice.voice_id,
-          elevenlabsVoice: narratorVoice
+          name: cleanName,
+          avatar: cleanName.charAt(0).toUpperCase(),
+          voiceId: femaleNarratorVoice.voice_id,
+          elevenlabsVoice: femaleNarratorVoice
         });
       }
       
