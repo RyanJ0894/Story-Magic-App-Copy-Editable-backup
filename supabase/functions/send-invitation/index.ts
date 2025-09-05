@@ -46,8 +46,17 @@ const serve_handler = async (req: Request): Promise<Response> => {
       throw new Error('Invitation not found');
     }
 
+    // Debug environment variables
+    const apiKey = Deno.env.get("RESEND_API_KEY");
+    console.log('RESEND_API_KEY available:', !!apiKey);
+    console.log('Available env vars:', Object.keys(Deno.env.toObject()));
+    
+    if (!apiKey) {
+      throw new Error('RESEND_API_KEY environment variable not found');
+    }
+
     // Send actual email using Resend
-    const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+    const resend = new Resend(apiKey);
     
     const emailResponse = await resend.emails.send({
       from: "Story Magic Team <onboarding@resend.dev>",
