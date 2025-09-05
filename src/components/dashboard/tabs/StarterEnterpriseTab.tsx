@@ -10,6 +10,9 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { VoiceLibrary } from "@/components/VoiceLibrary";
+import { TeamManagementTab } from "@/components/dashboard/tabs/TeamManagementTab";
+import { useUserRole } from "@/hooks/useUserRole";
+import { ROLE_PERMISSIONS } from "@/types/roles";
 interface StarterEnterpriseTabProps {
   projects: any[];
   onDeleteProject: (id: string, title: string) => void;
@@ -21,6 +24,8 @@ export function StarterEnterpriseTab({
   deletingId
 }: StarterEnterpriseTabProps) {
   const [activeTeamTab, setActiveTeamTab] = useState("overview");
+  const { currentRole } = useUserRole();
+  const permissions = currentRole ? ROLE_PERMISSIONS[currentRole] : ROLE_PERMISSIONS['Staff'];
   return <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -160,81 +165,13 @@ export function StarterEnterpriseTab({
         </TabsContent>
 
         <TabsContent value="team" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Team Management</CardTitle>
-              <CardDescription>Manage your team members and their roles</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {/* Add User Form */}
-              <div className="p-4 border rounded-lg bg-muted/20">
-                <h4 className="font-medium mb-3">Invite New Team Member</h4>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  <div>
-                    <Label htmlFor="email">Email Address</Label>
-                    <Input id="email" placeholder="colleague@company.com" />
-                  </div>
-                  <div>
-                    <Label htmlFor="role">Role</Label>
-                    <Select>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select role" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Team Lead">Team Lead</SelectItem>
-                        <SelectItem value="Staff">Staff</SelectItem>
-                        <SelectItem value="Client">Client</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="flex items-end">
-                    <Button className="w-full">Send Invite</Button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Current Team Members */}
-              <div className="space-y-3">
-                <h4 className="font-medium">Current Team Members (3/10)</h4>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between p-3 border rounded-lg">
-                    <div>
-                      <p className="font-medium">You (Admin)</p>
-                      <p className="text-sm text-muted-foreground">admin@company.com</p>
-                    </div>
-                    <Badge variant="default">Owner</Badge>
-                  </div>
-                  <div className="flex items-center justify-between p-3 border rounded-lg">
-                    <div>
-                      <p className="font-medium">Sarah Johnson</p>
-                      <p className="text-sm text-muted-foreground">sarah@company.com</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline">Editor</Badge>
-                      <Button variant="ghost" size="sm">Manage</Button>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between p-3 border rounded-lg">
-                    <div>
-                      <p className="font-medium">Mike Chen</p>
-                      <p className="text-sm text-muted-foreground">mike@company.com</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline">Viewer</Badge>
-                      <Button variant="ghost" size="sm">Manage</Button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Billing Info */}
-              <div className="p-3 bg-muted/50 rounded-lg">
-                <p className="text-sm">
-                  <strong>Additional users:</strong> $20/month each (or $15/month for bulk 11-25 users)
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+          <TeamManagementTab 
+            userRole={currentRole || 'Staff'} 
+            permissions={permissions}
+            projects={projects}
+            onDeleteProject={onDeleteProject}
+            deletingId={deletingId}
+          />
         </TabsContent>
 
         <TabsContent value="projects" className="space-y-6">
