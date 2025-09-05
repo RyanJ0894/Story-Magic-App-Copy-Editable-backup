@@ -78,12 +78,19 @@ export default function AcceptInvitation() {
         return;
       }
 
-      // Update the user's profile with the new role and hierarchy
+      // Determine plan type based on role
+      let planType = 'individual';
+      if (invitation.role === 'Team Lead') {
+        planType = 'starter-enterprise';
+      }
+
+      // Update the user's profile with the new role, hierarchy, and appropriate plan
       const { error: profileError } = await supabase
         .from('profiles')
         .update({
           role: invitation.role,
           invited_by: invitation.invited_by,
+          plan_type: planType,
           updated_at: new Date().toISOString()
         })
         .eq('user_id', session.user.id);
