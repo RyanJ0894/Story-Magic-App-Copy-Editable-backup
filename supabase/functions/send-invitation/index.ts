@@ -15,7 +15,7 @@ interface InvitationRequest {
 }
 
 const serve_handler = async (req: Request): Promise<Response> => {
-  console.log('=== SEND-INVITATION FUNCTION CALLED ===');
+  console.log('=== SEND-INVITATION FUNCTION STARTED v2.0 ===');
   console.log('Request method:', req.method);
   console.log('Request URL:', req.url);
   
