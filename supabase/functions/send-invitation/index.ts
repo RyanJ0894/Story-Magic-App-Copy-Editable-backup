@@ -15,13 +15,23 @@ interface InvitationRequest {
 }
 
 const serve_handler = async (req: Request): Promise<Response> => {
+  console.log('=== SEND-INVITATION FUNCTION CALLED ===');
+  console.log('Request method:', req.method);
+  console.log('Request URL:', req.url);
+  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
+    console.log('Handling CORS preflight request');
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { email, role, token, inviterName }: InvitationRequest = await req.json();
+    console.log('Parsing request body...');
+    const requestBody = await req.text();
+    console.log('Raw request body:', requestBody);
+    
+    const { email, role, token, inviterName }: InvitationRequest = JSON.parse(requestBody);
+    console.log('Parsed request data:', { email, role, token: token?.substring(0, 10) + '...', inviterName });
 
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -47,16 +57,22 @@ const serve_handler = async (req: Request): Promise<Response> => {
     }
 
     // Get and validate API key
+    console.log('Checking for RESEND_API_KEY...');
     const apiKey = Deno.env.get("RESEND_API_KEY");
+    console.log('API Key exists:', !!apiKey);
+    console.log('API Key length:', apiKey?.length || 0);
+    console.log('Available env vars:', Object.keys(Deno.env.toObject()));
+    
     if (!apiKey || apiKey.trim() === '') {
+      console.error('RESEND_API_KEY is missing or empty!');
       throw new Error('RESEND_API_KEY environment variable not found or empty');
     }
 
-    console.log('Sending email with RESEND API...');
-
-    // Send actual email using Resend
+    console.log('Initializing Resend with API key...');
     const resend = new Resend(apiKey);
+    console.log('Resend initialized, preparing email...');
     
+    console.log('Calling resend.emails.send...');
     const emailResponse = await resend.emails.send({
       from: "Story Magic Team <onboarding@resend.dev>",
       to: [email],
@@ -116,9 +132,17 @@ const serve_handler = async (req: Request): Promise<Response> => {
       }
     );
   } catch (error: any) {
-    console.error("Error in send-invitation function:", error);
+    console.error("=== ERROR IN SEND-INVITATION FUNCTION ===");
+    console.error("Error type:", typeof error);
+    console.error("Error message:", error.message);
+    console.error("Error stack:", error.stack);
+    console.error("Full error object:", error);
+    
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        details: error.stack 
+      }),
       {
         status: 500,
         headers: { "Content-Type": "application/json", ...corsHeaders },
