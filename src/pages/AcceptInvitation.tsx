@@ -31,35 +31,32 @@ export default function AcceptInvitation() {
 
   const loadInvitation = async () => {
     try {
+      // Use the secure validation function instead of direct table queries
       const { data, error: inviteError } = await supabase
-        .from('team_invitations')
-        .select(`
-          *,
-          profiles!team_invitations_invited_by_fkey(role)
-        `)
-        .eq('token', token)
-        .eq('status', 'pending')
-        .single();
+        .rpc('validate_invitation_token', { token_to_validate: token });
 
       if (inviteError) {
-        if (inviteError.code === 'PGRST116') {
-          setError('Invitation not found or already used');
-        } else {
-          throw inviteError;
-        }
+        throw inviteError;
+      }
+
+      if (!data || data.length === 0) {
+        setError('Invitation not found, expired, or already used');
         return;
       }
 
-      // Check if invitation is expired
-      if (new Date(data.expires_at) < new Date()) {
-        setError('This invitation has expired');
-        return;
-      }
-
-      setInvitation(data);
+      // The function already validates expiry and status, so we can use the data directly
+      const invitationData = data[0];
+      setInvitation({
+        id: invitationData.invitation_id,
+        email: invitationData.invited_email,
+        role: invitationData.role,
+        expires_at: invitationData.expires_at,
+        status: invitationData.status,
+        invited_by: invitationData.invited_by
+      });
     } catch (error: any) {
       console.error('Error loading invitation:', error);
-      setError(error.message);
+      setError(error.message || 'Failed to load invitation');
     } finally {
       setLoading(false);
     }

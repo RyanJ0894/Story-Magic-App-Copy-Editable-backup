@@ -271,6 +271,17 @@ export type Database = {
         Args: { user_id_param?: string }
         Returns: string
       }
+      validate_invitation_token: {
+        Args: { token_to_validate: string }
+        Returns: {
+          expires_at: string
+          invitation_id: string
+          invited_by: string
+          invited_email: string
+          role: string
+          status: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
