@@ -15,25 +15,23 @@ export default function Pricing() {
   const [enterpriseModalOpen, setEnterpriseModalOpen] = useState(false);
   const [academicModalOpen, setAcademicModalOpen] = useState(false);
   const [selectedEnterprisePlan, setSelectedEnterprisePlan] = useState("");
-  const { toast } = useToast();
-  
+  const {
+    toast
+  } = useToast();
   useEffect(() => {
     console.log("🎯 Pricing page loaded successfully");
     // Check for newuser parameter
     const urlParams = new URLSearchParams(window.location.search);
     setIsNewUser(urlParams.get('newuser') === 'true');
   }, []);
-
   const handleIndividualTrial = () => {
     // Redirect to auth page to sign up/sign in before starting trial
     window.location.href = "/auth";
   };
-
   const handleEnterprisePlan = (planName: string) => {
     setSelectedEnterprisePlan(planName);
     setEnterpriseModalOpen(true);
   };
-
   const handleAcademicPlan = () => {
     setAcademicModalOpen(true);
   };
@@ -160,8 +158,7 @@ export default function Pricing() {
       <Header />
       
       {/* New User Welcome Banner */}
-      {isNewUser && (
-        <section className="bg-gradient-to-r from-cinema-blue/10 to-cinema-gold/10 border-b border-cinema-gold/20">
+      {isNewUser && <section className="bg-gradient-to-r from-cinema-blue/10 to-cinema-gold/10 border-b border-cinema-gold/20">
           <div className="container mx-auto px-4 py-4">
             <div className="flex items-center justify-center gap-3 text-center">
               <Sparkles className="w-6 h-6 text-cinema-gold" />
@@ -170,8 +167,7 @@ export default function Pricing() {
               </p>
             </div>
           </div>
-        </section>
-      )}
+        </section>}
 
       {/* Hero Section */}
       <section className="py-16">
@@ -180,11 +176,8 @@ export default function Pricing() {
             Choose Your Story Magic Plan
           </h2>
           <p className="text-xl text-muted-foreground mb-4 max-w-3xl mx-auto">
-            From individual creators to major studios - find the perfect plan to revolutionize how you experience scripts
-          </p>
-          <p className="text-lg font-medium max-w-3xl mx-auto text-sky-500">
-            Stop reading scripts. Start experiencing them. Multitask while listening during commutes, workouts, meals, and more.
-          </p>
+        </p>
+          <p className="text-lg font-medium max-w-3xl mx-auto text-sky-500">From individual creators to major studios - stop reading scripts. Start experiencing them. Multitask while listening during commutes, workouts, meals, and more.</p>
         </div>
       </section>
 
@@ -234,31 +227,13 @@ export default function Pricing() {
                 </CardContent>
 
                 <CardFooter>
-                  {card.id === "individual" ? (
-                    <Button 
-                      variant={card.ctaVariant} 
-                      className="w-full"
-                      onClick={handleIndividualTrial}
-                    >
+                  {card.id === "individual" ? <Button variant={card.ctaVariant} className="w-full" onClick={handleIndividualTrial}>
                       {card.ctaText}
-                    </Button>
-                  ) : card.id === "university" ? (
-                    <Button 
-                      variant={card.ctaVariant} 
-                      className="w-full"
-                      onClick={handleAcademicPlan}
-                    >
+                    </Button> : card.id === "university" ? <Button variant={card.ctaVariant} className="w-full" onClick={handleAcademicPlan}>
                       {card.ctaText}
-                    </Button>
-                  ) : (
-                    <Button 
-                      variant={card.ctaVariant} 
-                      className="w-full"
-                      onClick={() => handleEnterprisePlan(card.title)}
-                    >
+                    </Button> : <Button variant={card.ctaVariant} className="w-full" onClick={() => handleEnterprisePlan(card.title)}>
                       {card.ctaText}
-                    </Button>
-                  )}
+                    </Button>}
                 </CardFooter>
               </Card>)}
           </div>
@@ -405,15 +380,8 @@ export default function Pricing() {
       </section>
 
       {/* Modals */}
-      <EnterpriseContactModal
-        isOpen={enterpriseModalOpen}
-        onClose={() => setEnterpriseModalOpen(false)}
-        planName={selectedEnterprisePlan}
-      />
+      <EnterpriseContactModal isOpen={enterpriseModalOpen} onClose={() => setEnterpriseModalOpen(false)} planName={selectedEnterprisePlan} />
       
-      <AcademicVerificationModal
-        isOpen={academicModalOpen}
-        onClose={() => setAcademicModalOpen(false)}
-      />
+      <AcademicVerificationModal isOpen={academicModalOpen} onClose={() => setAcademicModalOpen(false)} />
     </div>;
 }
