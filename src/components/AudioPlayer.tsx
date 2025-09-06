@@ -98,10 +98,10 @@ export const AudioPlayer = () => {
   };
 
   return (
-    <section className="py-20 bg-gradient-hero">
+    <section className="py-8 md:py-20 bg-gradient-hero">
       <div className="container mx-auto px-4">
-        <div className="text-center mb-12">
-          <h2 className="text-4xl md:text-5xl font-bold mb-4">
+        <div className="text-center mb-6 md:mb-12">
+          <h2 className="text-3xl md:text-5xl font-bold mb-4">
             Immersive Audio
             <span className="block bg-gradient-accent bg-clip-text text-transparent">
               Experience
@@ -164,8 +164,8 @@ export const AudioPlayer = () => {
               </div>
 
               {/* Volume & Actions */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 flex-1">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-2 flex-1 w-full sm:w-auto">
                   <Volume2 className="h-4 w-4 text-muted-foreground" />
                   <Slider
                     value={volume}
@@ -176,18 +176,18 @@ export const AudioPlayer = () => {
                   />
                 </div>
                 
-                <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="sm">
+                <div className="flex items-center gap-1 overflow-x-auto w-full sm:w-auto">
+                  <Button variant="ghost" size="sm" className="flex-shrink-0">
                     <BarChart3 className="h-4 w-4" />
-                    Visualizer
+                    <span className="hidden sm:inline ml-1">Visualizer</span>
                   </Button>
-                  <Button variant="ghost" size="sm">
+                  <Button variant="ghost" size="sm" className="flex-shrink-0">
                     <Music className="h-4 w-4" />
-                    Music Mix
+                    <span className="hidden sm:inline ml-1">Music Mix</span>
                   </Button>
-                  <Button variant="cinema-outline" size="sm">
+                  <Button variant="cinema-outline" size="sm" className="flex-shrink-0">
                     <Download className="h-4 w-4" />
-                    Download
+                    <span className="hidden sm:inline ml-1">Download</span>
                   </Button>
                 </div>
               </div>

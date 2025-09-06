@@ -194,10 +194,10 @@ export const VoiceCasting = () => {
   };
 
   return (
-    <section className="py-20 bg-background">
+    <section className="py-8 md:py-20 bg-background">
       <div className="container mx-auto px-4">
-        <div className="text-center mb-12">
-          <h2 className="text-4xl md:text-5xl font-bold mb-4">
+        <div className="text-center mb-6 md:mb-12">
+          <h2 className="text-3xl md:text-5xl font-bold mb-4">
             AI Voice
             <span className="block bg-gradient-accent bg-clip-text text-transparent">
               Casting Director

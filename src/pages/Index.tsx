@@ -259,14 +259,16 @@ const Index = () => {
       <Header />
       <main>
         <HeroSection />
-        <section className="container mx-auto px-4 py-16 space-y-16">
+        <section className="container mx-auto px-4 py-8 md:py-16 space-y-8 md:space-y-16">
           <ScriptUpload />
           <VoiceCasting />
           <AudioPlayer />
           <FeedbackForm />
 
-          {/* Auto-resolving debug panel */}
-          <AIDirectorDebugPanel />
+          {/* Auto-resolving debug panel - hidden on mobile to save space */}
+          <div className="hidden md:block">
+            <AIDirectorDebugPanel />
+          </div>
         </section>
       </main>
     </div>
