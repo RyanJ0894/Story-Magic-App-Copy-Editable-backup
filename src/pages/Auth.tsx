@@ -196,7 +196,7 @@ const Auth = () => {
   return (
     <div className="relative min-h-screen flex items-center justify-center p-4 overflow-hidden">
       {/* Background Image with Overlay */}
-      <div className="absolute inset-0 bg-cover bg-center bg-no-repeat" style={{
+      <div className="absolute inset-0 bg-cover bg-left bg-no-repeat" style={{
         backgroundImage: `url(${heroImage})`
       }}>
         <div className="absolute inset-0 bg-gradient-to-r from-cinema-dark/90 via-cinema-dark/70 to-transparent" />
@@ -213,7 +213,7 @@ const Auth = () => {
           </Link>
         </div>
 
-        <Card className="bg-card border-border">
+        <Card className="bg-card/50 border-border backdrop-blur-sm">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl font-bold text-foreground">
               {isPasswordReset ? "Reset Password" : (isLogin ? "Welcome Back" : invitationToken ? "Complete Your Invitation" : "Create Account")}
