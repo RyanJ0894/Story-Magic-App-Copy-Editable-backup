@@ -245,36 +245,36 @@ export const VoiceCasting = () => {
                   {charactersWithVoices.map((character) => (
                   <div 
                     key={character.id}
-                    className={`p-4 rounded-lg border transition-all duration-200 cursor-pointer ${
+                    className={`p-3 md:p-4 rounded-lg border transition-all duration-200 cursor-pointer ${
                       selectedCharacter === character.id 
                         ? 'border-cinema-gold bg-cinema-gold/10' 
                         : 'border-border hover:border-cinema-gold/50 hover:bg-cinema-surface/50'
                     }`}
                     onClick={() => setSelectedCharacter(character.id)}
                   >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <Avatar className="h-12 w-12">
+                    <div className="flex items-start justify-between gap-3 min-w-0">
+                      <div className="flex items-start gap-3 md:gap-4 min-w-0 flex-1">
+                        <Avatar className="h-10 w-10 md:h-12 md:w-12 flex-shrink-0">
                           <AvatarImage src={character.avatar} />
-                          <AvatarFallback className="bg-cinema-surface text-cinema-gold font-bold">
+                          <AvatarFallback className="bg-cinema-surface text-cinema-gold font-bold text-sm md:text-base">
                             {character.avatar}
                           </AvatarFallback>
                         </Avatar>
                         
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <h3 className="font-semibold text-lg">{character.name}</h3>
-                            <Badge variant="secondary" className="text-xs">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2 mb-1 flex-wrap">
+                            <h3 className="font-semibold text-base md:text-lg truncate">{character.name}</h3>
+                            <Badge variant="secondary" className="text-xs flex-shrink-0">
                               {character.role}
                             </Badge>
                             {character.role === "Narrator" && (
-                              <Crown className="h-4 w-4 text-cinema-gold" />
+                              <Crown className="h-4 w-4 text-cinema-gold flex-shrink-0" />
                             )}
                           </div>
-                          <p className="text-sm text-muted-foreground mb-2">
+                          <p className="text-xs md:text-sm text-muted-foreground mb-2 line-clamp-2">
                             {character.personality} • {character.age}
                           </p>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 flex-wrap">
                             {character.elevenlabsVoice && (
                               <Badge variant="secondary" className="text-xs">
                                 {character.elevenlabsVoice.category}
@@ -284,24 +284,24 @@ export const VoiceCasting = () => {
                         </div>
                       </div>
                       
-                      <div className="flex items-center gap-1 md:gap-2 min-w-0">
+                      <div className="flex flex-col sm:flex-row items-end sm:items-center gap-1 sm:gap-2 flex-shrink-0">
                         <Button 
                           variant="ghost" 
                           size="sm"
-                          className="flex-shrink-0 px-2 md:px-3"
+                          className="px-2 py-1 h-auto text-xs"
                           onClick={(e) => {
                             e.stopPropagation();
                             handleRegenerateVoice(character.id);
                           }}
                           disabled={isProcessing}
                         >
-                          <RotateCcw className="h-4 w-4" />
-                          <span className="hidden sm:inline ml-1">Regenerate</span>
+                          <RotateCcw className="h-3 w-3" />
+                          <span className="hidden lg:inline ml-1">Regen</span>
                         </Button>
                         <Button 
                           variant="ghost" 
                           size="sm"
-                          className="flex-shrink-0 px-2 md:px-3"
+                          className="px-2 py-1 h-auto text-xs"
                           onClick={(e) => {
                             e.stopPropagation();
                             handlePreviewVoice(character);
@@ -309,11 +309,11 @@ export const VoiceCasting = () => {
                           disabled={!character.elevenlabsVoice?.preview_url}
                         >
                           {playingVoiceId === character.voiceId ? (
-                            <Pause className="h-4 w-4" />
+                            <Pause className="h-3 w-3" />
                           ) : (
-                            <Play className="h-4 w-4" />
+                            <Play className="h-3 w-3" />
                           )}
-                          <span className="hidden sm:inline ml-1">Preview</span>
+                          <span className="hidden lg:inline ml-1">Play</span>
                         </Button>
                       </div>
                     </div>
