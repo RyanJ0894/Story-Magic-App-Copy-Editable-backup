@@ -170,7 +170,7 @@ export default function Pricing() {
         </section>}
 
       {/* Hero Section */}
-      <section className="py-16">
+      <section className="py-8 md:py-16">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl md:text-5xl font-bold text-foreground mb-6">
             Choose Your Story Magic Plan
@@ -182,7 +182,7 @@ export default function Pricing() {
       </section>
 
       {/* Pricing Cards */}
-      <section className="py-16">
+      <section className="py-8 md:py-16">
         <div className="container mx-auto px-4">
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
             {pricingCards.map(card => <Card key={card.id} className={`relative ${card.popular ? 'border-cinema-gold shadow-glow' : ''}`}>
