@@ -152,22 +152,37 @@ export const VoiceCasting = () => {
 
       console.log('Playing voice preview:', character.elevenlabsVoice.name, character.elevenlabsVoice.preview_url);
 
-      // Create and play new audio
+      // Create audio element with mobile-optimized settings
       const audio = new Audio();
+      
+      // Mobile-friendly audio settings
       audio.crossOrigin = 'anonymous';
-      audio.preload = 'auto';
+      audio.preload = 'metadata'; // Changed from 'auto' for better mobile compatibility
+      audio.setAttribute('playsinline', 'true'); // Important for iOS
       
-      audio.onloadstart = () => {
-        console.log('Audio loading started');
-      };
-      
-      audio.oncanplaythrough = () => {
-        console.log('Audio can play through');
-        audio.play().catch(error => {
+      // Set up event handlers
+      const playAudio = async () => {
+        try {
+          setPlayingVoiceId(character.voiceId);
+          await audio.play();
+          console.log('Audio started playing successfully');
+        } catch (error) {
           console.error('Audio play failed:', error);
           setPlayingVoiceId(null);
           setCurrentAudio(null);
-        });
+          
+          // Specific error handling for mobile constraints
+          if (error.name === 'NotAllowedError') {
+            console.error('Audio play blocked - user interaction required');
+          } else if (error.name === 'NotSupportedError') {
+            console.error('Audio format not supported');
+          }
+        }
+      };
+      
+      audio.onloadeddata = () => {
+        console.log('Audio data loaded, attempting to play');
+        playAudio();
       };
       
       audio.onended = () => {
@@ -182,9 +197,17 @@ export const VoiceCasting = () => {
         setCurrentAudio(null);
       };
       
+      audio.onpause = () => {
+        console.log('Audio paused');
+        setPlayingVoiceId(null);
+      };
+      
+      // Set current audio reference and source
       setCurrentAudio(audio);
-      setPlayingVoiceId(character.voiceId);
       audio.src = character.elevenlabsVoice.preview_url;
+      
+      // Load the audio - this will trigger onloadeddata when ready
+      audio.load();
       
     } catch (error) {
       console.error('Error in handlePreviewVoice:', error);
