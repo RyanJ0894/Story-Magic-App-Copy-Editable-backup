@@ -2,21 +2,18 @@ import { Button } from "@/components/ui/button";
 import { Play, Upload, Mic } from "lucide-react";
 import heroImage from "@/assets/hero-cinema.jpg";
 import { Link } from "react-router-dom";
-
 export const HeroSection = () => {
-  return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+  return <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Background Image with Overlay */}
-      <div 
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: `url(${heroImage})` }}
-      >
+      <div className="absolute inset-0 bg-cover bg-center bg-no-repeat" style={{
+      backgroundImage: `url(${heroImage})`
+    }}>
         <div className="absolute inset-0 bg-gradient-to-r from-cinema-dark/90 via-cinema-dark/70 to-transparent" />
       </div>
       
       {/* Content */}
       <div className="relative z-10 container mx-auto px-4 text-center max-w-4xl">
-        <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-cinema-surface/50 backdrop-blur-sm px-4 py-2 text-sm text-cinema-blue border border-cinema-gold/20">
+        <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-cinema-surface/50 backdrop-blur-sm px-4 py-2 text-sm text-cinema-blue border border-cinema-gold/20 mx-[8px]">
           <Mic className="h-4 w-4" />
           Powered by Our AI Director
         </div>
@@ -74,6 +71,5 @@ export const HeroSection = () => {
           </div>
         </div>
       </div>
-    </section>
-  );
+    </section>;
 };
