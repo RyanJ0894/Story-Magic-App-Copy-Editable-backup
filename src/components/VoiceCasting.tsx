@@ -284,10 +284,11 @@ export const VoiceCasting = () => {
                         </div>
                       </div>
                       
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1 md:gap-2 min-w-0">
                         <Button 
                           variant="ghost" 
                           size="sm"
+                          className="flex-shrink-0 px-2 md:px-3"
                           onClick={(e) => {
                             e.stopPropagation();
                             handleRegenerateVoice(character.id);
@@ -295,11 +296,12 @@ export const VoiceCasting = () => {
                           disabled={isProcessing}
                         >
                           <RotateCcw className="h-4 w-4" />
-                          Regenerate
+                          <span className="hidden sm:inline ml-1">Regenerate</span>
                         </Button>
                         <Button 
                           variant="ghost" 
                           size="sm"
+                          className="flex-shrink-0 px-2 md:px-3"
                           onClick={(e) => {
                             e.stopPropagation();
                             handlePreviewVoice(character);
@@ -311,7 +313,7 @@ export const VoiceCasting = () => {
                           ) : (
                             <Play className="h-4 w-4" />
                           )}
-                          Preview
+                          <span className="hidden sm:inline ml-1">Preview</span>
                         </Button>
                       </div>
                     </div>

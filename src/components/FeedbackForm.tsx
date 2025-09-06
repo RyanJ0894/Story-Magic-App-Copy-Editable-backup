@@ -33,7 +33,7 @@ export const FeedbackForm = () => {
   };
 
   return (
-    <section className="py-8 md:py-20 bg-background">
+    <section className="py-20 bg-background">
       <div className="container mx-auto px-4">
         <div className="max-w-2xl mx-auto">
           <Card className="bg-gradient-card border-border shadow-cinematic">
@@ -51,69 +51,59 @@ export const FeedbackForm = () => {
                 <div className="space-y-3">
                   <Label htmlFor="rating">How would you rate your experience?</Label>
                   <RadioGroup value={rating} onValueChange={setRating}>
-                    <div className="flex items-center space-x-2 min-w-0">
+                    <div className="flex items-center space-x-2">
                       <RadioGroupItem value="5" id="5" />
-                      <Label htmlFor="5" className="flex items-center gap-1 min-w-0 flex-wrap">
-                        <div className="flex items-center gap-0.5 flex-shrink-0">
-                          <Star className="h-3 w-3 md:h-4 md:w-4 text-cinema-gold fill-cinema-gold" />
-                          <Star className="h-3 w-3 md:h-4 md:w-4 text-cinema-gold fill-cinema-gold" />
-                          <Star className="h-3 w-3 md:h-4 md:w-4 text-cinema-gold fill-cinema-gold" />
-                          <Star className="h-3 w-3 md:h-4 md:w-4 text-cinema-gold fill-cinema-gold" />
-                          <Star className="h-3 w-3 md:h-4 md:w-4 text-cinema-gold fill-cinema-gold" />
-                        </div>
-                        <span className="text-sm md:text-base">Excellent</span>
+                      <Label htmlFor="5" className="flex items-center gap-1">
+                        <Star className="h-4 w-4 text-cinema-gold fill-cinema-gold" />
+                        <Star className="h-4 w-4 text-cinema-gold fill-cinema-gold" />
+                        <Star className="h-4 w-4 text-cinema-gold fill-cinema-gold" />
+                        <Star className="h-4 w-4 text-cinema-gold fill-cinema-gold" />
+                        <Star className="h-4 w-4 text-cinema-gold fill-cinema-gold" />
+                        Excellent
                       </Label>
                     </div>
-                    <div className="flex items-center space-x-2 min-w-0">
+                    <div className="flex items-center space-x-2">
                       <RadioGroupItem value="4" id="4" />
-                      <Label htmlFor="4" className="flex items-center gap-1 min-w-0 flex-wrap">
-                        <div className="flex items-center gap-0.5 flex-shrink-0">
-                          <Star className="h-3 w-3 md:h-4 md:w-4 text-cinema-gold fill-cinema-gold" />
-                          <Star className="h-3 w-3 md:h-4 md:w-4 text-cinema-gold fill-cinema-gold" />
-                          <Star className="h-3 w-3 md:h-4 md:w-4 text-cinema-gold fill-cinema-gold" />
-                          <Star className="h-3 w-3 md:h-4 md:w-4 text-cinema-gold fill-cinema-gold" />
-                          <Star className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
-                        </div>
-                        <span className="text-sm md:text-base">Very Good</span>
+                      <Label htmlFor="4" className="flex items-center gap-1">
+                        <Star className="h-4 w-4 text-cinema-gold fill-cinema-gold" />
+                        <Star className="h-4 w-4 text-cinema-gold fill-cinema-gold" />
+                        <Star className="h-4 w-4 text-cinema-gold fill-cinema-gold" />
+                        <Star className="h-4 w-4 text-cinema-gold fill-cinema-gold" />
+                        <Star className="h-4 w-4 text-muted-foreground" />
+                        Very Good
                       </Label>
                     </div>
-                    <div className="flex items-center space-x-2 min-w-0">
+                    <div className="flex items-center space-x-2">
                       <RadioGroupItem value="3" id="3" />
-                      <Label htmlFor="3" className="flex items-center gap-1 min-w-0 flex-wrap">
-                        <div className="flex items-center gap-0.5 flex-shrink-0">
-                          <Star className="h-3 w-3 md:h-4 md:w-4 text-cinema-gold fill-cinema-gold" />
-                          <Star className="h-3 w-3 md:h-4 md:w-4 text-cinema-gold fill-cinema-gold" />
-                          <Star className="h-3 w-3 md:h-4 md:w-4 text-cinema-gold fill-cinema-gold" />
-                          <Star className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
-                          <Star className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
-                        </div>
-                        <span className="text-sm md:text-base">Good</span>
+                      <Label htmlFor="3" className="flex items-center gap-1">
+                        <Star className="h-4 w-4 text-cinema-gold fill-cinema-gold" />
+                        <Star className="h-4 w-4 text-cinema-gold fill-cinema-gold" />
+                        <Star className="h-4 w-4 text-cinema-gold fill-cinema-gold" />
+                        <Star className="h-4 w-4 text-muted-foreground" />
+                        <Star className="h-4 w-4 text-muted-foreground" />
+                        Good
                       </Label>
                     </div>
-                    <div className="flex items-center space-x-2 min-w-0">
+                    <div className="flex items-center space-x-2">
                       <RadioGroupItem value="2" id="2" />
-                      <Label htmlFor="2" className="flex items-center gap-1 min-w-0 flex-wrap">
-                        <div className="flex items-center gap-0.5 flex-shrink-0">
-                          <Star className="h-3 w-3 md:h-4 md:w-4 text-cinema-gold fill-cinema-gold" />
-                          <Star className="h-3 w-3 md:h-4 md:w-4 text-cinema-gold fill-cinema-gold" />
-                          <Star className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
-                          <Star className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
-                          <Star className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
-                        </div>
-                        <span className="text-sm md:text-base">Fair</span>
+                      <Label htmlFor="2" className="flex items-center gap-1">
+                        <Star className="h-4 w-4 text-cinema-gold fill-cinema-gold" />
+                        <Star className="h-4 w-4 text-cinema-gold fill-cinema-gold" />
+                        <Star className="h-4 w-4 text-muted-foreground" />
+                        <Star className="h-4 w-4 text-muted-foreground" />
+                        <Star className="h-4 w-4 text-muted-foreground" />
+                        Fair
                       </Label>
                     </div>
-                    <div className="flex items-center space-x-2 min-w-0">
+                    <div className="flex items-center space-x-2">
                       <RadioGroupItem value="1" id="1" />
-                      <Label htmlFor="1" className="flex items-center gap-1 min-w-0 flex-wrap">
-                        <div className="flex items-center gap-0.5 flex-shrink-0">
-                          <Star className="h-3 w-3 md:h-4 md:w-4 text-cinema-gold fill-cinema-gold" />
-                          <Star className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
-                          <Star className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
-                          <Star className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
-                          <Star className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
-                        </div>
-                        <span className="text-sm md:text-base">Needs Improvement</span>
+                      <Label htmlFor="1" className="flex items-center gap-1">
+                        <Star className="h-4 w-4 text-cinema-gold fill-cinema-gold" />
+                        <Star className="h-4 w-4 text-muted-foreground" />
+                        <Star className="h-4 w-4 text-muted-foreground" />
+                        <Star className="h-4 w-4 text-muted-foreground" />
+                        <Star className="h-4 w-4 text-muted-foreground" />
+                        Needs Improvement
                       </Label>
                     </div>
                   </RadioGroup>
