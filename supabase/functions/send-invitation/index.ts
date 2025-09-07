@@ -57,14 +57,26 @@ Deno.serve(async (req: Request): Promise<Response> => {
     }
 
     // Get and validate API key
-    console.log('Checking for RESEND_API_KEY...');
-    const apiKey = Deno.env.get("RESEND_API_KEY");
-    console.log('API Key exists:', !!apiKey);
-    console.log('API Key length:', apiKey?.length || 0);
-    console.log('Available env vars:', Object.keys(Deno.env.toObject()));
+    console.log('Getting RESEND_API_KEY from environment...');
+    const envVars = Deno.env.toObject();
+    console.log('All env vars keys:', Object.keys(envVars));
     
-    if (!apiKey || apiKey.trim() === '') {
-      console.error('RESEND_API_KEY is missing or empty!');
+    let apiKey: string | undefined;
+    
+    // Try multiple ways to get the API key
+    apiKey = envVars['RESEND_API_KEY'] || Deno.env.get('RESEND_API_KEY') || envVars.RESEND_API_KEY;
+    
+    console.log('Raw API key value:', apiKey);
+    console.log('API key type:', typeof apiKey);
+    console.log('API key length:', apiKey?.length || 0);
+    
+    if (!apiKey || apiKey.trim() === '' || apiKey === 'undefined') {
+      console.error('RESEND_API_KEY is missing, empty, or undefined!');
+      console.error('Environment check:', {
+        exists: 'RESEND_API_KEY' in envVars,
+        value: envVars['RESEND_API_KEY'],
+        denoGet: Deno.env.get('RESEND_API_KEY')
+      });
       throw new Error('RESEND_API_KEY environment variable not found or empty');
     }
 
