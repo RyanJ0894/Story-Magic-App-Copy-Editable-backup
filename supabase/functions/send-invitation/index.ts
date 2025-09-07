@@ -37,9 +37,9 @@ Deno.serve(async (req: Request): Promise<Response> => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Get the current domain for the invitation link - use the Supabase URL for consistency
-    const baseUrl = Deno.env.get('SUPABASE_URL') || 'https://bcuhyyyerxwgkrkbrqbs.supabase.co';
-    const invitationUrl = `${baseUrl.replace('/rest/v1', '')}/accept-invitation?token=${token}`;
+    // Use your actual app domain for the invitation link
+    const baseUrl = 'https://storymagicapp.net';
+    const invitationUrl = `${baseUrl}/accept-invitation?token=${token}`;
 
     console.log('Sending invitation email:', { email, role, invitationUrl });
 
