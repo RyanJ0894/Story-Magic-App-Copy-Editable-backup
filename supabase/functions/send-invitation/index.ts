@@ -1,4 +1,3 @@
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.0';
 import { Resend } from 'npm:resend@4.0.0';
 
@@ -14,7 +13,7 @@ interface InvitationRequest {
   inviterName?: string;
 }
 
-const serve_handler = async (req: Request): Promise<Response> => {
+Deno.serve(async (req: Request): Promise<Response> => {
   console.log('=== SEND-INVITATION FUNCTION STARTED v2.0 ===');
   console.log('Request method:', req.method);
   console.log('Request URL:', req.url);
@@ -38,8 +37,9 @@ const serve_handler = async (req: Request): Promise<Response> => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Get the current domain for the invitation link
-    const invitationUrl = `${req.headers.get('origin') || 'https://bcuhyyyerxwgkrkbrqbs.supabase.co'}/accept-invitation?token=${token}`;
+    // Get the current domain for the invitation link - use the Supabase URL for consistency
+    const baseUrl = Deno.env.get('SUPABASE_URL') || 'https://bcuhyyyerxwgkrkbrqbs.supabase.co';
+    const invitationUrl = `${baseUrl.replace('/rest/v1', '')}/accept-invitation?token=${token}`;
 
     console.log('Sending invitation email:', { email, role, invitationUrl });
 
@@ -149,6 +149,4 @@ const serve_handler = async (req: Request): Promise<Response> => {
       }
     );
   }
-};
-
-serve(serve_handler);
+});

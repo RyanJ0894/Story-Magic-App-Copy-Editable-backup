@@ -127,7 +127,7 @@ export function TeamManagementTab({ userRole, permissions }: TeamManagementTabPr
       }
       console.log('Invitation inserted successfully');
 
-      // Call edge function to send email (optional - for now just show the link)
+      // Call edge function to send email
       try {
         console.log('Calling send-invitation edge function...');
         const { data: emailResult, error: emailError } = await supabase.functions.invoke('send-invitation', {
@@ -140,18 +140,20 @@ export function TeamManagementTab({ userRole, permissions }: TeamManagementTabPr
         });
 
         if (emailError) {
-          console.warn('Email sending failed:', emailError);
-        } else {
-          console.log('Email function result:', emailResult);
+          console.error('Email function error:', emailError);
+          throw new Error(`Failed to send invitation email: ${emailError.message}`);
         }
 
-        // For development - show the invitation link
+        console.log('Email function result:', emailResult);
+        
+        if (emailResult?.error) {
+          console.error('Email service error:', emailResult.error);
+          throw new Error(`Email delivery failed: ${emailResult.error}`);
+        }
+
+        // Success - show the invitation link for development
         if (emailResult?.invitationUrl) {
           console.log('Got invitation URL:', emailResult.invitationUrl);
-          toast({
-            title: "Invitation Created!",
-            description: `Invitation link copied! Share: ${emailResult.invitationUrl.substring(0, 60)}...`,
-          });
           
           // Copy to clipboard for easy sharing during development
           try {
@@ -161,14 +163,21 @@ export function TeamManagementTab({ userRole, permissions }: TeamManagementTabPr
             console.log('Could not copy to clipboard:', e);
           }
         }
-      } catch (emailError) {
-        console.warn('Email function failed:', emailError);
-      }
 
-      toast({
-        title: "Invitation Sent",
-        description: `Invitation sent to ${inviteEmail} as ${inviteRole}`,
-      });
+        toast({
+          title: "Invitation Sent Successfully!",
+          description: `Email invitation sent to ${inviteEmail} as ${inviteRole}`,
+        });
+
+      } catch (emailError: any) {
+        console.error('Email function failed:', emailError);
+        // Don't fail the whole process if email fails, but warn the user
+        toast({
+          title: "Database Updated, Email Failed",
+          description: `Invitation saved but email couldn't be sent: ${emailError.message}`,
+          variant: "destructive"
+        });
+      }
 
       setInviteEmail('');
       setInviteRole('Staff');
