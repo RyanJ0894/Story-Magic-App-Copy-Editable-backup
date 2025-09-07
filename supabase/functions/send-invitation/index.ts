@@ -106,7 +106,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
     // Use direct fetch call to Resend API as requested
     try {
       console.log('Making direct fetch call to Resend API with:', {
-        from: "Story Magic <onboarding@resend.dev>",
+        from: "Story Magic <noreply@storymagicapp.net>",
         to: email,
         subject: `You're invited to join our team as ${role}`,
         apiKeyLength: apiKey?.length,
@@ -120,7 +120,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          from: 'Story Magic <onboarding@resend.dev>', // Using resend.dev domain as requested
+          from: 'Story Magic <noreply@storymagicapp.net>',
           to: [email],
           subject: `You're invited to join our team as ${role}`,
           html: emailHtml
