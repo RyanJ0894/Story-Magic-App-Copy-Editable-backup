@@ -69,70 +69,76 @@ Deno.serve(async (req: Request): Promise<Response> => {
       throw new Error('Invalid or missing RESEND_API_KEY');
     }
 
-    console.log('Initializing Resend with validated API key...');
-    const resend = new Resend(apiKey);
+    console.log('Making direct Resend API call...');
     
-    // Wrap Resend API call in detailed try/catch
+    const emailHtml = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      </head>
+      <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="text-align: center; margin-bottom: 40px;">
+          <h1 style="color: #2c5aa0; margin-bottom: 10px;">Story Magic</h1>
+          <h2 style="color: #666; font-weight: normal; margin-top: 0;">Team Invitation</h2>
+        </div>
+        
+        <div style="background: #f8f9fa; padding: 30px; border-radius: 8px; margin-bottom: 30px;">
+          <p style="font-size: 18px; margin-bottom: 20px;">You've been invited by <strong>${inviterName || 'a team member'}</strong> to join Story Magic as a <strong>${role}</strong>.</p>
+          
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${invitationUrl}" style="background: #2c5aa0; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: 500; display: inline-block;">Accept Invitation</a>
+          </div>
+          
+          <p style="font-size: 14px; color: #666;">If the button doesn't work, copy and paste this link into your browser:</p>
+          <p style="background: #e9ecef; padding: 10px; border-radius: 4px; word-break: break-all; font-size: 14px;">${invitationUrl}</p>
+        </div>
+        
+        <div style="border-top: 1px solid #eee; padding-top: 20px; font-size: 14px; color: #666;">
+          <p><strong>Important:</strong> This invitation expires in 7 days.</p>
+          <p>If you didn't expect this invitation, you can safely ignore this email.</p>
+        </div>
+      </body>
+      </html>
+    `;
+
+    // Use direct fetch call to Resend API as requested
     try {
-      console.log('Making Resend API call with parameters:', {
-        from: "Story Magic Team <onboarding@resend.dev>",
+      console.log('Making direct fetch call to Resend API with:', {
+        from: "Story Magic <onboarding@resend.dev>",
         to: email,
-        subject: `You're invited to join our team as ${role}`
-      });
-      
-      const emailResponse = await resend.emails.send({
-        from: "Story Magic Team <onboarding@resend.dev>",
-        to: [email],
         subject: `You're invited to join our team as ${role}`,
-        html: `
-          <!DOCTYPE html>
-          <html>
-          <head>
-            <meta charset="utf-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          </head>
-          <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-            <div style="text-align: center; margin-bottom: 40px;">
-              <h1 style="color: #2c5aa0; margin-bottom: 10px;">Story Magic</h1>
-              <h2 style="color: #666; font-weight: normal; margin-top: 0;">Team Invitation</h2>
-            </div>
-            
-            <div style="background: #f8f9fa; padding: 30px; border-radius: 8px; margin-bottom: 30px;">
-              <p style="font-size: 18px; margin-bottom: 20px;">You've been invited by <strong>${inviterName || 'a team member'}</strong> to join Story Magic as a <strong>${role}</strong>.</p>
-              
-              <div style="text-align: center; margin: 30px 0;">
-                <a href="${invitationUrl}" style="background: #2c5aa0; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: 500; display: inline-block;">Accept Invitation</a>
-              </div>
-              
-              <p style="font-size: 14px; color: #666;">If the button doesn't work, copy and paste this link into your browser:</p>
-              <p style="background: #e9ecef; padding: 10px; border-radius: 4px; word-break: break-all; font-size: 14px;">${invitationUrl}</p>
-            </div>
-            
-            <div style="border-top: 1px solid #eee; padding-top: 20px; font-size: 14px; color: #666;">
-              <p><strong>Important:</strong> This invitation expires in 7 days.</p>
-              <p>If you didn't expect this invitation, you can safely ignore this email.</p>
-            </div>
-          </body>
-          </html>
-        `,
+        apiKeyLength: apiKey?.length,
+        apiKeyPrefix: apiKey?.substring(0, 5)
       });
 
-      console.log('Resend API response:', {
-        success: !emailResponse.error,
-        data: emailResponse.data,
-        error: emailResponse.error
+      const response = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          from: 'Story Magic <onboarding@resend.dev>', // Using resend.dev domain as requested
+          to: [email],
+          subject: `You're invited to join our team as ${role}`,
+          html: emailHtml
+        })
       });
 
-      if (emailResponse.error) {
-        console.error('Resend API returned error:', {
-          name: emailResponse.error.name,
-          message: emailResponse.error.message,
-          statusCode: (emailResponse.error as any).statusCode
-        });
-        throw new Error(`Resend API error: ${emailResponse.error.message}`);
+      console.log('Resend fetch response status:', response.status);
+      console.log('Resend fetch response headers:', Object.fromEntries(response.headers.entries()));
+
+      const responseData = await response.json();
+      console.log('Resend success:', responseData);
+
+      if (!response.ok) {
+        console.log('Resend error details:', responseData.message, responseData);
+        throw new Error(`Resend API error: ${responseData.message || 'Unknown error'}`);
       }
 
-      console.log('Email sent successfully! ID:', emailResponse.data?.id);
+      console.log('Email sent successfully! Response:', responseData);
       
     } catch (resendError: any) {
       console.error('=== RESEND API CALL FAILED ===');
