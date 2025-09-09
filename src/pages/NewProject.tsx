@@ -6,6 +6,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, Download } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { createProject, runDirector, runAudio } from "@/integrations/filmDirectorApi";
+import { useToast } from "@/hooks/use-toast";
 
 // A tiny starter script so the form isn't empty
 const DEFAULT_SCRIPT = `EXT. PARK – DAY
@@ -21,6 +22,7 @@ JOHN: Yeah, let’s keep moving.`;
  */
 export default function NewProject() {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [title, setTitle] = useState("Untitled Project");
   const [script, setScript] = useState(DEFAULT_SCRIPT);
 
@@ -102,7 +104,7 @@ export default function NewProject() {
     document.body.removeChild(link);
   }
 
-  // Load existing project data if we have a project ID
+  // Real-time listener for AI Director updates
   useEffect(() => {
     if (!projectId) return;
 
@@ -110,7 +112,7 @@ export default function NewProject() {
       try {
         const { data, error } = await supabase
           .from("user_projects")
-          .select("audio_url")
+          .select("audio_url, ai_director_json")
           .eq("id", projectId)
           .maybeSingle();
 
@@ -120,13 +122,105 @@ export default function NewProject() {
           setAudioUrl(data.audio_url);
           setAudioResult({ success: true, public_url: data.audio_url });
         }
+
+        if (data?.ai_director_json) {
+          setDirectorJson(data.ai_director_json);
+        }
       } catch (err) {
         console.error("Failed to load project data:", err);
       }
     }
 
     loadProjectData();
-  }, [projectId]);
+
+    // Set up real-time subscription for ai_director_json updates
+    const channel = supabase
+      .channel('project-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'user_projects',
+          filter: `id=eq.${projectId}`
+        },
+        (payload) => {
+          console.log('Project updated:', payload);
+          const newData = payload.new as any;
+          
+          if (newData.ai_director_json) {
+            // Check if it's an error
+            if (typeof newData.ai_director_json === 'object' && newData.ai_director_json.error) {
+              setError(newData.ai_director_json.error);
+              setStatus("AI Director analysis failed.");
+              toast({
+                title: "Error",
+                description: "AI Director analysis failed: " + newData.ai_director_json.error,
+                variant: "destructive",
+              });
+            } else {
+              // Success
+              setDirectorJson(newData.ai_director_json);
+              setError("");
+              setStatus("AI Director analysis completed!");
+              toast({
+                title: "Success",
+                description: "AI Director analysis completed successfully!",
+              });
+              
+              // Auto-generate audio if doAudio was checked
+              if (doAudio) {
+                handleAutoGenerateAudio(newData.ai_director_json, projectId);
+              }
+            }
+          }
+
+          if (newData.audio_url) {
+            setAudioUrl(newData.audio_url);
+            setAudioResult({ success: true, public_url: newData.audio_url });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [projectId, toast, doAudio]);
+
+  // Auto-generate audio when director JSON is ready
+  async function handleAutoGenerateAudio(dirJson: any, projId: string) {
+    try {
+      setStatus("Generating audio…");
+      toast({
+        title: "Generating Audio",
+        description: "Creating audio from your script analysis...",
+      });
+
+      const audio = await runAudio(projId, dirJson);
+      if (audio.success && audio.public_url) {
+        setAudioUrl(audio.public_url);
+        setAudioResult(audio);
+        setStatus("Audio generated successfully! Redirecting to project…");
+        toast({
+          title: "Success",
+          description: "Audio generated successfully!",
+        });
+        setTimeout(() => navigate(`/projects/${projId}`), 1500);
+      } else {
+        throw new Error(audio.message || "Audio generation failed");
+      }
+    } catch (audioErr: any) {
+      console.error("Audio generation failed:", audioErr);
+      setError(audioErr?.message ?? String(audioErr));
+      setStatus("Project created, but audio generation failed.");
+      toast({
+        title: "Audio Error", 
+        description: audioErr?.message ?? "Audio generation failed",
+        variant: "destructive",
+      });
+    }
+  }
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -144,32 +238,27 @@ export default function NewProject() {
 
       let dirJson: any | null = null;
       if (doDirector) {
-        setStatus("Analyzing script with AI Director…");
-        dirJson = await runDirector(created.id, script);
-        setDirectorJson(dirJson);
+        setStatus("Starting AI Director analysis…");
+        toast({
+          title: "Processing",
+          description: "AI Director is analyzing your script. Please wait...",
+        });
+        
+        // Start the director job (returns job id, doesn't wait for completion)
+        await runDirector(created.id, script);
+        
+        // The real-time listener will handle the response
+        setStatus("AI Director analysis in progress…");
       }
 
-      // Auto-run audio generation if checked
-      if (doAudio && dirJson) {
-        setStatus("Generating audio…");
-        try {
-          const audio = await runAudio(created.id, dirJson);
-          if (audio.success && audio.public_url) {
-            setAudioUrl(audio.public_url);
-            setAudioResult(audio);
-            setStatus("Audio generated successfully! Redirecting to project…");
-            setTimeout(() => navigate(`/projects/${created.id}`), 1500);
-          } else {
-            throw new Error(audio.message || "Audio generation failed");
-          }
-        } catch (audioErr: any) {
-          console.error("Audio generation failed:", audioErr);
-          setError(audioErr?.message ?? String(audioErr));
-          setStatus("Project created, but audio generation failed.");
-        }
-      } else {
-        setStatus("All done! You can head to your Dashboard.");
+      // Auto-run audio generation if checked - will be handled by real-time listener
+      if (doAudio && !doDirector) {
+        // If not running director but want audio, show message
+        setStatus("Please enable AI Director to generate audio automatically.");
+      } else if (!doDirector) {
+        setStatus("Project created successfully! You can head to your Dashboard.");
       }
+      // If doDirector is true, the real-time listener will handle next steps
     } catch (err: any) {
       console.error(err);
       setError(err?.message ?? String(err));
