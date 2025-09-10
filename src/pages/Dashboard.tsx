@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { DashboardTabs } from "@/components/dashboard/DashboardTabs";
+import { DashboardSkeleton } from "@/components/DashboardSkeleton";
 import { type PlanTier } from "@/types/plans";
 
 type ProjectRow = { 
@@ -136,7 +137,7 @@ export default function Dashboard() {
     }
   };
 
-  if (loading || planLoading) return <div className="min-h-screen flex items-center justify-center">Loading…</div>;
+  if (loading || planLoading) return <DashboardSkeleton />;
   if (err) return <div className="min-h-screen flex items-center justify-center text-destructive">{err}</div>;
 
   return (

@@ -2,6 +2,9 @@ import { useState } from "react";
 import { Button } from "./ui/button";
 import { useToast } from "./ui/use-toast";
 
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY; 
+
 export function CallbackTester() {
   const [testing, setTesting] = useState(false);
   const [result, setResult] = useState<any>(null);
@@ -33,11 +36,12 @@ export function CallbackTester() {
       console.log("🧪 Testing callback with:", testData);
 
       const response = await fetch(
-        "https://eyfxxhkbotkjsazvhxlj.supabase.co/functions/v1/ai-director-callback",
+        `${supabaseUrl}/functions/v1/ai-director-callback`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            "Authorization": `Bearer ${supabaseAnonKey}`
           },
           body: JSON.stringify(testData),
         }
