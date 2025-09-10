@@ -23,7 +23,8 @@ export async function createProject(title: string, script: string): Promise<{ id
     .from("user_projects")
     .insert({
       title: title,
-      user_id: user.id
+      user_id: user.id,
+      script: script,
     } as any)
     .select("id")
     .single();
@@ -36,16 +37,17 @@ export async function createProject(title: string, script: string): Promise<{ id
 export const getDirectorJSON = runDirector;
 export const generateAudio = runAudio;
 
-// ---- call the AI director Edge Function, return its JSON ----
-export async function runDirector(projectId: string, script: string): Promise<DirectorJSON> {
-  const { data, error } = await supabase.functions.invoke("ai-director", {
-    body: { project_id: projectId, script },
+// ---- call the AI director Edge Function, trigger job only ----
+export async function runDirector(projectId: string, script: string): Promise<void> {
+  const { error } = await supabase.functions.invoke("ai-director", {
+    body: { 
+      message: JSON.stringify({ project_id: projectId, script })
+    },
   });
 
   if (error) throw new Error(`ai-director error: ${error.message}`);
-
-  // The function both updates the DB and returns a summary
-  return (data?.director_json as DirectorJSON) ?? { lines: [] };
+  
+  // Job triggered successfully, real-time listener will handle the result
 }
 
 // ---- call the audio generator Edge Function (optional) ----

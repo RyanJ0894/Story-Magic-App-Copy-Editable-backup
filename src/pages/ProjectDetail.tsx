@@ -74,7 +74,11 @@ export default function ProjectDetail() {
         throw new Error("Invalid director JSON data");
       }
 
-      await runAudio(project.id, directorJson);
+      const audioResult = await runAudio(project.id, directorJson);
+      
+      if (!audioResult.merged_audio?.success) {
+        throw new Error(audioResult.merged_audio?.message || "Audio generation failed");
+      }
       
       // Refresh project data to get the new audio_url
       const { data: updatedProject } = await supabase

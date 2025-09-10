@@ -5,8 +5,10 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, Download } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { createProject, runDirector, runAudio } from "@/integrations/filmDirectorApi";
+import { createProject, runAudio } from "@/integrations/filmDirectorApi";
 import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
+import { useDirector } from "@/hooks/useDirector";
 
 // A tiny starter script so the form isn't empty
 const DEFAULT_SCRIPT = `EXT. PARK – DAY
@@ -33,11 +35,20 @@ export default function NewProject() {
   const [status, setStatus] = useState("");
   const [projectId, setProjectId] = useState<string>("");
 
-  const [directorJson, setDirectorJson] = useState<any | null>(null);
   const [audioResult, setAudioResult] = useState<any | null>(null);
   const [error, setError] = useState<string>("");
   const [generatingAudio, setGeneratingAudio] = useState(false);
   const [audioUrl, setAudioUrl] = useState<string>("");
+
+  // Use the new director hook
+  const {
+    directorJson,
+    waitingForDirector,
+    directorError,
+    triggerDirector,
+    handleDirectorComplete,
+    clearDirectorData
+  } = useDirector();
 
   async function ensureSignedIn() {
     const { data } = await supabase.auth.getUser();
@@ -50,14 +61,34 @@ export default function NewProject() {
       setStatus("Generating audio...");
       setError("");
 
+      // Show loading toast
+      toast({
+        title: "Audio Generation Started",
+        description: "Converting your story to audio... This may take a few moments.",
+        variant: "default",
+        duration: 3000
+      });
+
       if (!projectId) {
-        setError("No project id. Create a project first.");
+        const errorMsg = "No project id. Create a project first.";
+        setError(errorMsg);
         setGeneratingAudio(false);
+        toast({
+          title: "Error",
+          description: errorMsg,
+          variant: "destructive"
+        });
         return;
       }
       if (!directorJson) {
-        setError("No director JSON available. Run AI Director first.");
+        const errorMsg = "No director JSON available. Run AI Director first.";
+        setError(errorMsg);
         setGeneratingAudio(false);
+        toast({
+          title: "Error", 
+          description: errorMsg,
+          variant: "destructive"
+        });
         return;
       }
 
@@ -66,28 +97,51 @@ export default function NewProject() {
       });
 
       if (error) {
+        const errorMsg = error.message || "Edge function error";
         setStatus("Audio generation failed");
-        setError(error.message || "Edge function error");
+        setError(errorMsg);
         setGeneratingAudio(false);
+        toast({
+          title: "Audio Generation Failed",
+          description: errorMsg,
+          variant: "destructive"
+        });
         return;
       }
 
-      const ok = !!data?.success && !!data?.audio_url;
+      const ok = !!data?.merged_audio?.success && !!data?.merged_audio?.audio_url;
       if (!ok) {
+        const errorMsg = data?.merged_audio?.message || "No audio_url returned";
         setStatus("Audio generation failed");
-        setError(data?.message || "No audio_url returned");
+        setError(errorMsg);
         setGeneratingAudio(false);
+        toast({
+          title: "Audio Generation Failed",
+          description: errorMsg,
+          variant: "destructive"
+        });
         return;
       }
 
       // success
-      setAudioUrl(data.audio_url);
+      setAudioUrl(data.merged_audio.audio_url);
       setAudioResult(data);
       setStatus("Audio generated successfully");
       setError("");
+      toast({
+        title: "Audio Generation Complete",
+        description: "Your story has been successfully converted to audio!",
+        variant: "default"
+      });
     } catch (e: any) {
+      const errorMsg = e?.message || String(e);
       setStatus("Audio generation failed");
-      setError(e?.message || String(e));
+      setError(errorMsg);
+      toast({
+        title: "Audio Generation Error",
+        description: errorMsg,
+        variant: "destructive"
+      });
     } finally {
       setGeneratingAudio(false);
     }
@@ -124,7 +178,7 @@ export default function NewProject() {
         }
 
         if (data?.ai_director_json) {
-          setDirectorJson(data.ai_director_json);
+          handleDirectorComplete(data.ai_director_json);
         }
       } catch (err) {
         console.error("Failed to load project data:", err);
@@ -154,18 +208,19 @@ export default function NewProject() {
               setError(newData.ai_director_json.error);
               setStatus("AI Director analysis failed.");
               toast({
-                title: "Error",
+                title: "AI Director Failed",
                 description: "AI Director analysis failed: " + newData.ai_director_json.error,
-                variant: "destructive",
+                variant: "destructive"
               });
             } else {
               // Success
-              setDirectorJson(newData.ai_director_json);
+              handleDirectorComplete(newData.ai_director_json);
               setError("");
               setStatus("AI Director analysis completed!");
               toast({
-                title: "Success",
-                description: "AI Director analysis completed successfully!",
+                title: "AI Director Complete",
+                description: "Director analysis has been generated successfully!",
+                variant: "default"
               });
               
               // Auto-generate audio if doAudio was checked
@@ -188,46 +243,85 @@ export default function NewProject() {
     };
   }, [projectId, toast, doAudio]);
 
+  // Handle director status changes with toasts
+  useEffect(() => {
+    if (waitingForDirector) {
+      toast({
+        title: "AI Director Analysis Started",
+        description: "Analyzing your script... This may take a few moments.",
+        variant: "default",
+        duration: 3000
+      });
+    }
+  }, [waitingForDirector, toast]);
+
+  useEffect(() => {
+    if (directorJson && !waitingForDirector) {
+      toast({
+        title: "AI Director Analysis Complete",
+        description: "Your script has been successfully analyzed!",
+        variant: "default"
+      });
+    }
+  }, [directorJson, waitingForDirector, toast]);
+
+  useEffect(() => {
+    if (directorError) {
+      toast({
+        title: directorError.includes("timeout") ? "Analysis Timeout" : "AI Director Analysis Failed",
+        description: directorError,
+        variant: "destructive"
+      });
+    }
+  }, [directorError, toast]);
+
   // Auto-generate audio when director JSON is ready
   async function handleAutoGenerateAudio(dirJson: any, projId: string) {
     try {
       setStatus("Generating audio…");
+      
       toast({
-        title: "Generating Audio",
-        description: "Creating audio from your script analysis...",
+        title: "Auto Audio Generation Started",
+        description: "Converting your story to audio automatically...",
+        variant: "default",
+        duration: 3000
       });
 
       const audio = await runAudio(projId, dirJson);
-      if (audio.success && audio.public_url) {
-        setAudioUrl(audio.public_url);
+      if (audio.merged_audio?.success && audio.merged_audio?.audio_url) {
+        setAudioUrl(audio.merged_audio.audio_url);
         setAudioResult(audio);
         setStatus("Audio generated successfully! Redirecting to project…");
+        
         toast({
-          title: "Success",
-          description: "Audio generated successfully!",
+          title: "Auto Audio Generation Complete",
+          description: "Your story has been converted to audio! Redirecting...",
+          variant: "default"
         });
+        
         setTimeout(() => navigate(`/projects/${projId}`), 1500);
       } else {
-        throw new Error(audio.message || "Audio generation failed");
+        throw new Error(audio.merged_audio?.message || "Audio generation failed");
       }
     } catch (audioErr: any) {
       console.error("Audio generation failed:", audioErr);
       setError(audioErr?.message ?? String(audioErr));
       setStatus("Project created, but audio generation failed.");
+      
       toast({
-        title: "Audio Error", 
-        description: audioErr?.message ?? "Audio generation failed",
-        variant: "destructive",
+        title: "Auto Audio Generation Failed",
+        description: audioErr?.message ?? "Failed to generate audio automatically",
+        variant: "destructive"
       });
     }
   }
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setBusy(true);
+    setBusy(false);
     setStatus("");
     setError("");
-    setDirectorJson(null);
+    clearDirectorData();
 
     try {
       await ensureSignedIn();
@@ -236,18 +330,15 @@ export default function NewProject() {
       const created = await createProject(title, script);
       setProjectId(created.id);
 
-      let dirJson: any | null = null;
       if (doDirector) {
         setStatus("Starting AI Director analysis…");
         toast({
-          title: "Processing",
-          description: "AI Director is analyzing your script. Please wait...",
+          title: "AI Director Started",
+          description: "Processing your script... This may take a few moments.",
+          variant: "default",
+          duration: 3000
         });
-        
-        // Start the director job (returns job id, doesn't wait for completion)
-        await runDirector(created.id, script);
-        
-        // The real-time listener will handle the response
+        await triggerDirector(created.id, script);
         setStatus("AI Director analysis in progress…");
       }
 
@@ -427,14 +518,13 @@ export default function NewProject() {
                 Your browser does not support the audio element.
               </audio>
 
-              <a
-                href={audioUrl}
-                download="story-magic.mp3"
+              <Button
+                onClick={() => downloadAudio()}
                 className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors"
               >
                 <Download className="h-4 w-4" />
                 Download MP3
-              </a>
+              </Button>
             </div>
           </div>
         )}
