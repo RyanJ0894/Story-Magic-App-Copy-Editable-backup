@@ -9,7 +9,7 @@ export function useDirector() {
   
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const subscriptionRef = useRef<any>(null);
-  const DIRECTOR_TIMEOUT = 120000; // 2 minutes timeout
+  const DIRECTOR_TIMEOUT = 3600000; // 1 hour
 
   const triggerDirector = async (projectId: string, script: string) => {
     try {
