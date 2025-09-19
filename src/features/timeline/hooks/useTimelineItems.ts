@@ -1,7 +1,7 @@
 import { useState, useCallback, useMemo } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
-import type { TimelineItem, TimelineCardData } from "@/feature/timeline/types";
-import { getColorForType } from "@/feature/timeline/lib/audio-colors";
+import type { TimelineItem, TimelineCardData } from "@/features/timeline/types";
+import { getColorForType } from "@/features/timeline/lib/audio-colors";
 
 type RowState = TimelineCardData & { muted?: boolean; hidden?: boolean };
 

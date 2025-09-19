@@ -1,8 +1,8 @@
 import React from "react";
-import TimelineAudio from "@/feature/timeline/components/TimelineAudio";
-import chunk from "@/feature/timeline/data/chunk.json";
-import project from "@/feature/timeline/data/project.json";
-import type { ChunkData, TimelineItem } from "@/feature/timeline/types";
+import TimelineAudio from "@/features/timeline/components/TimelineAudio";
+import type { ChunkData, TimelineItem } from "@/features/timeline/types";
+import chunk from "@/features/timeline/data/chunk.json";
+import project from "@/features/timeline/data/project.json";
 
 // Types for chunk loading
 type ChunkRef = {
@@ -20,16 +20,47 @@ type ChunkLoadingState = {
   error?: string;
 };
 
-// Simulate API call to load individual chunk
+// Simulate API call to load individual chunk with different test cases
 const loadChunkData = async (chunkId: string): Promise<ChunkData> => {
+  // Different delay patterns for testing
+  let delay = 0;
+  let shouldError = false;
+  
+  switch (chunkId) {
+    case "chunk_proj001_001":
+      delay = 3000; // Fast load
+      break;
+    case "chunk_proj001_002":
+      delay = 8000; // Medium load
+      shouldError = true; // This one will fail
+      break;
+    case "chunk_proj001_003":
+      delay = 15000; // Slow load
+      break;
+    case "chunk_proj001_004":
+      delay = 5000; // Medium-fast load
+      break;
+    case "chunk_proj001_005":
+      delay = 12000; // Slow load
+      break;
+    default:
+      delay = 10000 + Math.random() * 5000; // Random 10-15s
+  }
+  
   // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, Math.random() * 2000 + 500));
+  await new Promise(resolve => setTimeout(resolve, delay));
+  
+  // Simulate error for specific chunk
+  if (shouldError) {
+    throw new Error(`Failed to load chunk ${chunkId}: Network timeout after ${delay}ms`);
+  }
   
   // Return mock data based on chunkId
   if (chunkId === "chunk_proj001_001") {
-    return chunk;
+      return chunk;
   } else {
     // Generate mock chunk for other IDs
+    const offset = parseInt(chunkId.split('_').pop() || '0') * 30;
     return {
       ...chunk,
       chunk_id: chunkId,
@@ -37,7 +68,7 @@ const loadChunkData = async (chunkId: string): Promise<ChunkData> => {
       lines: chunk.lines.map(line => ({
         ...line,
         line_id: `${chunkId}_${line.line_id.split('_').pop()}`,
-        start: line.start + (chunkId === "chunk_proj001_002" ? 30 : 0)
+        start: line.start + offset
       }))
     };
   }
@@ -81,17 +112,24 @@ export default function ShowAudio() {
     }
   }, []);
 
-  // Load chunks in order
+  // Load chunks in random order
   React.useEffect(() => {
-    const loadChunksInOrder = async () => {
-      for (const ref of chunkRefs) {
-        await loadChunk(ref.chunk_id);
-        // Small delay between chunks for better UX
-        await new Promise(resolve => setTimeout(resolve, 200));
-      }
+    const loadChunksRandomly = async () => {
+      // Shuffle chunk refs for random loading order
+      const shuffledRefs = [...chunkRefs].sort(() => Math.random() - 0.5);
+      
+      // Load all chunks in parallel (but with random delays)
+      const loadPromises = shuffledRefs.map(async (ref, index) => {
+        // Add random delay before starting each chunk load
+        await new Promise(resolve => setTimeout(resolve, Math.random() * 1000));
+        return loadChunk(ref.chunk_id);
+      });
+      
+      // Wait for all chunks to complete (or fail)
+      await Promise.allSettled(loadPromises);
     };
 
-    loadChunksInOrder();
+    loadChunksRandomly();
   }, [chunkRefs, loadChunk]);
 
   // Get loaded chunks

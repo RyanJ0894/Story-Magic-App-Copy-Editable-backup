@@ -1,7 +1,7 @@
 import React from "react";
 import { motion, useMotionValue } from "framer-motion";
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
-import type { TimelineCardProps } from "@/feature/timeline/types";
+import type { TimelineCardProps } from "@/features/timeline/types";
 
 export default function TimelineCard({ 
   data, 

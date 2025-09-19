@@ -1,4 +1,4 @@
-import type { ChunkData, ChunkLine, AudioTrack, TimelineItem, AudioType } from "@/feature/timeline/types";
+import type { ChunkData, ChunkLine, AudioTrack, TimelineItem, AudioType } from "@/features/timeline/types";
 
 /**
  * Convert chunk lines (narration/dialogue) to timeline items
@@ -48,12 +48,24 @@ export function convertTracksToTimelineItems(
 export function convertChunkToTimelineItems(chunk: ChunkData): TimelineItem[] {
   const items: TimelineItem[] = [];
 
+  console.log(`🎬 Converting chunk ${chunk.chunk_id} to timeline items`);
+  console.log(`🎬 Chunk lines:`, chunk.lines?.length || 0, 'lines');
+  console.log(`🎬 Chunk audio_direction:`, chunk.audio_direction ? 'exists' : 'missing');
+
   // Convert voice lines
   const voiceItems = convertLinesToTimelineItems(chunk.lines);
+  console.log(`🎬 Voice items:`, voiceItems.length, voiceItems.map(item => ({
+    id: item.id,
+    title: item.title,
+    start: item.start,
+    src: item.src 
+  })));
   items.push(...voiceItems);
 
   // Convert audio direction tracks
   if (chunk.audio_direction) {
+    console.log(`🎬 Audio direction data:`, chunk.audio_direction);
+    
     const musicItems = convertTracksToTimelineItems(
       chunk.audio_direction.music || [], 
       "music"
@@ -67,11 +79,40 @@ export function convertChunkToTimelineItems(chunk: ChunkData): TimelineItem[] {
       "sfx"
     );
     
+    console.log(`🎬 Music items:`, musicItems.length, musicItems.map(item => ({
+      id: item.id,
+      title: item.title,
+      start: item.start,
+      src: item.src 
+    })));
+    console.log(`🎬 Ambience items:`, ambienceItems.length, ambienceItems.map(item => ({
+      id: item.id,
+      title: item.title,
+      start: item.start,
+      src: item.src ? 'has audio' : 'no audio'
+    })));
+    console.log(`🎬 SFX items:`, sfxItems.length, sfxItems.map(item => ({
+      id: item.id,
+      title: item.title,
+      start: item.start,
+      src: item.src 
+    })));
+    
     items.push(...musicItems, ...ambienceItems, ...sfxItems);
   }
 
   // Sort by start time
-  return items.sort((a, b) => a.start - b.start);
+  const sortedItems = items.sort((a, b) => a.start - b.start);
+  console.log(`🎬 Final chunk items (${sortedItems.length}):`, sortedItems.map(item => ({
+    id: item.id,
+    title: item.title,
+    type: item.type,
+    start: item.start,
+    end: item.end,
+    src: item.src 
+  })));
+  
+  return sortedItems;
 }
 
 /**
@@ -92,8 +133,19 @@ export function convertChunksToTimelineItems(
   const allItems: TimelineItem[] = [];
   let currentOffset = offsetStart;
 
+  console.log('🔄 convertChunksToTimelineItems - Processing', chunks.length, 'chunks');
+
   for (const chunk of chunks) {
+    console.log(`📦 Processing chunk ${chunk.chunk_id} with offset ${currentOffset}`);
     const chunkItems = convertChunkToTimelineItems(chunk);
+    console.log(`📦 Chunk ${chunk.chunk_id} has ${chunkItems.length} items:`, chunkItems.map(item => ({
+      id: item.id,
+      title: item.title,
+      type: item.type,
+      start: item.start,
+      end: item.end,
+      src: item.src ? 'has audio' : 'no audio'
+    })));
     
     // Apply offset to all items in this chunk
     const offsetItems = chunkItems.map(item => ({
@@ -102,13 +154,24 @@ export function convertChunksToTimelineItems(
       end: item.end + currentOffset,
     }));
     
+    console.log(`📦 After offset ${currentOffset}, items become:`, offsetItems.map(item => ({
+      id: item.id,
+      title: item.title,
+      type: item.type,
+      start: item.start,
+      end: item.end,
+      src: item.src ? 'has audio' : 'no audio'
+    })));
+    
     allItems.push(...offsetItems);
     
     // Update offset for next chunk
     const chunkDuration = calculateTimelineDuration(chunkItems);
+    console.log(`📦 Chunk ${chunk.chunk_id} duration: ${chunkDuration}, next offset: ${currentOffset + chunkDuration}`);
     currentOffset += chunkDuration;
   }
 
+  console.log('✅ Final timeline items:', allItems.length, 'items');
   return allItems;
 }
 

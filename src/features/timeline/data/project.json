@@ -1,0 +1,50 @@
+{
+    "project_id": "proj_001",
+    "title": "Sample Story Project",
+    "description": "Demo project with JSONB schema",
+    "created_at": "2025-09-19T12:00:00Z",
+    "updated_at": "2025-09-19T12:30:00Z",
+    "status": "in_progress",
+    "chunks": [
+      {
+        "chunk_id": "chunk_proj001_001",
+        "scene_title": "EXT. PARK – DAY",
+        "content": "This is the content of the first chunk.",
+        "order": 1,
+        "start": 0,
+        "duration": 30
+      },
+      {
+        "chunk_id": "chunk_proj001_002",
+        "scene_title": "INT. HOUSE – EVENING",
+        "content": "This is the content of the second chunk.",
+        "order": 2,
+        "start": 30,
+        "duration": 45
+      },
+      {
+        "chunk_id": "chunk_proj001_003",
+        "scene_title": "EXT. FOREST – NIGHT",
+        "content": "This is the content of the third chunk.",
+        "order": 3,
+        "start": 75,
+        "duration": 60
+      },
+      {
+        "chunk_id": "chunk_proj001_004",
+        "scene_title": "INT. CAVE – DEEP",
+        "content": "This is the content of the fourth chunk.",
+        "order": 4,
+        "start": 135,
+        "duration": 40
+      },
+      {
+        "chunk_id": "chunk_proj001_005",
+        "scene_title": "EXT. MOUNTAIN – DAWN",
+        "content": "This is the content of the fifth chunk.",
+        "order": 5,
+        "start": 175,
+        "duration": 50
+      }
+    ]
+  }

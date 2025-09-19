@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-import type { UseTimelinePlaybackProps, UseTimelinePlaybackReturn } from "@/feature/timeline/types";
+import type { UseTimelinePlaybackProps, UseTimelinePlaybackReturn } from "@/features/timeline/types";
 
 /**
  * Hook for timeline playback functionality

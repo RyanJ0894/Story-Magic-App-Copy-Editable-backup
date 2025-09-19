@@ -1,11 +1,11 @@
-import React from "react";
+import React, { useCallback } from "react";
 import TimelineRuler from "./TimelineRuler";
 import TimelinePlayhead from "./TimelinePlayhead";
 import TimelineCard from "./TimelineCard";
-import { useTimelinePlayback } from "@/feature/timeline/hooks/useTimelinePlayback";
-import { useTimelineItems } from "@/feature/timeline/hooks/useTimelineItems";
+import { useTimelinePlayback } from "@/features/timeline/hooks/useTimelinePlayback";
+import { useTimelineItems } from "@/features/timeline/hooks/useTimelineItems";
 import { Play, Pause, Download, Music, Volume2, VolumeX, Eye, EyeOff, Trash2 } from "lucide-react";
-import type { BasicTimelineProps } from "@/feature/timeline/types";
+import type { BasicTimelineProps } from "@/features/timeline/types";
 
 export default function BasicTimeline({ 
   duration, 
@@ -28,6 +28,15 @@ export default function BasicTimeline({
     handleSeek,
   } = useTimelineItems(items);
 
+  // Memoize callbacks to prevent infinite loops
+  const handleTimeUpdate = useCallback((time: number) => {
+    setCurrentTime(time);
+  }, []);
+
+  const handlePlaybackEnd = useCallback(() => {
+    setIsPlaying(false);
+  }, []);
+
   const {
     currentTime,
     setCurrentTime,
@@ -38,12 +47,8 @@ export default function BasicTimeline({
   } = useTimelinePlayback({
     duration,
     isPlaying,
-    onTimeUpdate: (time) => {
-      setCurrentTime(time);
-    },
-    onPlaybackEnd: () => {
-      setIsPlaying(false);
-    },
+    onTimeUpdate: handleTimeUpdate,
+    onPlaybackEnd: handlePlaybackEnd,
   });
 
   const labelWidth = 220; // space for row controls

@@ -1,4 +1,4 @@
-import type { AudioType } from "@/feature/timeline/types";
+import type { AudioType } from "@/features/timeline/types";
 
 /**
  * Get color for audio type
