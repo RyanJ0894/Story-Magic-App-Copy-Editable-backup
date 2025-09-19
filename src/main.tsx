@@ -4,6 +4,7 @@ import App from './App.tsx'
 import './index.css'
 import { AuthProvider } from '@/hooks/useAuth'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 console.log('🚀 main.tsx: Starting app initialization');
 
@@ -14,13 +15,17 @@ import "./integrations/filmDirectorApi";
 const rootElement = document.getElementById("root");
 console.log('🎯 main.tsx: Root element found:', !!rootElement);
 
+const queryClient = new QueryClient();
+
 if (rootElement) {
   console.log('🔄 main.tsx: Creating React root');
   createRoot(rootElement).render(
     <StrictMode>
       <ErrorBoundary>
         <AuthProvider>
-          <App />
+          <QueryClientProvider client={queryClient}>
+            <App />
+          </QueryClientProvider>
         </AuthProvider>
       </ErrorBoundary>
     </StrictMode>

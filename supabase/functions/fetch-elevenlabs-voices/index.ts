@@ -1,60 +1,54 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
-
-serve(async (req) => {
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type'
+};
+serve(async (req)=>{
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
+    return new Response(null, {
+      headers: corsHeaders
+    });
   }
-
   try {
     // Get the authorization header
-    const authorization = req.headers.get('Authorization')
+    const authorization = req.headers.get('Authorization');
     if (!authorization) {
-      throw new Error('No authorization header')
+      throw new Error('No authorization header');
     }
-
     // Create Supabase client
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      { global: { headers: { Authorization: authorization } } }
-    )
-
+    const supabaseClient = createClient(Deno.env.get('SUPABASE_URL') ?? '', Deno.env.get('SUPABASE_ANON_KEY') ?? '', {
+      global: {
+        headers: {
+          Authorization: authorization
+        }
+      }
+    });
     // Verify user is authenticated
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser()
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
     if (userError || !user) {
-      throw new Error('User not authenticated')
+      throw new Error('User not authenticated');
     }
-
     // Get ElevenLabs API key from Supabase secrets
-    const elevenLabsApiKey = Deno.env.get('ELEVENLABS_API_KEY')
+    const elevenLabsApiKey = Deno.env.get('ELEVENLABS_API_KEY');
     if (!elevenLabsApiKey) {
-      throw new Error('ElevenLabs API key not configured')
+      throw new Error('ElevenLabs API key not configured');
     }
-
     // Fetch voices from ElevenLabs API
     const response = await fetch('https://api.elevenlabs.io/v1/voices', {
       method: 'GET',
       headers: {
         'xi-api-key': elevenLabsApiKey,
-        'Accept': 'application/json',
-      },
-    })
-
+        'Accept': 'application/json'
+      }
+    });
     if (!response.ok) {
-      throw new Error(`ElevenLabs API error: ${response.status} ${response.statusText}`)
+      throw new Error(`ElevenLabs API error: ${response.status} ${response.statusText}`);
     }
-
-    const voicesData = await response.json()
-    
+    const voicesData = await response.json();
     // Define the exact voice IDs and their categories as specified by the user
-    const userVoiceMapping: Record<string, string> = {
+    const userVoiceMapping = {
       // Female 20s to 30s
       "xZVrOjUURog02K298cjt": "Female 20s to 30s",
       "XhNlP8uwiH6XZSFnH1yL": "Female 20s to 30s",
@@ -68,7 +62,6 @@ serve(async (req) => {
       "cnPPy2dWDNfzwhzvZ3CJ": "Female 20s to 30s",
       "vr5WKaGvRWsoaX5LCVax": "Female 20s to 30s",
       "5BkEaSrc8SxSp7cOflae": "Female 20s to 30s",
-      
       // Female Teen
       "bMxLr8fP6hzNRRi9nJxU": "Female Teen",
       "wrxvN1LZJIfL3HHvffqe": "Female Teen",
@@ -80,11 +73,9 @@ serve(async (req) => {
       "Djjbjv1y8TG5IpNX5YAK": "Female Teen",
       "VmeYJ8yn9LbQxhPAl5wO": "Female Teen",
       "dP9ClfrTRIUt2zMBr00W": "Female Teen",
-      
       // Female Under 10
       "jLreTVzdmVFjzOZ4f2Jx": "Female Under 10",
       "TkSyBjII8TcWww0CSouI": "Female Under 10",
-      
       // Male 20s to 30s
       "PSqRw3ln34TxQZrTS6Wt": "Male 20s to 30s",
       "mcuuWJIofmzgKEGk3EMA": "Male 20s to 30s",
@@ -96,7 +87,6 @@ serve(async (req) => {
       "m9Ul0apeWDFimb3H9yGY": "Male 20s to 30s",
       "Tm4QO7PzRBQqp7MSSl5w": "Male 20s to 30s",
       "k1SgXRmVVqpFcQpNU1ou": "Male 20s to 30s",
-      
       // Male Teen
       "DTKMou8ccj1ZaWGBiotd": "Male Teen",
       "3XOBzXhnDY98yeWQ3GdM": "Male Teen",
@@ -108,11 +98,9 @@ serve(async (req) => {
       "AtHOGgML51i4RHBVD0le": "Male Teen",
       "ZhLVlARQZoYYz5GikrfB": "Male Teen",
       "ciopqvYA9WYw3xOGbodX": "Male Teen",
-      
       // Male Under 10
       "RnC1vV4hTIG6mpspiNMw": "Male Under 10",
       "OzETXvniP8ZpkhCsvTBQ": "Male Under 10",
-      
       // Narrator
       "L0Dsvb3SLTyegXwtm47J": "Narrator",
       "uju3wxzG5OhpWcoi3SMy": "Narrator",
@@ -123,7 +111,6 @@ serve(async (req) => {
       "RILOU7YmBhvwJGDGjNmP": "Narrator",
       "e5WNhrdI30aXpS2RSGm1": "Narrator",
       "pcKdPWtbF6bM9o7NHjCI": "Narrator",
-      
       // Older Female
       "XxY7LfDr5SzeemL30EAJ": "Older Female",
       "lIgS04i5awvulQMifXvy": "Older Female",
@@ -135,7 +122,6 @@ serve(async (req) => {
       "AFDn1vVPITHRYD7x7GhG": "Older Female",
       "Blpxl6Q79PMW6Pr2PNq1": "Older Female",
       "zUZjZwPQKfsRlH9QVPnK": "Older Female",
-      
       // Older Male
       "iiidtqDt9FBdT1vfBluA": "Older Male",
       "NOpBlnGInO9m6vDvFkFC": "Older Male",
@@ -146,55 +132,43 @@ serve(async (req) => {
       "Vnuyx38AQEZgAlsJN8mB": "Older Male",
       "1G9Ya1Fy4Ju2EAKyjGYJ": "Older Male",
       "00y4m1PbCBtjIPrwiynB": "Older Male"
-    }
-
+    };
     // Filter to ONLY include the user's specified voices
-    const userVoices = voicesData.voices.filter((voice: any) => 
-      userVoiceMapping.hasOwnProperty(voice.voice_id)
-    )
-    
+    const userVoices = voicesData.voices.filter((voice)=>userVoiceMapping.hasOwnProperty(voice.voice_id));
     // Transform the voice data and assign the correct user categories
-    const voices = userVoices.map((voice: any) => ({
-      voice_id: voice.voice_id,
-      name: voice.name,
-      category: userVoiceMapping[voice.voice_id], // Use user's specified category
-      description: voice.description,
-      preview_url: voice.preview_url,
-      available_for_tiers: voice.available_for_tiers,
-      settings: voice.settings,
-      labels: voice.labels || {},
-      samples: voice.samples || [],
-      high_quality_base_model_ids: voice.high_quality_base_model_ids || []
-    }))
-
-    return new Response(
-      JSON.stringify({ 
-        voices,
-        count: voices.length 
-      }),
-      {
-        headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'application/json' 
-        },
+    const voices = userVoices.map((voice)=>({
+        voice_id: voice.voice_id,
+        name: voice.name,
+        category: userVoiceMapping[voice.voice_id],
+        description: voice.description,
+        preview_url: voice.preview_url,
+        available_for_tiers: voice.available_for_tiers,
+        settings: voice.settings,
+        labels: voice.labels || {},
+        samples: voice.samples || [],
+        high_quality_base_model_ids: voice.high_quality_base_model_ids || []
+      }));
+    return new Response(JSON.stringify({
+      voices,
+      count: voices.length
+    }), {
+      headers: {
+        ...corsHeaders,
+        'Content-Type': 'application/json'
       }
-    )
-
+    });
   } catch (error) {
-    console.error('Error fetching ElevenLabs voices:', error)
-    return new Response(
-      JSON.stringify({ 
-        error: error.message || 'Failed to fetch voices',
-        voices: [],
-        count: 0
-      }),
-      {
-        status: 400,
-        headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'application/json' 
-        },
+    console.error('Error fetching ElevenLabs voices:', error);
+    return new Response(JSON.stringify({
+      error: error.message || 'Failed to fetch voices',
+      voices: [],
+      count: 0
+    }), {
+      status: 400,
+      headers: {
+        ...corsHeaders,
+        'Content-Type': 'application/json'
       }
-    )
+    });
   }
-})
+});

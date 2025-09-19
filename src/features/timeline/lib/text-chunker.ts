@@ -1,0 +1,249 @@
+/**
+ * Text chunking utilities for converting script text into manageable chunks
+ */
+
+export type TextChunk = {
+  id: string;
+  text: string;
+  order: number;
+  start: number;
+  duration: number;
+  scene_title: string;
+};
+
+export type ChunkingOptions = {
+  maxChunkLength?: number;
+  overlap?: number;
+  minChunkLength?: number;
+};
+
+/**
+ * Split text into chunks based on scene breaks and length limits
+ */
+export function chunkTextByScenes(
+  text: string, 
+  options: ChunkingOptions = {}
+): TextChunk[] {
+  const {
+    maxChunkLength = 2000,
+    overlap = 200,
+    minChunkLength = 500
+  } = options;
+
+  // Split by scene breaks (EXT., INT., etc.)
+  const sceneRegex = /^(EXT\.|INT\.|FADE IN|FADE OUT|CUT TO|DISSOLVE TO)/gm;
+  const scenes = text.split(sceneRegex).filter(Boolean);
+  
+  const chunks: TextChunk[] = [];
+  let currentOrder = 1;
+  let currentStart = 0;
+
+  for (let i = 0; i < scenes.length; i += 2) {
+    const sceneDirection = scenes[i];
+    const sceneContent = scenes[i + 1] || '';
+    
+    if (!sceneDirection || !sceneContent.trim()) continue;
+
+    const fullScene = sceneDirection + sceneContent;
+    const sceneTitle = extractSceneTitle(sceneDirection);
+    
+    // If scene is too long, split it further
+    if (fullScene.length > maxChunkLength) {
+      const subChunks = splitLongScene(fullScene, maxChunkLength, overlap);
+      
+      subChunks.forEach((subChunk, index) => {
+        const duration = estimateDuration(subChunk.length);
+        chunks.push({
+          id: `chunk_${currentOrder}`,
+          text: subChunk,
+          order: currentOrder,
+          start: currentStart,
+          duration,
+          scene_title: `${sceneTitle} (Part ${index + 1})`
+        });
+        
+        currentStart += duration;
+        currentOrder++;
+      });
+    } else {
+      // Scene is short enough, use as-is
+      const duration = estimateDuration(fullScene.length);
+      chunks.push({
+        id: `chunk_${currentOrder}`,
+        text: fullScene,
+        order: currentOrder,
+        start: currentStart,
+        duration,
+        scene_title: sceneTitle
+      });
+      
+      currentStart += duration;
+      currentOrder++;
+    }
+  }
+
+  return chunks;
+}
+
+/**
+ * Split text into chunks by character count
+ */
+export function chunkTextByLength(
+  text: string,
+  options: ChunkingOptions = {}
+): TextChunk[] {
+  const {
+    maxChunkLength = 2000,
+    overlap = 200,
+    minChunkLength = 500
+  } = options;
+
+  const chunks: TextChunk[] = [];
+  let currentOrder = 1;
+  let currentStart = 0;
+  let remainingText = text;
+
+  while (remainingText.length > 0) {
+    let chunkText = '';
+    
+    if (remainingText.length <= maxChunkLength) {
+      // Last chunk
+      chunkText = remainingText;
+      remainingText = '';
+    } else {
+      // Find a good break point (sentence end, paragraph, etc.)
+      const breakPoint = findGoodBreakPoint(
+        remainingText, 
+        maxChunkLength, 
+        minChunkLength
+      );
+      
+      chunkText = remainingText.substring(0, breakPoint);
+      remainingText = remainingText.substring(breakPoint - overlap);
+    }
+
+    if (chunkText.trim().length === 0) break;
+
+    const duration = estimateDuration(chunkText.length);
+    const sceneTitle = extractSceneTitle(chunkText) || `Scene ${currentOrder}`;
+    
+    chunks.push({
+      id: `chunk_${currentOrder}`,
+      text: chunkText.trim(),
+      order: currentOrder,
+      start: currentStart,
+      duration,
+      scene_title: sceneTitle
+    });
+
+    currentStart += duration;
+    currentOrder++;
+  }
+
+  return chunks;
+}
+
+/**
+ * Extract scene title from text (e.g., "EXT. PARK – DAY" from "EXT. PARK – DAY\nNARRATOR: ...")
+ */
+function extractSceneTitle(text: string): string {
+  const lines = text.split('\n');
+  const firstLine = lines[0]?.trim();
+  
+  if (firstLine?.match(/^(EXT\.|INT\.|FADE IN|FADE OUT|CUT TO|DISSOLVE TO)/)) {
+    return firstLine;
+  }
+  
+  // Try to find scene direction in first few lines
+  for (const line of lines.slice(0, 3)) {
+    const trimmed = line.trim();
+    if (trimmed.match(/^(EXT\.|INT\.|FADE IN|FADE OUT|CUT TO|DISSOLVE TO)/)) {
+      return trimmed;
+    }
+  }
+  
+  return `Scene ${Date.now()}`;
+}
+
+/**
+ * Split a long scene into smaller chunks
+ */
+function splitLongScene(
+  scene: string, 
+  maxLength: number, 
+  overlap: number
+): string[] {
+  const chunks: string[] = [];
+  let remaining = scene;
+  
+  while (remaining.length > maxLength) {
+    const breakPoint = findGoodBreakPoint(remaining, maxLength, 500);
+    chunks.push(remaining.substring(0, breakPoint));
+    remaining = remaining.substring(breakPoint - overlap);
+  }
+  
+  if (remaining.trim().length > 0) {
+    chunks.push(remaining);
+  }
+  
+  return chunks;
+}
+
+/**
+ * Find a good break point in text (sentence end, paragraph, etc.)
+ */
+function findGoodBreakPoint(
+  text: string, 
+  maxLength: number, 
+  minLength: number
+): number {
+  // Look for sentence endings first
+  const sentenceEnd = text.lastIndexOf('.', maxLength);
+  if (sentenceEnd > minLength) return sentenceEnd + 1;
+  
+  // Look for paragraph breaks
+  const paragraphEnd = text.lastIndexOf('\n\n', maxLength);
+  if (paragraphEnd > minLength) return paragraphEnd + 2;
+  
+  // Look for single line breaks
+  const lineEnd = text.lastIndexOf('\n', maxLength);
+  if (lineEnd > minLength) return lineEnd + 1;
+  
+  // Look for dialogue breaks
+  const dialogueEnd = text.lastIndexOf('\n', maxLength);
+  if (dialogueEnd > minLength) return dialogueEnd + 1;
+  
+  // Fallback to max length
+  return maxLength;
+}
+
+/**
+ * Estimate duration based on text length (rough approximation)
+ */
+function estimateDuration(textLength: number): number {
+  // Rough estimate: 150 words per minute, 5 characters per word average
+  const wordsPerMinute = 150;
+  const charsPerWord = 5;
+  const words = textLength / charsPerWord;
+  const minutes = words / wordsPerMinute;
+  return Math.max(10, Math.round(minutes * 60)); // Minimum 10 seconds
+}
+
+/**
+ * Main chunking function - tries scene-based first, falls back to length-based
+ */
+export function chunkText(
+  text: string, 
+  options: ChunkingOptions = {}
+): TextChunk[] {
+  // Try scene-based chunking first
+  const sceneChunks = chunkTextByScenes(text, options);
+  
+  // If we got reasonable chunks, use them
+  if (sceneChunks.length > 0 && sceneChunks.every(c => c.text.length > 100)) {
+    return sceneChunks;
+  }
+  
+  // Fall back to length-based chunking
+  return chunkTextByLength(text, options);
+}

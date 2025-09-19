@@ -74,6 +74,39 @@ export type Database = {
         }
         Relationships: []
       }
+      mix_jobs: {
+        Row: {
+          created_at: string
+          error: string | null
+          error_text: string | null
+          id: string
+          output_path: string | null
+          payload_json: Json
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          error?: string | null
+          error_text?: string | null
+          id?: string
+          output_path?: string | null
+          payload_json: Json
+          status: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          error?: string | null
+          error_text?: string | null
+          id?: string
+          output_path?: string | null
+          payload_json?: Json
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           account_status: string
@@ -120,6 +153,101 @@ export type Database = {
             referencedColumns: ["user_id"]
           },
         ]
+      }
+      project_chunks: {
+        Row: {
+          audio_direction: Json | null
+          chunk_index: number
+          chunk_key: string
+          content: string | null
+          created_at: string | null
+          director_notes: string | null
+          duration: number | null
+          id: string
+          lines: Json | null
+          project_id: string
+          scene_title: string | null
+          start: number | null
+          status: string | null
+          updated_at: string | null
+          version: number | null
+        }
+        Insert: {
+          audio_direction?: Json | null
+          chunk_index: number
+          chunk_key: string
+          content?: string | null
+          created_at?: string | null
+          director_notes?: string | null
+          duration?: number | null
+          id?: string
+          lines?: Json | null
+          project_id: string
+          scene_title?: string | null
+          start?: number | null
+          status?: string | null
+          updated_at?: string | null
+          version?: number | null
+        }
+        Update: {
+          audio_direction?: Json | null
+          chunk_index?: number
+          chunk_key?: string
+          content?: string | null
+          created_at?: string | null
+          director_notes?: string | null
+          duration?: number | null
+          id?: string
+          lines?: Json | null
+          project_id?: string
+          scene_title?: string | null
+          start?: number | null
+          status?: string | null
+          updated_at?: string | null
+          version?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_chunks_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      projects: {
+        Row: {
+          created_at: string | null
+          id: string
+          project_key: string
+          script: string | null
+          status: string | null
+          title: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          project_key: string
+          script?: string | null
+          status?: string | null
+          title: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          project_key?: string
+          script?: string | null
+          status?: string | null
+          title?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
       raw_webhooks: {
         Row: {
@@ -209,6 +337,7 @@ export type Database = {
           id: string
           script: string | null
           title: string | null
+          updated_at: string | null
           user_id: string | null
         }
         Insert: {
@@ -218,6 +347,7 @@ export type Database = {
           id?: string
           script?: string | null
           title?: string | null
+          updated_at?: string | null
           user_id?: string | null
         }
         Update: {
@@ -227,6 +357,7 @@ export type Database = {
           id?: string
           script?: string | null
           title?: string | null
+          updated_at?: string | null
           user_id?: string | null
         }
         Relationships: []
