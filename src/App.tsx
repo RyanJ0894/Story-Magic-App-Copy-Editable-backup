@@ -1,4 +1,3 @@
-// src/pages/App.tsx
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 
@@ -10,6 +9,7 @@ import ProjectDetail from "./pages/ProjectDetail";
 import Pricing from "./pages/Pricing";
 import ResetPassword from "./pages/ResetPassword";
 import AcceptInvitation from "./pages/AcceptInvitation";
+import ShowAudio from "./pages/ShowAudio";
 
 function App() {
   console.log("📱 App: Component rendering");
@@ -27,6 +27,7 @@ function App() {
         <Route path="/projects/new" element={<NewProject />} />
         <Route path="/projects/:id" element={<ProjectDetail />} />
         <Route path="/pricing" element={<Pricing />} />
+        <Route path="/show-audio" element={<ShowAudio />} />
       </Routes>
       <Toaster />
     </BrowserRouter>

@@ -1,0 +1,30 @@
+{
+    "project_id": "proj_001",
+    "title": "Sample Story Project",
+    "description": "Demo project with JSONB schema",
+    "language": "en",
+    "created_at": "2025-09-19T12:00:00Z",
+    "updated_at": "2025-09-19T12:30:00Z",
+    "status": "in_progress",
+    "global_settings": {
+      "default_provider": "elevenlabs",
+      "credits_remaining": 9500,
+      "playback_mode": "timeline"
+    },
+    "chunks": [
+      {
+        "chunk_id": "chunk_proj001_001",
+        "scene_title": "EXT. PARK – DAY",
+        "order": 1,
+        "start": 0,
+        "duration": 30
+      },
+      {
+        "chunk_id": "chunk_proj001_002",
+        "scene_title": "INT. HOUSE – EVENING",
+        "order": 2,
+        "start": 30,
+        "duration": 45
+      }
+    ]
+  }
