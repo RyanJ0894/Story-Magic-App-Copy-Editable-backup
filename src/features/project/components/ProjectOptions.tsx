@@ -1,23 +1,27 @@
-interface ProjectOptionsProps {
+import { UseFormRegister, FieldErrors } from "react-hook-form";
+
+interface ProjectFormData {
+  title: string;
+  script: string;
   doDirector: boolean;
-  setDoDirector: (value: boolean) => void;
   doAudio: boolean;
-  setDoAudio: (value: boolean) => void;
+}
+
+interface ProjectOptionsProps {
+  register: UseFormRegister<ProjectFormData>;
+  errors: FieldErrors<ProjectFormData>;
 }
 
 export default function ProjectOptions({
-  doDirector,
-  setDoDirector,
-  doAudio,
-  setDoAudio
+  register,
+  errors
 }: ProjectOptionsProps) {
   return (
     <div className="flex items-center gap-6">
       <label className="inline-flex items-center gap-2">
         <input
           type="checkbox"
-          checked={doDirector}
-          onChange={(e) => setDoDirector(e.target.checked)}
+          {...register("doDirector")}
         />
         <span>Run AI Director (analyze script)</span>
       </label>
@@ -25,8 +29,7 @@ export default function ProjectOptions({
       <label className="inline-flex items-center gap-2">
         <input
           type="checkbox"
-          checked={doAudio}
-          onChange={(e) => setDoAudio(e.target.checked)}
+          {...register("doAudio")}
         />
         <span>Generate Audio after analysis</span>
       </label>

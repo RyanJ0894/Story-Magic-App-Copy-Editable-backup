@@ -10,6 +10,7 @@ import Pricing from "./pages/Pricing";
 import ResetPassword from "./pages/ResetPassword";
 import AcceptInvitation from "./pages/AcceptInvitation";
 import ShowAudio from "./pages/ShowAudio";
+import ScriptPlayerDemo from "./features/scripts/components/ScriptPlayerDemo";
 
 function App() {
   console.log("📱 App: Component rendering");
@@ -28,6 +29,7 @@ function App() {
         <Route path="/projects/:id" element={<ProjectDetail />} />
         <Route path="/pricing" element={<Pricing />} />
         <Route path="/show-audio" element={<ShowAudio />} />
+        <Route path="/script-demo" element={<ScriptPlayerDemo />} />
       </Routes>
       <Toaster />
     </BrowserRouter>

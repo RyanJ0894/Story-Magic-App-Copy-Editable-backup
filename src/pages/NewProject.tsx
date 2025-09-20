@@ -1,37 +1,54 @@
 // src/pages/NewProject.tsx
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
+import { useForm } from "react-hook-form";
 
 // Feature imports
 import { useProjectCreate } from "@/features/project/hooks/useProjectCreate";
 import { useChunkProductionFixed } from "@/features/project/hooks/useChunkProductionFixed";
-import { useChunkLoaderProduction } from "@/features/project/hooks/useChunkLoaderProduction";
+import { useChunkPolling } from "@/features/project/hooks/useChunkPolling";
 import ProjectForm from "@/features/project/components/ProjectForm";
 import ProjectOptions from "@/features/project/components/ProjectOptions";
 import ProjectStatus from "@/features/project/components/ProjectStatus";
-import TimelineAudio from "@/features/timeline/components/TimelineAudio";
-import type { ChunkRef, ChunkLoadingState } from "@/features/project/hooks/useChunkLoaderProduction";
-import type { TimelineItem } from "@/features/timeline/types";
+import type { ChunkRef } from "@/features/project/hooks/useChunkLoaderProduction";
 import React from "react";
+import ScriptPlayer from "@/features/scripts/components/ScriptPlayer";
+import AudioPlayer from "@/features/scripts/components/AudioPlayer";
+import ChunkProgressBar from "@/features/timeline/components/ChunkProgressBar";
+
+interface ProjectFormData {
+  title: string;
+  script: string;
+  doDirector: boolean;
+  doAudio: boolean;
+}
 
 export default function NewProject() {
-  const navigate = useNavigate();
-  const { toast } = useToast();
-
-  // Form state
-  const [title, setTitle] = useState("Untitled Project");
-  const [script, setScript] = useState(`EXT. PARK – DAY
+  const { register, handleSubmit, watch, formState: { errors } } = useForm<ProjectFormData>({
+    defaultValues: {
+      title: "Untitled Project",
+      script: `EXT. PARK – DAY
 NARRATOR: A gentle breeze moves through the trees as Mary and John walk.
 MARY: It's peaceful here.
-JOHN: Yeah, let's keep moving.`);
-  const [doDirector, setDoDirector] = useState(true);
-  const [doAudio, setDoAudio] = useState(false);
+JOHN: Yeah, let's keep moving.`,
+      doDirector: true,
+      doAudio: false
+    }
+  });
+
+  const watchedValues = watch();
 
   // Project state
   const [projectId, setProjectId] = useState<string>("");
+  
+  // Timeline playback state
+  const [currentTime, setCurrentTime] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [duration, setDuration] = useState(30);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Project creation hook
   const { createProject, isCreating, error: createError } = useProjectCreate();
@@ -48,101 +65,126 @@ JOHN: Yeah, let's keep moving.`);
     processError: chunkProcessError
   } = useChunkProductionFixed(projectId);
 
-  // Convert project chunks to chunk refs for TimelineAudio - memoized to prevent re-renders
+  const {
+    chunks: polledChunks,
+    pendingChunks,
+    processingChunks,
+    completedChunks,
+    errorChunks,
+    totalChunks,
+    completedCount,
+    errorCount
+  } = useChunkPolling(projectId, !!projectId);
+
+  const loadedChunks = completedChunks.map(chunk => ({
+    chunk_id: chunk.chunk_key,
+    project_id: chunk.project_id,
+    scene_title: chunk.scene_title,
+    version: chunk.version,
+    director_notes: chunk.director_notes || "",
+    lines: chunk.lines || [],
+    audio_direction: chunk.audio_direction || { music: [], ambience: [], sfx: [] }
+  }));
+
   const chunkRefs: ChunkRef[] = React.useMemo(() => 
-    projectChunks.map(chunk => ({
+    polledChunks.map(chunk => ({
       chunk_id: chunk.chunk_key,
       scene_title: chunk.scene_title,
       order: chunk.chunk_index,
       start: chunk.start,
       duration: chunk.duration
-    })), [projectChunks]
+    })), [polledChunks]
   );
 
-  // Chunk loader hook (like ShowAudio)
-  const {
-    chunkStates,
-    loadedChunks,
-    loadChunk,
-    loadAllChunks,
-    allChunksLoaded,
-    hasErrors,
-    loadingCount,
-    loadedCount,
-    pendingCount,
-    errorCount,
-    totalCount
-  } = useChunkLoaderProduction(chunkRefs);
-
-  // Debug logs
-  console.log('🔍 NewProject Debug:');
-  console.log('- projectId:', projectId);
-  console.log('- projectChunks:', projectChunks);
-  console.log('- chunkRefs:', chunkRefs);
-  console.log('- chunkStates:', chunkStates);
-  console.log('- loadedChunks:', loadedChunks);
-  
-  // Chi tiết chunkStates
-  chunkStates.forEach((state, index) => {
-    console.log(`ChunkState ${index}:`, {
-      chunkId: state.chunkId,
-      isLoading: state.isLoading,
-      hasData: !!state.data,
-      error: state.error
-    });
-  });
+  const chunkStates = polledChunks.map(chunk => ({
+    chunkId: chunk.chunk_key,
+    isLoading: chunk.status === 'processing',
+    data: chunk.status === 'done' ? chunk : undefined,
+    error: chunk.status === 'error' ? `Chunk ${chunk.chunk_key} failed` : undefined
+  }));
 
 
-  // Handle form submission
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = async (data: ProjectFormData) => {
     try {
-      console.log('🚀 Step 1: Creating project...');
-      const project = await createProject({ title, script });
+      const project = await createProject({ title: data.title, script: data.script });
       setProjectId(project.id);
-      
-      console.log('✅ Project created:', project.id);
-      
-      // Step 2: Create chunks with pending status
-      console.log('🔄 Step 2: Creating chunks with pending status...');
-      await createChunks({ projectId: project.id, script });
-      
-      console.log('✅ Chunks created, starting processing...');
-      
-      // Step 3: Process chunks (simulate director function)
-      console.log('🔄 Step 3: Processing chunks (simulating director function)...');
+      await createChunks({ projectId: project.id, script: data.script });
       await processChunks(project.id);
-      
-      console.log('✅ All steps completed, timeline will show automatically...');
-      
     } catch (error) {
       console.error("Project creation failed:", error);
     }
   };
 
-  // Timeline event handlers
-  const handleItemsChange = (items: TimelineItem[]) => {
-    console.log("Timeline items changed:", items);
+  useEffect(() => {
+    if (isPlaying) {
+      intervalRef.current = setInterval(() => {
+        setCurrentTime(prev => {
+          const newTime = prev + 0.1;
+          if (newTime >= duration) {
+            setIsPlaying(false);
+            return duration;
+          }
+          return newTime;
+        });
+      }, 100);
+    } else {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    }
+
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
+  }, [isPlaying, duration]);
+
+  useEffect(() => {
+    if (loadedChunks.length > 0) {
+      let maxEndTime = 0;
+      loadedChunks.forEach(chunk => {
+        chunk.lines.forEach(line => {
+          const endTime = line.start + line.duration;
+          if (endTime > maxEndTime) maxEndTime = endTime;
+        });
+        
+        [...chunk.audio_direction.music, ...chunk.audio_direction.ambience, ...chunk.audio_direction.sfx].forEach(audio => {
+          const endTime = audio.start + audio.duration;
+          if (endTime > maxEndTime) maxEndTime = endTime;
+        });
+      });
+      
+      if (maxEndTime > 0) {
+        setDuration(Math.ceil(maxEndTime));
+      }
+    }
+  }, [loadedChunks]);
+
+  const handleSeek = (time: number) => {
+    setCurrentTime(time);
   };
 
   const handlePlayPause = (isPlaying: boolean) => {
-    console.log("Playback state:", isPlaying ? "Playing" : "Paused");
+    setIsPlaying(isPlaying);
   };
 
-  const handleSeek = (time: number) => {
-    console.log("Seek to:", time);
+  const handleLineChange = (lineId: string) => {
+    console.log("Active line changed:", lineId);
   };
 
-  const handleChunkUpdate = (chunkId: string, updatedChunk: any) => {
-    console.log("Chunk updated:", chunkId, updatedChunk);
+  const handleVoiceChange = (lineId: string, voiceKey: string) => {
+    console.log("Voice changed:", lineId, voiceKey);
   };
 
-  const handleGenerateAudio = (chunkId: string, lineId: string) => {
-    console.log("Generate audio for:", chunkId, lineId);
+  const handleVolumeChange = (trackId: string, volume: number) => {
+    console.log("Volume changed:", trackId, volume);
   };
 
-  const handleVoiceChange = (chunkId: string, lineId: string, voiceKey: string) => {
-    console.log("Voice changed:", chunkId, lineId, voiceKey);
+  const handleSfxChange = (trackId: string, sfxKey: string) => {
+    console.log("SFX changed:", trackId, sfxKey);
   };
 
   return (
@@ -171,23 +213,18 @@ JOHN: Yeah, let's keep moving.`);
         <h1 className="text-3xl font-bold mb-6">Create New Project</h1>
         
         {/* Project Creation Form - luôn hiển thị */}
-        <div className="space-y-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <ProjectForm
-            title={title}
-            setTitle={setTitle}
-            script={script}
-            setScript={setScript}
-            onSubmit={handleSubmit}
+            register={register}
+            errors={errors}
             isSubmitting={isCreating || isCreatingChunks || isProcessingChunks}
           />
 
           <ProjectOptions
-            doDirector={doDirector}
-            setDoDirector={setDoDirector}
-            doAudio={doAudio}
-            setDoAudio={setDoAudio}
+            register={register}
+            errors={errors}
           />
-        </div>
+        </form>
 
         {/* Loading Status - hiển thị khi đang tạo project hoặc chunks */}
         {(isCreating || isCreatingChunks || isProcessingChunks) && (
@@ -206,18 +243,17 @@ JOHN: Yeah, let's keep moving.`);
           </div>
         )}
 
-        {/* Timeline Audio Editor - luôn hiển thị */}
         {projectId && (
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-3xl font-bold">{title}</h1>
+                <h1 className="text-3xl font-bold">{watchedValues.title}</h1>
                 <p className="text-muted-foreground">
-                  {totalCount > 0 ? (
+                  {totalChunks > 0 ? (
                     <>
-                      {loadedCount}/{totalCount} chunks loaded
-                      {loadingCount > 0 && ` • ${loadingCount} loading...`}
-                      {pendingCount > 0 && ` • ${pendingCount} pending...`}
+                      {completedCount}/{totalChunks} chunks completed
+                      {processingChunks.length > 0 && ` • ${processingChunks.length} processing...`}
+                      {pendingChunks.length > 0 && ` • ${pendingChunks.length} pending...`}
                       {errorCount > 0 && ` • ${errorCount} errors`}
                     </>
                   ) : (
@@ -236,18 +272,48 @@ JOHN: Yeah, let's keep moving.`);
               </div>
             </div>
 
-            <TimelineAudio 
-              chunks={loadedChunks}
-              chunkStates={chunkStates}
+
+            <ChunkProgressBar 
               chunkRefs={chunkRefs}
-              onItemsChange={handleItemsChange}
-              onPlayPause={handlePlayPause}
-              onSeek={handleSeek}
-              onChunkUpdate={handleChunkUpdate}
-              onGenerateAudio={handleGenerateAudio}
-              onVoiceChange={handleVoiceChange}
-              onRetryChunk={loadChunk}
+              chunkStates={chunkStates}
+              onRetryChunk={() => {}}
             />
+
+            <AudioPlayer 
+              chunks={loadedChunks}
+              currentTime={currentTime}
+              isPlaying={isPlaying}
+            />
+
+            {loadedChunks.length > 0 && (
+              <ScriptPlayer 
+                chunks={loadedChunks} 
+                currentTime={currentTime}
+                isPlaying={isPlaying}
+                duration={duration}
+                onSeek={handleSeek}
+                onPlayPause={handlePlayPause}
+                onLineChange={handleLineChange}
+                onVoiceChange={handleVoiceChange}
+                onVolumeChange={handleVolumeChange}
+                onSfxChange={handleSfxChange}
+              />
+            )}
+
+            {totalChunks > 0 && loadedChunks.length === 0 && (
+              <div className="p-6 text-center border rounded-lg bg-muted/30">
+                <div className="text-lg font-semibold mb-2">Processing Script...</div>
+                <div className="text-muted-foreground mb-4">
+                  {processingChunks.length > 0 
+                    ? `Processing ${processingChunks.length} chunk(s)...` 
+                    : `Waiting for ${pendingChunks.length} chunk(s) to start processing...`
+                  }
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  Script will appear here as chunks are completed
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

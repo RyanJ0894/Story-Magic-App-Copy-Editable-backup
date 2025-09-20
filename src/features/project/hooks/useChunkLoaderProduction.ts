@@ -134,13 +134,11 @@ export const useChunkLoaderProduction = (chunkRefs: ChunkRef[]) => {
     }
   }, [chunkRefs]);
 
-  // Thêm polling mechanism
   useEffect(() => {
     if (chunkRefs.length === 0) return;
 
     console.log('🔄 Starting polling mechanism for', chunkRefs.length, 'chunks');
     
-    // Poll immediately first time
     const pollChunks = async () => {
       const pendingChunks = chunkStates.filter(state => 
         !state.data && !state.isLoading && !state.error

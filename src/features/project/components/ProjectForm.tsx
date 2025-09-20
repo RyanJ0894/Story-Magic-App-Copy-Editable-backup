@@ -1,66 +1,68 @@
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import PdfToText from "@/components/PdfToText";
+import { UseFormRegister, FieldErrors } from "react-hook-form";
+
+interface ProjectFormData {
+  title: string;
+  script: string;
+  doDirector: boolean;
+  doAudio: boolean;
+}
 
 interface ProjectFormProps {
-  title: string;
-  setTitle: (title: string) => void;
-  script: string;
-  setScript: (script: string) => void;
-  onSubmit: (e: React.FormEvent) => void;
+  register: UseFormRegister<ProjectFormData>;
+  errors: FieldErrors<ProjectFormData>;
   isSubmitting: boolean;
 }
 
 export default function ProjectForm({
-  title,
-  setTitle,
-  script,
-  setScript,
-  onSubmit,
+  register,
+  errors,
   isSubmitting
 }: ProjectFormProps) {
-  // Handle PDF text extraction
-  const handlePdfText = (text: string, mode: "replace" | "append" = "replace") => {
-    if (mode === "replace") {
-      setScript(text);
-    } else {
-      setScript((prev) => (prev ? `${prev}\n\n${text}` : text));
-    }
-  };
   return (
-    <form onSubmit={onSubmit} className="space-y-6">
+    <div className="space-y-6">
       {/* Title */}
       <div>
-        <label htmlFor="title" className="block text-sm font-medium mb-2">
+        <Label htmlFor="title" className="block text-sm font-medium mb-2">
           Title
-        </label>
-        <input
+        </Label>
+        <Input
           id="title"
-          className="w-full rounded-md border px-3 py-2 bg-black/20"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
+          {...register("title", { required: "Title is required" })}
           placeholder="My Project"
         />
+        {errors.title && (
+          <p className="text-sm text-red-500 mt-1">{errors.title.message}</p>
+        )}
       </div>
 
       {/* PDF upload helper */}
       <div className="mb-2">
         <PdfToText
-          onText={handlePdfText}
+          onText={(text: string, mode: "replace" | "append" = "replace") => {
+            // TODO: Handle PDF text extraction with react-hook-form
+            console.log("PDF text:", text, mode);
+          }}
         />
       </div>
 
       {/* Script textarea */}
       <div>
-        <label htmlFor="script" className="block text-sm font-medium mb-2">
+        <Label htmlFor="script" className="block text-sm font-medium mb-2">
           Script
-        </label>
+        </Label>
         <Textarea
           id="script"
           rows={14}
           placeholder="Paste your script here, or upload a PDF above…"
-          value={script}
-          onChange={(e) => setScript(e.target.value)}
+          {...register("script", { required: "Script is required" })}
         />
+        {errors.script && (
+          <p className="text-sm text-red-500 mt-1">{errors.script.message}</p>
+        )}
       </div>
 
       <button
@@ -70,6 +72,6 @@ export default function ProjectForm({
       >
         {isSubmitting ? "Working…" : "Create Project"}
       </button>
-    </form>
+    </div>
   );
 }

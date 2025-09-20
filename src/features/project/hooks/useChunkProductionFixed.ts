@@ -189,12 +189,11 @@ export const useChunkProductionFixed = (projectId: string) => {
       
       console.log(`✅ Found ${chunksToProcess.length} chunks to process:`, chunksToProcess.map(c => c.chunk_key));
 
-      // Process chunks with 10s delay each
-      for (const chunk of chunksToProcess) {
+      // Process chunks in parallel
+      const processChunk = async (chunk: ProjectChunk) => {
         try {
           console.log(`🔄 Processing chunk: ${chunk.chunk_key}`);
           
-          // Update status to processing
           const { error: updateError } = await supabase
             .from('project_chunks')
             .update({ status: 'processing' })
@@ -202,17 +201,14 @@ export const useChunkProductionFixed = (projectId: string) => {
 
           if (updateError) {
             console.error(`Failed to update chunk ${chunk.chunk_key} to processing:`, updateError);
-            continue;
+            return;
           }
 
-          // Simulate processing delay (4 seconds)
           console.log(`⏳ Processing chunk ${chunk.chunk_key} for 4 seconds...`);
           await new Promise(resolve => setTimeout(resolve, 4000));
 
-          // Generate mock data from chunk.json
           const mockData = await generateMockChunkData(chunk as ProjectChunk);
 
-          // Update chunk with completed data
           const { error: completeError } = await supabase
             .from('project_chunks')
             .update({
@@ -229,7 +225,7 @@ export const useChunkProductionFixed = (projectId: string) => {
               .from('project_chunks')
               .update({ status: 'error' })
               .eq('id', chunk.id);
-            continue;
+            return;
           }
 
           console.log(`✅ Chunk processed: ${chunk.chunk_key}`);
@@ -240,7 +236,10 @@ export const useChunkProductionFixed = (projectId: string) => {
             .update({ status: 'error' })
             .eq('id', chunk.id);
         }
-      }
+      };
+
+      // Process all chunks in parallel
+      await Promise.all(chunksToProcess.map(chunk => processChunk(chunk as ProjectChunk)));
 
       console.log('✅ All chunks processed successfully!');
     },
