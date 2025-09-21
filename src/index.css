@@ -144,3 +144,42 @@ All colors MUST be HSL.
 .slider-thin .radix-slider-track { width: 4px !important; }
 .slider-thin .radix-slider-range { width: 100% !important; }
 .slider-thin .radix-slider-thumb { width: 10px !important; height: 10px !important; }
+
+/* VSCode-like JSON Theme */
+.vscode-json-theme {
+  --w-rjv-font-family: 'JetBrains Mono', 'Fira Code', 'Monaco', 'Consolas', 'Courier New', monospace;
+  --w-rjv-font-size: 12px;
+  --w-rjv-line-height: 1.4;
+  
+  /* VSCode Dark+ colors */
+  --w-rjv-background-color: #1e1e1e;
+  --w-rjv-curlybraces-color: #d4d4d4;
+  --w-rjv-colon-color: #d4d4d4;
+  --w-rjv-brackets-color: #d4d4d4;
+  --w-rjv-quotes-color: #ce9178;
+  --w-rjv-quotes-string-color: #ce9178;
+  --w-rjv-type-string-color: #ce9178;
+  --w-rjv-type-int-color: #b5cea8;
+  --w-rjv-type-float-color: #b5cea8;
+  --w-rjv-type-bigint-color: #b5cea8;
+  --w-rjv-type-boolean-color: #569cd6;
+  --w-rjv-type-date-color: #d4d4d4;
+  --w-rjv-type-null-color: #569cd6;
+  --w-rjv-type-nan-color: #569cd6;
+  --w-rjv-type-undefined-color: #569cd6;
+  --w-rjv-type-symbol-color: #d4d4d4;
+  --w-rjv-type-function-color: #dcdcaa;
+  --w-rjv-key-color: #569cd6;
+  --w-rjv-edit-color: #d4d4d4;
+  --w-rjv-info-color: #d4d4d4;
+  --w-rjv-edit-background: #3c3c3c;
+  --w-rjv-edit-border: #6a6a6a;
+  --w-rjv-arrow-color: #d4d4d4;
+  --w-rjv-edit-border-radius: 4px;
+  --w-rjv-key-string: #20d2ff;
+}
+
+.vscode-json-theme .w-json-view {
+  background-color: var(--w-rjv-background-color) !important;
+  color: var(--w-rjv-curlybraces-color) !important;
+}

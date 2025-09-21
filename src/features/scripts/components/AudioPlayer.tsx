@@ -1,8 +1,8 @@
 import { useEffect, useRef, useMemo } from 'react';
-import type { ChunkData } from '@/features/timeline/types';
+import type { ChunkProgressData } from '@/features/projects/project-chunk.type';
 
 interface AudioPlayerProps {
-  chunks: ChunkData[];
+  chunks: ChunkProgressData[];
   currentTime: number;
   isPlaying: boolean;
 }
@@ -15,6 +15,7 @@ export default function AudioPlayer({
   const audioRefs = useRef<Map<string, HTMLAudioElement>>(new Map());
   
   const stableChunks = useMemo(() => chunks, [chunks.map(c => c.chunk_id).join(',')]);
+
 
   useEffect(() => {
     const chunkIds = stableChunks.map(c => c.chunk_id).sort().join(',');
@@ -35,9 +36,23 @@ export default function AudioPlayer({
           if (line.src) {
             const audio = new Audio();
             audio.crossOrigin = 'anonymous';
-            audio.preload = 'none';
+            audio.preload = 'metadata'; // Preload metadata for better streaming
             audio.volume = line.volume || 1;
             audio.src = line.src;
+            
+            // Add event listeners for better streaming
+            audio.addEventListener('loadstart', () => {
+              console.log(`Loading audio: ${line.line_id}`);
+            });
+            
+            audio.addEventListener('canplay', () => {
+              console.log(`Audio ready: ${line.line_id}`);
+            });
+            
+            audio.addEventListener('error', (e) => {
+              console.error(`Audio error for ${line.line_id}:`, e);
+            });
+            
             audioRefs.current.set(line.line_id, audio);
           }
         });
@@ -52,9 +67,23 @@ export default function AudioPlayer({
           if (track.src) {
             const audio = new Audio();
             audio.crossOrigin = 'anonymous';
-            audio.preload = 'none';
+            audio.preload = 'metadata'; // Better streaming for background music
             audio.volume = track.volume || 1;
             audio.src = track.src;
+            
+            // Add event listeners for background tracks
+            audio.addEventListener('loadstart', () => {
+              console.log(`Loading track: ${track.track_id} (${track.type})`);
+            });
+            
+            audio.addEventListener('canplay', () => {
+              console.log(`Track ready: ${track.track_id} (${track.type})`);
+            });
+            
+            audio.addEventListener('error', (e) => {
+              console.error(`Track error for ${track.track_id}:`, e);
+            });
+            
             audioRefs.current.set(track.track_id, audio);
           }
         });
@@ -100,9 +129,8 @@ export default function AudioPlayer({
     }
     lastProcessedTime.current = currentTime;
 
-    console.log('🎵 AudioPlayer: Processing audio at time:', currentTime);
-    
     for (const chunk of stableChunks) {
+      
       // Process script lines
       for (const line of chunk.lines) {
         if (line.src && audioRefs.current.has(line.line_id)) {
@@ -110,16 +138,41 @@ export default function AudioPlayer({
           const shouldPlay = currentTime >= line.start && currentTime < line.start + line.duration;
           const audioKey = `line_${line.line_id}`;
           
-          if (shouldPlay && audio.paused && !processedAudio.current.has(audioKey)) {
-            console.log('🎵 Playing line:', line.line_id, 'at time:', currentTime - line.start);
-            audio.currentTime = currentTime - line.start;
+          if (shouldPlay && audio.paused && !processedAudio.current.has(audioKey) && isPlaying) {
+            // Preload audio if not ready
             if (audio.readyState < 2) {
+              console.log(`Preloading audio for line: ${line.line_id}`);
               audio.load();
+              // Wait for canplay event before playing
+              audio.addEventListener('canplay', () => {
+                audio.currentTime = currentTime - line.start;
+                const playPromise = audio.play();
+                if (playPromise !== undefined) {
+                  playPromise
+                    .then(() => {
+                      console.log(`Audio playing: ${line.line_id}`);
+                    })
+                    .catch((e) => {
+                      console.error('Line play error:', e);
+                    });
+                }
+              }, { once: true });
+            } else {
+              // Audio is ready, play immediately
+              audio.currentTime = currentTime - line.start;
+              const playPromise = audio.play();
+              if (playPromise !== undefined) {
+                playPromise
+                  .then(() => {
+                    console.log(`Audio playing: ${line.line_id}`);
+                  })
+                  .catch((e) => {
+                    console.error('Line play error:', e);
+                  });
+              }
             }
-            audio.play().catch((e) => console.error('Line play error:', e));
             processedAudio.current.add(audioKey);
           } else if (!shouldPlay && !audio.paused) {
-            console.log('🎵 Pausing line:', line.line_id);
             audio.pause();
             processedAudio.current.delete(audioKey);
           }
@@ -140,15 +193,22 @@ export default function AudioPlayer({
           const audioKey = `track_${track.track_id}`;
           
           if (shouldPlay && audio.paused && !processedAudio.current.has(audioKey)) {
-            console.log('🎵 Playing track:', track.track_id, track.type, 'at time:', currentTime - track.start);
-            audio.currentTime = currentTime - track.start;
+            // Preload track if not ready
             if (audio.readyState < 2) {
+              console.log(`Preloading track: ${track.track_id} (${track.type})`);
               audio.load();
+              // Wait for canplay event before playing
+              audio.addEventListener('canplay', () => {
+                audio.currentTime = currentTime - track.start;
+                audio.play().catch((e) => console.error('Track play error:', e));
+              }, { once: true });
+            } else {
+              // Track is ready, play immediately
+              audio.currentTime = currentTime - track.start;
+              audio.play().catch((e) => console.error('Track play error:', e));
             }
-            audio.play().catch((e) => console.error('Track play error:', e));
             processedAudio.current.add(audioKey);
           } else if (!shouldPlay && !audio.paused) {
-            console.log('🎵 Pausing track:', track.track_id, track.type);
             audio.pause();
             processedAudio.current.delete(audioKey);
           }

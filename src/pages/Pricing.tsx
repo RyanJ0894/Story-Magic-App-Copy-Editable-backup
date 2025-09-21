@@ -9,6 +9,8 @@ import { Link } from "react-router-dom";
 import { Header } from "@/components/layout/Header";
 import { EnterpriseContactModal, AcademicVerificationModal } from "@/components/layout/PlanSelectionModals";
 import { useToast } from "@/hooks/use-toast";
+
+
 export default function Pricing() {
   const [billingCycle, setBillingCycle] = useState<"monthly" | "annual">("monthly");
   const [isNewUser, setIsNewUser] = useState(false);

@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '../../../../supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { chunkText } from '@/features/timeline/lib/text-chunker';
 import { processChunks } from '@/features/timeline/services/chunk-api';

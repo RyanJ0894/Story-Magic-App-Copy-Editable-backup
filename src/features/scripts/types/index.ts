@@ -1,8 +1,8 @@
 
-import type { ChunkData } from '@/features/timeline/types';
+import type { ChunkProgressData } from '@/features/projects/project-chunk.type';
 
 export interface ScriptPlayerProps {
-  chunks: ChunkData[];                
+  chunks: ChunkProgressData[];                
   currentTime: number;
   isPlaying?: boolean;
   duration?: number;
@@ -18,7 +18,7 @@ export interface ScriptEditModalProps {
   isOpen: boolean;
   onClose: () => void;
   selectedItems: Set<string>;
-  chunks: ChunkData[];
+  chunks: ChunkProgressData[];
   onSave: (changes: any) => void;
 }
 

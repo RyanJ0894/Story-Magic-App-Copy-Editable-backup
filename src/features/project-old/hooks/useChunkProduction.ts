@@ -1,9 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { supabase } from '../../../../supabase/client';
 import { chunkText } from '@/features/timeline/lib/text-chunker';
-import type { TextChunk } from '@/features/timeline/lib/text-chunker';
-import type { ChunkData } from '@/features/timeline/types';
+import { toast } from 'sonner';
 
 export type ProjectChunk = {
   id: string;
@@ -32,7 +30,6 @@ export const CHUNK_KEY_FACTORY = {
 };
 
 export const useChunkProduction = (projectId?: string) => {
-  const { toast } = useToast();
   const queryClient = useQueryClient();
 
   // Get chunks for project
@@ -102,10 +99,8 @@ export const useChunkProduction = (projectId?: string) => {
       return savedChunks as ProjectChunk[];
     },
     onSuccess: (chunks) => {
-      toast({
-        title: "Chunks Created",
+      toast.success("Chunks Created", {
         description: `Created ${chunks.length} chunks with pending status!`,
-        variant: "default"
       });
       
       if (projectId) {
@@ -114,10 +109,8 @@ export const useChunkProduction = (projectId?: string) => {
     },
     onError: (error: any) => {
       console.error('❌ Chunk creation failed:', error);
-      toast({
-        title: "Chunk Creation Failed",
+      toast.error("Chunk Creation Failed", {
         description: error?.message || "Failed to create chunks",
-        variant: "destructive"
       });
     }
   });
@@ -201,10 +194,8 @@ export const useChunkProduction = (projectId?: string) => {
       console.log('✅ All chunks processed successfully!');
     },
     onSuccess: () => {
-      toast({
-        title: "Chunks Processed",
+      toast.success("Chunks Processed", {
         description: "All chunks have been processed successfully!",
-        variant: "default"
       });
       
       if (projectId) {
@@ -213,10 +204,8 @@ export const useChunkProduction = (projectId?: string) => {
     },
     onError: (error: any) => {
       console.error('❌ Chunk processing failed:', error);
-      toast({
-        title: "Chunk Processing Failed",
+      toast.error("Chunk Processing Failed", {
         description: error?.message || "Failed to process chunks",
-        variant: "destructive"
       });
     }
   });

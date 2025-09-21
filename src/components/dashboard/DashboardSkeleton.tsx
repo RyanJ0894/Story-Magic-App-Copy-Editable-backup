@@ -3,19 +3,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 export function DashboardSkeleton() {
   return (
     <div className="min-h-screen bg-background">
-      {/* Header Skeleton */}
-      <header className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-lg">
-        <div className="container mx-auto flex h-16 items-center justify-between px-4">
-          {/* Logo Skeleton */}
-          <Skeleton className="h-8 w-32" />
-          
-          {/* User Menu Skeleton */}
-          <div className="flex items-center gap-4">
-            <Skeleton className="h-8 w-8 rounded-full" />
-          </div>
-        </div>
-      </header>
-
       <div className="container mx-auto px-4 py-8">
         {/* Status Banner Skeleton */}
         <div className="mb-6">

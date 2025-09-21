@@ -1,7 +1,7 @@
 // src/integrations/filmDirectorApi.ts
 // Client-side helpers. Heavy lifting happens in Edge Functions.
 
-import { supabase } from "../integrations/supabase/client";
+import { supabase } from "./client";
 
 export type DirectorLine = {
   text: string;
@@ -11,6 +11,63 @@ export type DirectorLine = {
 
 export type DirectorJSON = {
   lines: DirectorLine[];
+};
+
+// New types for chunk-based audio generation
+export type ChunkLine = {
+  line_id: string;
+  text: string;
+  type: string;
+  start: number;
+  duration: number;
+  volume: number;
+  src: string | null;
+  tts_settings: {
+    style: string;
+    status: string;
+    language: string;
+    provider: string;
+    character: string | null;
+    voice_key: string;
+    stability: number;
+    similarity_boost: number;
+    credits_used: number;
+  };
+};
+
+export type AudioTrack = {
+  track_id: string;
+  label: string;
+  src: string | null;
+  start: number;
+  duration: number;
+  volume: number;
+  fade_in: number;
+  fade_out: number;
+};
+
+export type ChunkAudioDirection = {
+  music: AudioTrack[];
+  ambience: AudioTrack[];
+  sfx: AudioTrack[];
+};
+
+export type ChunkData = {
+  chunk_id: string;
+  scene_title: string;
+  lines: ChunkLine[];
+  audio_direction: ChunkAudioDirection;
+};
+
+export type ProjectInfo = {
+  id: string;
+  title: string;
+  created_at: string;
+};
+
+export type AudioGenerationRequest = {
+  project: ProjectInfo;
+  chunks: ChunkData;
 };
 
 // ---- create a project row and return the id ----
@@ -50,10 +107,20 @@ export async function runDirector(projectId: string, script: string): Promise<vo
   // Job triggered successfully, real-time listener will handle the result
 }
 
-// ---- call the audio generator Edge Function (optional) ----
+// ---- call the audio generator Edge Function (legacy) ----
 export async function runAudio(projectId: string, directorJSON: DirectorJSON): Promise<any> {
   const { data, error } = await supabase.functions.invoke("generate-audio", {
     body: { project_id: projectId, director: directorJSON },
+  });
+
+  if (error) throw new Error(`generate-audio error: ${error.message}`);
+  return data;
+}
+
+// ---- call the audio generator Edge Function for chunks ----
+export async function runAudioForChunk(request: AudioGenerationRequest): Promise<any> {
+  const { data, error } = await supabase.functions.invoke("generate-audio", {
+    body: request,
   });
 
   if (error) throw new Error(`generate-audio error: ${error.message}`);

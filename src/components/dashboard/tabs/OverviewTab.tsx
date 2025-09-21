@@ -4,7 +4,7 @@ import { Plus, BarChart3, Users, FolderOpen, MessageSquare, Share2, TrendingUp }
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "../../../../supabase/client";
 import { type UserRole, type RolePermissions } from "@/types/roles";
 
 interface OverviewTabProps {

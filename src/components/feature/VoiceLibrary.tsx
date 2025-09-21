@@ -130,7 +130,7 @@ export const VoiceLibrary = () => {
 
     try {
       // Use preview URL if available, otherwise generate a sample
-      let audioUrl = voice.preview_url
+      const audioUrl = voice.preview_url
 
       if (!audioUrl) {
         // If no preview URL, we could implement sample generation here

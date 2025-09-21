@@ -1,11 +1,11 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import type { TimelineEvent, AudioControls } from '../types';
-import type { ChunkData } from '@/features/timeline/types';
+import type { ChunkProgressData } from '@/features/projects/project-chunk.type';
 import { createTimelineEvents, groupEventsByTime, filterEventsByChunk, isItemActive, calculateProgress } from '../lib';
 import { DEFAULT_AUDIO_CONTROLS } from '../constants';
 
 export function useScriptPlayer(
-  chunks: ChunkData[],
+  chunks: ChunkProgressData[],
   currentTime: number,
   onLineChange?: (lineId: string) => void
 ) {
@@ -18,7 +18,18 @@ export function useScriptPlayer(
 
   // Create timeline events
   const timelineEvents = useMemo(() => {
-    return createTimelineEvents(chunks);
+    const events = createTimelineEvents(chunks);
+    console.log('🎬 useScriptPlayer - timelineEvents created:', {
+      chunksCount: chunks.length,
+      eventsCount: events.length,
+      events: events.slice(0, 3).map(e => ({
+        id: e.id,
+        type: e.type,
+        start: e.start,
+        duration: e.duration
+      }))
+    });
+    return events;
   }, [chunks]);
 
   // Group events by time
@@ -39,21 +50,46 @@ export function useScriptPlayer(
       }
     });
 
+    console.log('🎬 useScriptPlayer - active items update:', {
+      currentTime,
+      activeItemsCount: active.size,
+      activeItems: Array.from(active),
+      timelineEventsCount: timelineEvents.length
+    });
+
     setActiveItems(active);
 
-    // Auto scroll to active script line
+    // Auto scroll to active script line (only within ScriptPlayer)
     const activeScriptEvent = timelineEvents.find(event => 
       event.type === 'script' && active.has(event.id)
     );
     
-    if (activeScriptEvent) {
+    if (activeScriptEvent && scrollAreaRef.current) {
       setTimeout(() => {
         const element = document.getElementById(`event-${activeScriptEvent.id}`);
         if (element && scrollAreaRef.current) {
-          element.scrollIntoView({ 
-            behavior: 'smooth', 
-            block: 'center'
-          });
+          const scrollContainer = scrollAreaRef.current;
+          const containerRect = scrollContainer.getBoundingClientRect();
+          const elementRect = element.getBoundingClientRect();
+          
+          // Check if element is visible in container
+          const isVisible = elementRect.top >= containerRect.top && 
+                           elementRect.bottom <= containerRect.bottom;
+          
+          if (!isVisible) {
+            // Scroll within the container only
+            const scrollTop = scrollContainer.scrollTop;
+            const elementTop = element.offsetTop;
+            const containerHeight = scrollContainer.clientHeight;
+            const elementHeight = element.offsetHeight;
+            
+            const targetScrollTop = elementTop - (containerHeight / 2) + (elementHeight / 2);
+            
+            scrollContainer.scrollTo({
+              top: Math.max(0, targetScrollTop),
+              behavior: 'smooth'
+            });
+          }
         }
       }, 50);
     }

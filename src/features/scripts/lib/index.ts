@@ -1,10 +1,10 @@
 import type { TimelineEvent, AudioControls } from '../types';
-import type { ChunkData } from '@/features/timeline/types';
+import type { ChunkProgressData } from '@/features/projects/project-chunk.type';
 
 /**
  * Create timeline events from chunks data
  */
-export function createTimelineEvents(chunks: ChunkData[]): TimelineEvent[] {
+export function createTimelineEvents(chunks: ChunkProgressData[]): TimelineEvent[] {
   const events: TimelineEvent[] = [];
   
   chunks.forEach(chunk => {
@@ -79,7 +79,7 @@ export function groupEventsByTime(events: TimelineEvent[]): { time: number; even
 /**
  * Filter events by chunk
  */
-export function filterEventsByChunk(events: TimelineEvent[], chunk: ChunkData): TimelineEvent[] {
+export function filterEventsByChunk(events: TimelineEvent[], chunk: ChunkProgressData): TimelineEvent[] {
   return events.filter(event => {
     if (event.type === 'script') {
       return chunk.lines.some(line => line.line_id === event.id);
@@ -93,7 +93,7 @@ export function filterEventsByChunk(events: TimelineEvent[], chunk: ChunkData): 
 /**
  * Get selected events from chunks
  */
-export function getSelectedEvents(selectedItems: Set<string>, chunks: ChunkData[]): TimelineEvent[] {
+export function getSelectedEvents(selectedItems: Set<string>, chunks: ChunkProgressData[]): TimelineEvent[] {
   const events: TimelineEvent[] = [];
   
   chunks.forEach(chunk => {

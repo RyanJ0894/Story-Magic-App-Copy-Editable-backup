@@ -1,26 +1,24 @@
 import { useEffect, useMemo, useState } from "react";
-
 import { Header } from "@/components/layout/Header";
 import { HeroSection } from "@/components/layout/HeroSection";
 import { ScriptUpload } from "@/components/feature/ScriptUpload";
 import { VoiceCasting } from "@/components/feature/VoiceCasting";
 import { AudioPlayer } from "@/components/feature/AudioPlayer";
 import { FeedbackForm } from "@/components/layout/FeedbackForm";
-
-import { supabase } from "@/integrations/supabase/client";
-import { getDirectorJSON, generateAudio } from "@/integrations/filmDirectorApi";
+import { supabase } from "../../supabase/client";
+import { getDirectorJSON, generateAudio } from "../../supabase/filmDirectorApi";
+import { DirectorJSON } from "@/types/audio";
 
 async function selectLatestProjectId(userId: string | null) {
   if (!userId) {
     throw new Error("User must be authenticated to access projects");
   }
 
-  const base = supabase.from("user_projects").select("id, created_at", { head: false });
+  const base = supabase.from("projects").select("id, created_at", { head: false });
   const scoped = base.eq("user_id", userId);
 
   const orders = [
     { column: "created_at", ascending: false },
-    { column: "inserted_at", ascending: false },
     { column: "updated_at", ascending: false },
   ];
 
@@ -82,9 +80,15 @@ JOHN: Yeah, let’s keep moving.`,
 
         // 3) If none found or selection blocked by RLS, try to create one
         if (!projectId) {
+          const projectKey = `project_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
           const { data: inserted, error: insertErr } = await supabase
-            .from("user_projects")
-            .insert([{ user_id: userId, title: "Untitled Project", status: "draft" }])
+            .from("projects")
+            .insert([{ 
+              user_id: userId, 
+              title: "Untitled Project", 
+              status: "draft",
+              project_key: projectKey
+            }])
             .select("id")
             .single();
 
@@ -136,7 +140,7 @@ JOHN: Yeah, let’s keep moving.`,
       setDirectorOut(director);
 
       // 2) Generate audio
-      const audio = await generateAudio(effectiveProjectId, director);
+      const audio = await generateAudio(effectiveProjectId, director as unknown as DirectorJSON);
       setAudioOut(audio);
 
       setStatus("Done.");
@@ -179,9 +183,15 @@ JOHN: Yeah, let’s keep moving.`,
               }
               let pid = await selectLatestProjectId(userId);
               if (!pid) {
+                const projectKey = `project_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
                 const { data: inserted } = await supabase
-                  .from("user_projects")
-                  .insert([{ user_id: userId, title: "Untitled Project", status: "draft" }])
+                  .from("projects")
+                  .insert([{ 
+                    user_id: userId, 
+                    title: "Untitled Project", 
+                    status: "draft",
+                    project_key: projectKey
+                  }])
                   .select("id")
                   .single();
                 pid = inserted?.id ?? null;
@@ -204,7 +214,7 @@ JOHN: Yeah, let’s keep moving.`,
           <label className="block text-sm mb-1">Project ID (UUID)</label>
           <input
             className="w-full rounded-lg border border-white/10 bg-black/20 px-3 py-2"
-            placeholder="Paste a user_projects.id UUID"
+            placeholder="Paste a projects.id UUID"
             value={manualProjectId}
             onChange={(e) => setManualProjectId(e.target.value)}
           />

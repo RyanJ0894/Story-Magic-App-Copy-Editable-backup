@@ -184,7 +184,7 @@ export default function TimelineAudio({
                   <p className="text-muted-foreground mb-2">Waiting for chunks to load...</p>
                   <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
                     <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-                    <span>Loading chunks...</span>
+                    <span>Processing chunks...</span>
                   </div>
                 </div>
               </div>
@@ -192,7 +192,7 @@ export default function TimelineAudio({
             {hasLoadingChunks && (
               <div className="absolute top-2 right-2 bg-blue-500/90 text-white px-2 py-1 rounded text-xs flex items-center gap-1">
                 <div className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin"></div>
-                <span>Loading chunks...</span>
+                <span>Processing chunks...</span>
               </div>
             )}
           </div>

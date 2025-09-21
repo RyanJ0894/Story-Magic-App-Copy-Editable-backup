@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { runDirector } from "@/integrations/filmDirectorApi";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "../../supabase/client";
 
 export function useDirector() {
   const [directorJson, setDirectorJson] = useState<any | null>(null);

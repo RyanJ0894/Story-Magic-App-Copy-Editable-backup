@@ -1,6 +1,6 @@
 // src/features/project/hooks/useChunkProductionFixed.ts
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "../../../../supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import chunkData from "@/features/timeline/data/chunk.json";
 
