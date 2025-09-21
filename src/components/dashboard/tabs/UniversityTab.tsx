@@ -19,7 +19,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { VoiceLibrary } from "@/components/VoiceLibrary";
+import { VoiceLibrary } from "@/components/feature/VoiceLibrary";
 
 interface UniversityTabProps {
   projects: any[];

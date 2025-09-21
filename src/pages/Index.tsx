@@ -1,19 +1,15 @@
-// src/pages/Index.tsx
 import { useEffect, useMemo, useState } from "react";
 
-// --- your existing sections (keep these imports as-is) ---
-import { Header } from "@/components/Header";
-import { HeroSection } from "@/components/HeroSection";
-import { ScriptUpload } from "@/components/ScriptUpload";
-import { VoiceCasting } from "@/components/VoiceCasting";
-import { AudioPlayer } from "@/components/AudioPlayer";
-import { FeedbackForm } from "@/components/FeedbackForm";
+import { Header } from "@/components/layout/Header";
+import { HeroSection } from "@/components/layout/HeroSection";
+import { ScriptUpload } from "@/components/feature/ScriptUpload";
+import { VoiceCasting } from "@/components/feature/VoiceCasting";
+import { AudioPlayer } from "@/components/feature/AudioPlayer";
+import { FeedbackForm } from "@/components/layout/FeedbackForm";
 
-// --- integrations you already have ---
 import { supabase } from "@/integrations/supabase/client";
 import { getDirectorJSON, generateAudio } from "@/integrations/filmDirectorApi";
 
-// Utility: try different orders safely without crashing if column doesn't exist
 async function selectLatestProjectId(userId: string | null) {
   if (!userId) {
     throw new Error("User must be authenticated to access projects");
@@ -22,7 +18,6 @@ async function selectLatestProjectId(userId: string | null) {
   const base = supabase.from("user_projects").select("id, created_at", { head: false });
   const scoped = base.eq("user_id", userId);
 
-  // Try common timestamp columns in order; if error, fall back to a plain select
   const orders = [
     { column: "created_at", ascending: false },
     { column: "inserted_at", ascending: false },
@@ -62,7 +57,6 @@ JOHN: Yeah, let’s keep moving.`,
   );
   const [script, setScript] = useState<string>(defaultScript);
 
-  // Try to auto-resolve (or create) a project on mount
   useEffect(() => {
     let mounted = true;
 

@@ -3,6 +3,16 @@ import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { directorApi } from '../services/directorApi';
 
+
+export const AI_DIRECTOR_KEY_FACTORY = {
+  all: ["director"] as const,
+  lists: () => [...AI_DIRECTOR_KEY_FACTORY.all, "list"] as const,
+  list: () => [...AI_DIRECTOR_KEY_FACTORY.lists()] as const,
+  details: () => [...AI_DIRECTOR_KEY_FACTORY.all, "detail"] as const,
+  detail: (id: string) => [...AI_DIRECTOR_KEY_FACTORY.details(), id] as const,
+};
+
+
 export const useDirector = (projectId?: string) => {
   const { toast } = useToast();
   const [directorJson, setDirectorJson] = useState<any>(null);
@@ -11,7 +21,7 @@ export const useDirector = (projectId?: string) => {
 
   // Get director analysis for project
   const { data: existingDirectorJson } = useQuery({
-    queryKey: ['director', projectId],
+    queryKey: AI_DIRECTOR_KEY_FACTORY.detail(projectId!),
     queryFn: () => directorApi.getByProjectId(projectId!),
     enabled: !!projectId,
   });

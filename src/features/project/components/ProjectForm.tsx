@@ -1,7 +1,7 @@
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import PdfToText from "@/components/PdfToText";
+import PdfToText from "@/components/feature/PdfToText";
 import { UseFormRegister, FieldErrors } from "react-hook-form";
 
 interface ProjectFormData {

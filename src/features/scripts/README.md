@@ -17,8 +17,7 @@ src/features/scripts/
 ├── lib/
 │   ├── index.ts                  # Utility functions
 │   └── converters.ts             # Converters giữa các format
-├── types/
-│   └── index.ts                  # TypeScript types
+├-- types.ts                  # TypeScript types
 ├── constants/
 │   └── index.ts                  # Constants và options
 └── README.md                     # Documentation
@@ -38,7 +37,6 @@ import { useScriptPlayer } from "@/features/scripts/hooks/useScriptPlayer";
 import { useScriptEditModal } from "@/features/scripts/hooks/useScriptEditModal";
 
 // Types
-import type { ScriptPlayerProps } from "@/features/scripts/types";
 
 // Utils
 import { convertChunksToAiDirector } from "@/features/scripts/lib/converters";
@@ -98,15 +96,6 @@ const {
 - **Auto-scroll**: Tự động scroll đến active line
 - **Scene Separation**: Tách biệt theo scene
 
-## 🔄 Converters
-
-### ChunkData → AiDirectorJson
-
-```typescript
-import { convertChunksToAiDirector } from "@/features/scripts/lib/converters";
-
-const aiDirectorChunks = convertChunksToAiDirector(timelineChunks);
-```
 
 ## 🎨 Styling
 

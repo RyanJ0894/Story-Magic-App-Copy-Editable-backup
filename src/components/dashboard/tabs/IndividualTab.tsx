@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { VoiceLibrary } from "@/components/VoiceLibrary";
+import { VoiceLibrary } from "@/components/feature/VoiceLibrary";
 import { useVoiceCount } from "@/hooks/useVoiceCount";
 interface IndividualTabProps {
   projects: any[];
