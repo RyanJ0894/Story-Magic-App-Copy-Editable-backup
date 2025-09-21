@@ -2,15 +2,35 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { SignUpForm } from "@/features/auth/components/SignUpForm";
+import { EmailVerificationView } from "@/features/auth/views/EmailVerificationView";
 import { useAuthPage } from "@/features/auth/hooks/useAuthPage";
 import heroImage from "@/assets/hero-cinema.jpg";
+import { useState } from "react";
 
 export const SignUpView = () => {
   const {
     authState,
+    isLoading,
     handleSignUp,
+    handleResendVerification,
     toggleAuthMode,
   } = useAuthPage();
+  
+  const [userEmail, setUserEmail] = useState("");
+
+  // If email was sent, show verification view
+  if (authState.emailSent || authState.emailVerified) {
+    return (
+      <EmailVerificationView
+        email={userEmail}
+        resendCooldown={authState.resendCooldown}
+        onResendVerification={handleResendVerification}
+        isLoading={isLoading}
+        error={authState.error}
+        emailVerified={authState.emailVerified}
+      />
+    );
+  }
 
   return (
     <div className="relative min-h-screen flex items-center justify-center p-4 overflow-hidden">
@@ -48,8 +68,11 @@ export const SignUpView = () => {
 
           <CardContent>
             <SignUpForm
-              onSubmit={(data) => handleSignUp(data.email, data.password)}
-              loading={authState.loading}
+              onSubmit={(data) => {
+                setUserEmail(data.email);
+                handleSignUp(data.email, data.password);
+              }}
+              loading={isLoading}
               error={authState.error}
               invitationToken={authState.invitationToken}
             />

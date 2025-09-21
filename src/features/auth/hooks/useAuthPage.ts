@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
-import { useAuth, useSignIn, useSignUp, useResetPassword, useUpdatePassword } from "../auth";
+import { useAuth, useSignIn, useSignUp, useResetPassword, useUpdatePassword, useResendVerification } from "../auth";
 import { parseUrlParams, getAuthErrorMessage, getRedirectUrl } from "../utils";
 import { AuthState } from "../auth.type";
 
@@ -13,6 +13,9 @@ export const useAuthPage = () => {
     error: "",
     resetSent: false,
     invitationToken: null,
+    emailSent: false,
+    resendCooldown: 0,
+    emailVerified: false,
   });
 
   const navigate = useNavigate();
@@ -25,6 +28,7 @@ export const useAuthPage = () => {
   const signUpMutation = useSignUp();
   const resetPasswordMutation = useResetPassword();
   const updatePasswordMutation = useUpdatePassword();
+  const resendVerificationMutation = useResendVerification();
 
   useEffect(() => {
     const params = parseUrlParams(location.search);
@@ -41,6 +45,16 @@ export const useAuthPage = () => {
       newState.isPasswordReset = true;
     }
     
+    // Check if email was verified
+    if (params?.verified === "true") {
+      newState.emailVerified = true;
+      newState.emailSent = false;
+      toast({
+        title: "Email verified!",
+        description: "Your email has been successfully verified. You can now sign in."
+      });
+    }
+    
     if (params.mode === "signup" || path.endsWith("/signup")) {
       newState.isLogin = false;
     } else if (params.mode === "login" || path.endsWith("/signin")) {
@@ -48,13 +62,27 @@ export const useAuthPage = () => {
     }
     
     setAuthState(newState);
-  }, [location.search, location.pathname]);
+  }, [location.search, location.pathname, toast]);
 
   useEffect(() => {
     if (!authLoading && user) {
       navigate("/dashboard");
     }
   }, [authLoading, user, navigate]);
+
+  // Countdown timer for resend email
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (authState.resendCooldown > 0) {
+      interval = setInterval(() => {
+        setAuthState(prev => ({
+          ...prev,
+          resendCooldown: prev.resendCooldown - 1
+        }));
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [authState.resendCooldown]);
 
   const handleSignIn = async (email: string, password: string) => {
     try {
@@ -74,15 +102,21 @@ export const useAuthPage = () => {
 
   const handleSignUp = async (email: string, password: string) => {
     try {
-      const redirectUrl = getRedirectUrl("/");
+      const redirectUrl = getRedirectUrl("/signup?verified=true");
       await signUpMutation.mutateAsync({ data: { email, password }, redirectUrl });
-      toast({ title: "Account created!", description: "Welcome to Story Magic!" });
       
-      if (authState.invitationToken) {
-        navigate(`/accept-invitation?token=${authState.invitationToken}`);
-      } else {
-        navigate("/pricing?newuser=true");
-      }
+      // Show email verification message
+      setAuthState(prev => ({
+        ...prev,
+        emailSent: true,
+        resendCooldown: 60, // 60 seconds cooldown
+        error: ""
+      }));
+      
+      toast({ 
+        title: "Check your email!", 
+        description: "We've sent you a verification link. Please check your email to complete registration." 
+      });
     } catch (error: any) {
       const message = getAuthErrorMessage(error);
       setAuthState(prev => ({ 
@@ -127,22 +161,48 @@ export const useAuthPage = () => {
     }
   };
 
+  const handleResendVerification = useCallback(async (email: string) => {
+    if (authState.resendCooldown > 0) return;
+    
+    try {
+      const redirectUrl = getRedirectUrl("/signup?verified=true");
+      await resendVerificationMutation.mutateAsync({ email, redirectUrl });
+      
+      setAuthState(prev => ({
+        ...prev,
+        resendCooldown: 60,
+        error: ""
+      }));
+      
+      toast({
+        title: "Email sent again!",
+        description: "We've sent another verification email to your inbox."
+      });
+    } catch (error: any) {
+      const message = getAuthErrorMessage(error);
+      setAuthState(prev => ({ ...prev, error: message }));
+    }
+  }, [authState.resendCooldown, resendVerificationMutation, toast]);
+
   const toggleAuthMode = () => {
-    setAuthState(prev => ({
-      ...prev,
-      isLogin: !prev.isLogin,
-      error: "",
-      resetSent: false,
-    }));
+    if (authState.isLogin) {
+      // Switch to sign up
+      navigate("/signup");
+    } else {
+      // Switch to sign in
+      navigate("/signin");
+    }
   };
 
   return {
     authState,
     authLoading,
+    isLoading: authLoading || signInMutation.isPending || signUpMutation.isPending || resetPasswordMutation.isPending || updatePasswordMutation.isPending || resendVerificationMutation.isPending,
     handleSignIn,
     handleSignUp,
     handleForgotPassword,
     handlePasswordReset,
+    handleResendVerification,
     toggleAuthMode,
   };
 };

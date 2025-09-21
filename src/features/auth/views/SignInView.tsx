@@ -8,6 +8,7 @@ import heroImage from "@/assets/hero-cinema.jpg";
 export const SignInView = () => {
   const {
     authState,
+    isLoading,
     handleSignIn,
     handleForgotPassword,
     toggleAuthMode,
@@ -48,7 +49,7 @@ export const SignInView = () => {
             <SignInForm
               onSubmit={(data) => handleSignIn(data.email, data.password)}
               onForgotPassword={handleForgotPassword}
-              loading={authState.loading}
+              loading={isLoading}
               error={authState.error}
             />
             

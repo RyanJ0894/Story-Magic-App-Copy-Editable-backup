@@ -15,6 +15,14 @@ export const authApi = {
       options: redirectUrl ? { emailRedirectTo: redirectUrl } : undefined,
     });
   },
+
+  resendVerification: async (email: string, redirectUrl: string) => {
+    return await supabase.auth.resend({
+      type: 'signup',
+      email: email,
+      options: { emailRedirectTo: redirectUrl }
+    });
+  },
   
   resetPassword: async (email: string, redirectUrl: string) => {
     return await supabase.auth.resetPasswordForEmail(email, {

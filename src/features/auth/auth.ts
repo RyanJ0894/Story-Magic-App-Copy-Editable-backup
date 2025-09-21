@@ -79,6 +79,16 @@ export const useUpdatePassword = () => {
   });
 };
 
+// Resend verification mutation
+export const useResendVerification = () => {
+  return useMutation({
+    mutationFn: async ({ email, redirectUrl }: { email: string; redirectUrl: string }) => {
+      const { error } = await authApi.resendVerification(email, redirectUrl);
+      if (error) throw error;
+    },
+  });
+};
+
 // Sign out mutation
 export const useSignOut = () => {
   const queryClient = useQueryClient();

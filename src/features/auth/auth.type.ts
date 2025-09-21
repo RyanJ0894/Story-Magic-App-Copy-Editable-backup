@@ -20,5 +20,8 @@ export interface AuthState {
   error: string;
   resetSent: boolean;
   invitationToken: string | null;
+  emailSent: boolean;
+  resendCooldown: number;
+  emailVerified: boolean;
 }
 

@@ -27,5 +27,6 @@ export const parseUrlParams = (search: string) => {
     type: params.get("type"),
     accessToken: params.get("access_token"),
     invitation: params.get("invitation"),
+    verified: params.get("verified"),
   };
 };

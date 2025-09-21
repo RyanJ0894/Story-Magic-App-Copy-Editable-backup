@@ -7,6 +7,7 @@ import heroImage from "@/assets/hero-cinema.jpg";
 export const ResetPasswordView = () => {
   const {
     authState,
+    isLoading,
     handlePasswordReset,
   } = useAuthPage();
 
@@ -44,7 +45,7 @@ export const ResetPasswordView = () => {
           <CardContent>
             <ResetPasswordForm
               onSubmit={(data) => handlePasswordReset(data.newPassword, data.confirmPassword)}
-              loading={authState.loading}
+              loading={isLoading}
               error={authState.error}
             />
           </CardContent>
