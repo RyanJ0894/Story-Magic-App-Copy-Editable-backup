@@ -1,5 +1,6 @@
 import { CreateProjectData, Project, ProjectWithDetails } from "../project.type";
 import { supabase } from "../../../../supabase/client";
+import { runDirector } from "../../../../supabase/filmDirectorApi";
 
 export const projectApi = {
   // Get all projects for current user
@@ -101,5 +102,17 @@ export const projectApi = {
 
     if (error) throw error;
     return data as Project;
+  },
+
+  // Invoke AI Director for a specific chunk with additional metadata
+  invokeAiDirector: async (
+    projectId: string, 
+    chunkKey: string, 
+    script: string, 
+    chunkIndex: number, 
+    start: number, 
+    duration: number
+  ): Promise<void> => {
+    await runDirector(projectId, chunkKey, script, chunkIndex, start, duration);
   },
 };

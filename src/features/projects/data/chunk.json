@@ -1,0 +1,113 @@
+{
+  "chunk_id": "chunk_proj001_001",
+  "project_id": "proj_001",
+  "scene_title": "EXT. PARK – DAY",
+  "version": 1,
+  "lines": [
+    {
+      "src": "https://bcuhyyyerxwgkrkbrqbs.supabase.co/storage/v1/object/public/audio/projects/5a78722c-7997-40a8-be7c-270084532047/chunk_5a78722c-7997-40a8-be7c-270084532047_2e74f426-bc38-4b82-b881-25d8664287df_1_1_1758498355930.mp3",
+      "text": "Exterior. Park. Day.",
+      "type": "narration",
+      "start": 0,
+      "volume": 1,
+      "line_id": "chunk_5a78722c-7997-40a8-be7c-270084532047_2e74f426-bc38-4b82-b881-25d8664287df_1_1",
+      "duration": 2.5,
+      "fade_in": 0,
+      "fade_out": 0,
+      "tts_settings": {
+        "style": "neutral, steady",
+        "status": "done",
+        "language": "en-US",
+        "provider": "elevenlabs",
+        "character": null,
+        "stability": 0.8,
+        "voice_key": "MF3mGyEYCl7XYWbV9V6O",
+        "credits_used": 0,
+        "similarity_boost": 0.85
+      }
+    },
+    {
+      "src": "https://bcuhyyyerxwgkrkbrqbs.supabase.co/storage/v1/object/public/audio/projects/5a78722c-7997-40a8-be7c-270084532047/chunk_5a78722c-7997-40a8-be7c-270084532047_2e74f426-bc38-4b82-b881-25d8664287df_1_2_1758498356122.mp3",
+      "text": "A gentle breeze moves through the trees as Mary and John walk.",
+      "type": "narration",
+      "start": 2.5,
+      "volume": 1,
+      "line_id": "chunk_5a78722c-7997-40a8-be7c-270084532047_2e74f426-bc38-4b82-b881-25d8664287df_1_2",
+      "duration": 3,
+      "fade_in": 0,
+      "fade_out": 0,
+      "tts_settings": {
+        "style": "gentle, observational",
+        "status": "done",
+        "language": "en-US",
+        "provider": "elevenlabs",
+        "character": null,
+        "stability": 0.8,
+        "voice_key": "MF3mGyEYCl7XYWbV9V6O",
+        "credits_used": 0,
+        "similarity_boost": 0.85
+      }
+    },
+    {
+      "src": "https://bcuhyyyerxwgkrkbrqbs.supabase.co/storage/v1/object/public/audio/projects/5a78722c-7997-40a8-be7c-270084532047/chunk_5a78722c-7997-40a8-be7c-270084532047_2e74f426-bc38-4b82-b881-25d8664287df_1_3_1758498355858.mp3",
+      "text": "It's peaceful here.",
+      "type": "dialogue",
+      "start": 5.5,
+      "volume": 1,
+      "line_id": "chunk_5a78722c-7997-40a8-be7c-270084532047_2e74f426-bc38-4b82-b881-25d8664287df_1_3",
+      "duration": 2.5,
+      "fade_in": 0,
+      "fade_out": 0,
+      "tts_settings": {
+        "style": "soft, reflective",
+        "status": "done",
+        "language": "en-US",
+        "provider": "elevenlabs",
+        "character": "MARY",
+        "stability": 0.8,
+        "voice_key": "EXAVITQu4vr4xnSDxMaL",
+        "credits_used": 0,
+        "similarity_boost": 0.85
+      }
+    },
+    {
+      "src": "https://bcuhyyyerxwgkrkbrqbs.supabase.co/storage/v1/object/public/audio/projects/5a78722c-7997-40a8-be7c-270084532047/chunk_5a78722c-7997-40a8-be7c-270084532047_2e74f426-bc38-4b82-b881-25d8664287df_1_4_1758498356142.mp3",
+      "text": "Yeah, let's keep moving.",
+      "type": "dialogue",
+      "start": 8,
+      "volume": 1,
+      "line_id": "chunk_5a78722c-7997-40a8-be7c-270084532047_2e74f426-bc38-4b82-b881-25d8664287df_1_4",
+      "duration": 2.5,
+      "fade_in": 0,
+      "fade_out": 0,
+      "tts_settings": {
+        "style": "calm, steady",
+        "status": "done",
+        "language": "en-US",
+        "provider": "elevenlabs",
+        "character": "JOHN",
+        "stability": 0.8,
+        "voice_key": "TxGEqnHWrfWFTfGW9XjX",
+        "credits_used": 0,
+        "similarity_boost": 0.85
+      }
+    }
+  ],
+  "audio_direction": {
+    "sfx": [],
+    "music": [],
+    "ambience": [
+      {
+        "track_id": "ambience/a_forest_calm_01.wav",
+        "label": "Calm Forest Ambience",
+        "src": "https://bcuhyyyerxwgkrkbrqbs.supabase.co/storage/v1/object/public/story-magic-assets/ambience/a_forest_calm_01.wav",
+        "start": 0,
+        "duration": 12,
+        "volume": 0.25,
+        "fade_in": 1.5,
+        "fade_out": 2
+      }
+    ]
+  },
+  "director_notes": "Ambience and gentle music create a peaceful, open-air feeling. Cat meow is a sfx for the cat. Battlefield is a ambience for the battlefield."
+}

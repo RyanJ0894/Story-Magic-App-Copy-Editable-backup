@@ -1,7 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { useProjectChunks } from "../projectChunks";
-import { ProjectChunk } from "../project-chunk.type";
 
 export const useChunkPolling = (projectId: string, enabled: boolean = true) => {
   const queryClient = useQueryClient();

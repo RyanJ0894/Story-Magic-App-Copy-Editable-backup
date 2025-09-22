@@ -1,203 +1,114 @@
 import { useState, useEffect } from "react";
 import ScriptPlayer from "./ScriptPlayer";
 import AudioPlayer from "./AudioPlayer";
-import type { ChunkData } from "@/features/timeline/types";
+import { ChunkProgressData } from "@/features/projects/project-chunk.type";
+import chunk from "@/features/projects/data/chunk.json";
 
-const demoChunks: ChunkData[] = [
+const demoChunks: ChunkProgressData[] = [
   {
-    chunk_id: "chunk_demo_001",
-    project_id: "proj_demo",
-    scene_title: "EXT. PARK – DAY",
-    version: 1.0,
-    director_notes: "Demo chunk for testing audio playback",
-    lines: [
-      {
-        line_id: "line_demo_001",
-        type: "narration",
-        text: "Exterior. Park. Day. A gentle breeze moves through the trees as Mary and John walk along the winding path.",
-        tts_settings: {
-          provider: "elevenlabs",
-          voice_key: "narrator",
-          style: "neutral",
-          character: "Narrator",
-          language: "en-US",
-          speed: 1.0,
-          pitch: 0,
-          status: "completed",
-          credits_used: 10
-        },
-        src: "https://bcuhyyyerxwgkrkbrqbs.supabase.co/storage/v1/object/public/audio/projects/0a413ef3-320e-4200-98cd-1cf2b9e22a0e/line_1_1757524910012.mp3",
-        start: 1,
-        duration: 5,
-        volume: 0.9,
-        fade_in: 0,
-        fade_out: 0
-      },
-      {
-        line_id: "line_demo_002",
-        type: "dialogue",
-        text: "It's so peaceful here, John. I could stay forever.",
-        tts_settings: {
-          provider: "elevenlabs",
-          voice_key: "female_soft",
-          style: "soft",
-          character: "MARY",
-          language: "en-US",
-          speed: 1.0,
-          pitch: 0,
-          status: "completed",
-          credits_used: 8
-        },
-        src: null, // No audio for this line
-        start: 6,
-        duration: 3,
-        volume: 1.0,
-        fade_in: 0,
-        fade_out: 0
-      },
-      {
-        line_id: "line_demo_003",
-        type: "dialogue",
-        text: "I know what you mean. But we should keep moving.",
-        tts_settings: {
-          provider: "elevenlabs",
-          voice_key: "male_deep",
-          style: "calm",
-          character: "JOHN",
-          language: "en-US",
-          speed: 1.0,
-          pitch: 0,
-          status: "completed",
-          credits_used: 8
-        },
-        src: null, // No audio for this line
-        start: 9,
-        duration: 3,
-        volume: 1.0,
-        fade_in: 0,
-        fade_out: 0
-      }
-    ],
-    audio_direction: {
-      music: [
-        {
-          track_id: "music_001",
-          label: "Piano Soft Mysterious",
-          src: "https://bcuhyyyerxwgkrkbrqbs.supabase.co/storage/v1/object/public/story-magic-assets/music/m_paino_soft_mysterious_01.mp3",
-          start: 0,
-          duration: 15,
-          volume: 0.4,
-          fade_in: 1,
-          fade_out: 1
-        }
-      ],
-      ambience: [
-        {
-          track_id: "amb_001",
-          label: "Soul Jazz Love",
-          src: "https://bcuhyyyerxwgkrkbrqbs.supabase.co/storage/v1/object/public/story-magic-assets/music/m_soul_jazz_love_02.mp3",
-          start: 0,
-          duration: 15,
-          volume: 0.3,
-          fade_in: 0.5,
-          fade_out: 0.5
-        }
-      ],
-      sfx: [
-        {
-          track_id: "sfx_001",
-          label: "Cat Meow",
-          src: "https://bcuhyyyerxwgkrkbrqbs.supabase.co/storage/v1/object/public/story-magic-assets/sfx/s_cat_meow_01.wav",
-          start: 4,
-          duration: 0.5,
-          volume: 0.5,
-          fade_in: 0.2,
-          fade_out: 0
-        }
-      ]
-    }
+    chunk_id: chunk.chunk_id,
+    project_id: chunk.project_id,
+    scene_title: chunk.scene_title,
+    version: chunk.version,
+    director_notes: chunk.director_notes,
+    lines: chunk.lines,
+    audio_direction: chunk.audio_direction
   }
 ];
 
-export default function ScriptPlayerDemo() {
-  const [currentTime, setCurrentTime] = useState(0);
+interface ScriptPlayerDemoProps {
+  chunks: ChunkProgressData[];
+  isVisible: boolean;
+}
+
+export default function ScriptPlayerDemo({ chunks, isVisible }: ScriptPlayerDemoProps) {
+  const [selectedChunk, setSelectedChunk] = useState<ChunkProgressData | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [duration, setDuration] = useState(15);
+  const [currentTime, setCurrentTime] = useState(0);
 
-  // Simple timer for demo
+  // Use provided chunks or fallback to demo chunks
+  const availableChunks = chunks.length > 0 ? chunks : demoChunks;
+
   useEffect(() => {
-    let interval: NodeJS.Timeout;
-    
-    if (isPlaying) {
-      interval = setInterval(() => {
-        setCurrentTime(prev => {
-          const newTime = prev + 0.1;
-          if (newTime >= duration) {
-            setIsPlaying(false);
-            return duration;
-          }
-          return newTime;
-        });
-      }, 100);
+    if (availableChunks.length > 0 && !selectedChunk) {
+      setSelectedChunk(availableChunks[0]);
     }
+  }, [availableChunks, selectedChunk]);
 
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [isPlaying, duration]);
-
-  const handleSeek = (time: number) => {
-    setCurrentTime(time);
+  const handleChunkSelect = (chunk: ChunkProgressData) => {
+    setSelectedChunk(chunk);
+    setIsPlaying(false);
+    setCurrentTime(0);
   };
 
   const handlePlayPause = (playing: boolean) => {
     setIsPlaying(playing);
   };
 
-  const handleLineChange = (lineId: string) => {
-    console.log("Active line changed:", lineId);
+  const handleSeek = (time: number) => {
+    setCurrentTime(time);
   };
 
-  const handleVoiceChange = (lineId: string, voiceKey: string) => {
-    console.log("Voice changed:", lineId, voiceKey);
-  };
-
-  const handleVolumeChange = (trackId: string, volume: number) => {
-    console.log("Volume changed:", trackId, volume);
-  };
-
-  const handleSfxChange = (trackId: string, sfxKey: string) => {
-    console.log("SFX changed:", trackId, sfxKey);
-  };
+  if (!isVisible) {
+    return null;
+  }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold mb-4">Script Player Demo</h2>
-        <p className="text-muted-foreground mb-4">
-          Demo với audio URLs thực tế để test playback
-        </p>
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-semibold">Script Player Demo</h3>
+        <div className="text-sm text-gray-600">
+          {availableChunks.length} chunk(s) available
+        </div>
       </div>
 
-      {/* Audio Player - handles actual audio playback */}
-      <AudioPlayer 
-        chunks={demoChunks}
-        currentTime={currentTime}
-        isPlaying={isPlaying}
-      />
+      {/* Chunk Selection */}
+      <div className="space-y-2">
+        <label className="text-sm font-medium">Select Chunk:</label>
+        <select
+          value={selectedChunk?.chunk_id || ""}
+          onChange={(e) => {
+            const chunk = availableChunks.find(c => c.chunk_id === e.target.value);
+            if (chunk) handleChunkSelect(chunk);
+          }}
+          className="w-full p-2 border border-gray-300 rounded-lg"
+        >
+          {availableChunks.map((chunk) => (
+            <option key={chunk.chunk_id} value={chunk.chunk_id}>
+              {chunk.scene_title} ({chunk.lines.length} lines)
+            </option>
+          ))}
+        </select>
+      </div>
 
-      <ScriptPlayer 
-        chunks={demoChunks} 
-        currentTime={currentTime}
-        isPlaying={isPlaying}
-        duration={duration}
-        onSeek={handleSeek}
-        onPlayPause={handlePlayPause}
-        onLineChange={handleLineChange}
-        onVoiceChange={handleVoiceChange}
-        onVolumeChange={handleVolumeChange}
-        onSfxChange={handleSfxChange}
-      />
+      {/* Script Player */}
+      {selectedChunk && (
+        <div className="space-y-4">
+          <div className="p-4 bg-gray-50 rounded-lg">
+            <h4 className="font-medium mb-2">{selectedChunk.scene_title}</h4>
+            <p className="text-sm text-gray-600 mb-3">
+              {selectedChunk.director_notes}
+            </p>
+            <ScriptPlayer
+              chunks={[selectedChunk]}
+              currentTime={currentTime}
+              isPlaying={isPlaying}
+              onSeek={handleSeek}
+              onPlayPause={handlePlayPause}
+            />
+          </div>
+
+          {/* Audio Player */}
+          <div className="p-4 bg-blue-50 rounded-lg">
+            <h4 className="font-medium mb-2">Audio Preview</h4>
+            <AudioPlayer
+              chunks={[selectedChunk]}
+              currentTime={currentTime}
+              isPlaying={isPlaying}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

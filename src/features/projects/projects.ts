@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { projectApi } from './services/projectApi';
+import { audioGenerationApi, AudioGenerationRequest } from './services/audioGenerationApi';
 import { CreateProjectData } from './project.type';
 
 export const PROJECTS_KEY_FACTORY = {
@@ -89,3 +90,11 @@ export const useUpdateProjectStatus = () => {
     },
   });
 };
+
+// Generate project audio mutation
+export const useGenerateProjectAudio = () => {
+  return useMutation({
+    mutationFn: (request: AudioGenerationRequest) => audioGenerationApi.generateProjectAudio(request),
+  });
+};
+

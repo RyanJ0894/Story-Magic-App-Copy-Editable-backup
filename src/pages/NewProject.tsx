@@ -87,18 +87,18 @@ export default function NewProject() {
 
       {/* Processing Status */}
       {isProcessing && processingStep && (
-        <div className="mt-6 p-4 border border-blue-200 rounded-lg">
+        <div className="mt-6 p-4 border border-white/10 rounded-lg">
           <div className="flex items-center gap-3">
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-            <p className="text-blue-800 font-medium">{processingStep}</p>
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2"></div>
+            <p className="font-medium">{processingStep}</p>
           </div>
         </div>
       )}
 
       {/* Error Display */}
       {createError && (
-        <div className="mt-6 p-4 border border-red-200 rounded-lg mb-6">
-          <p className="text-red-800">Error: {createError.message}</p>
+        <div className="mt-6 p-4 border border-white/10 rounded-lg mb-6">
+          <p className="text-destructive">Error: {createError.message}</p>
         </div>
       )}
     </div>

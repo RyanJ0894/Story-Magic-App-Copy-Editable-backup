@@ -93,7 +93,7 @@ export const ChunkProgress = ({ projectId, script, onChunksChange, onComplete }:
   // Create chunk states for progress bar
   const chunkStates = polledChunks.map(chunk => ({
     chunkId: chunk.chunk_key,
-    isLoading: chunk.status === 'pending',
+    isLoading: chunk.status === 'pending' || chunk.status === 'processing',
     data: chunk.status === 'done' ? chunk : undefined,
     error: chunk.status === 'error' ? `Chunk ${chunk.chunk_key} failed` : undefined
   }));
@@ -135,8 +135,8 @@ export const ChunkProgress = ({ projectId, script, onChunksChange, onComplete }:
 
   return (
     <div className="space-y-6">
-      {/* Progress Bar */}
-      {totalChunks > 0 && (
+      {/* Progress Bar - Always show when we have chunks or are creating/processing */}
+      {(totalChunks > 0 || isCreatingChunks || isProcessingChunks) && (
         <ChunkProgressBar
           chunkRefs={chunkRefs}
           chunkStates={chunkStates}
@@ -157,15 +157,34 @@ export const ChunkProgress = ({ projectId, script, onChunksChange, onComplete }:
         </div>
       )}
 
+      {/* Initial Loading State - When no chunks yet but creating/processing */}
+      {totalChunks === 0 && (isCreatingChunks || isProcessingChunks) && (
+        <div className="p-6 text-center border rounded-lg bg-muted/30">
+          <div className="text-lg font-semibold mb-2">
+            {isCreatingChunks ? "Creating Chunks..." : "Processing Chunks..."}
+          </div>
+          <div className="text-muted-foreground mb-4">
+            {isCreatingChunks 
+              ? "Breaking script into chunks..."
+              : "Invoking AI Director for processing..."
+            }
+          </div>
+          <div className="text-sm text-muted-foreground">
+            Please wait while we prepare your script
+          </div>
+        </div>
+      )}
 
-      {/* Loading State */}
-      {totalChunks > 0 && loadedChunks.length === 0 && (
+      {/* Processing State - When chunks exist but none completed yet */}
+      {totalChunks > 0 && loadedChunks.length === 0 && !isCreatingChunks && !isProcessingChunks && (
         <div className="p-6 text-center border rounded-lg bg-muted/30">
           <div className="text-lg font-semibold mb-2">Processing Script...</div>
           <div className="text-muted-foreground mb-4">
             {processingChunks.length > 0
               ? `Processing ${processingChunks.length} chunk(s)...`
-              : `Waiting for ${pendingChunks.length} chunk(s) to start processing...`
+              : pendingChunks.length > 0
+              ? `Waiting for ${pendingChunks.length} chunk(s) to start processing...`
+              : "Initializing processing..."
             }
           </div>
           <div className="text-sm text-muted-foreground">

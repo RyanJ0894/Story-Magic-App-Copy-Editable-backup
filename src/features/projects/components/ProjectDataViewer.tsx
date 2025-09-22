@@ -131,7 +131,7 @@ export function ProjectDataViewer({
               </Button>
             </div>
             
-            <div className="border rounded-lg overflow-hidden vscode-json-theme">
+            <div className="border rounded-lg overflow-hidden vscode-json-theme thin-scrollbar">
               <JsonView
                 value={exportData}
                 style={{

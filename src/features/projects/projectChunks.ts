@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { projectChunksApi } from './services/projectChunksApi';
+import { projectApi } from './services/projectApi';
 
 export const PROJECT_CHUNKS_KEY_FACTORY = {
   all: ["project-chunks"] as const,
@@ -110,6 +111,26 @@ export const useDeleteProjectChunks = () => {
       // Invalidate related queries
       queryClient.invalidateQueries({ queryKey: PROJECT_CHUNKS_KEY_FACTORY.project(projectId) });
       queryClient.invalidateQueries({ queryKey: PROJECT_CHUNKS_KEY_FACTORY.lists() });
+    },
+  });
+};
+
+// Invoke AI Director mutation
+export const useInvokeAiDirector = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ projectId, chunkKey, script, chunkIndex, start, duration }: { 
+      projectId: string; 
+      chunkKey: string; 
+      script: string;
+      chunkIndex: number;
+      start: number;
+      duration: number;
+    }) => projectApi.invokeAiDirector(projectId, chunkKey, script, chunkIndex, start, duration),
+    onSuccess: (_, { projectId }) => {
+      // Invalidate project chunks to trigger polling updates
+      queryClient.invalidateQueries({ queryKey: PROJECT_CHUNKS_KEY_FACTORY.project(projectId) });
     },
   });
 };

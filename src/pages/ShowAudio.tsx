@@ -1,8 +1,8 @@
 import React from "react";
 import TimelineAudio from "@/features/timeline/components/TimelineAudio";
 import type { ChunkData, TimelineItem } from "@/features/timeline/types";
-import chunk from "@/features/timeline/data/chunk.json";
-import project from "@/features/timeline/data/project.json";
+import chunk from "@/features/projects/data/chunk.json";
+import project from "@/features/projects/data/project.json";
 
 // Types for chunk loading
 type ChunkRef = {

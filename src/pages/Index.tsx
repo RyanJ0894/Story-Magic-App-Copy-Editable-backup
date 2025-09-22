@@ -5,9 +5,11 @@ import { ScriptUpload } from "@/components/feature/ScriptUpload";
 import { VoiceCasting } from "@/components/feature/VoiceCasting";
 import { AudioPlayer } from "@/components/feature/AudioPlayer";
 import { FeedbackForm } from "@/components/layout/FeedbackForm";
+import ChunkProgressDemo from "@/components/demo/ChunkProgressDemo";
+import ScriptPlayerDemo from "@/components/demo/ScriptPlayerDemo";
 import { supabase } from "../../supabase/client";
-import { getDirectorJSON, generateAudio } from "../../supabase/filmDirectorApi";
-import { DirectorJSON } from "@/types/audio";
+import { getDirectorJSON, generateAudio, DirectorJSON } from "../../supabase/filmDirectorApi";
+import { ChunkProgressData } from "@/features/projects/project-chunk.type";
 
 async function selectLatestProjectId(userId: string | null) {
   if (!userId) {
@@ -44,6 +46,10 @@ function AIDirectorDebugPanel() {
 
   const [directorOut, setDirectorOut] = useState<any>(null);
   const [audioOut, setAudioOut] = useState<any>(null);
+  
+  // Demo state
+  const [demoChunks, setDemoChunks] = useState<ChunkProgressData[]>([]);
+  const [showDemo, setShowDemo] = useState(false);
 
   const defaultScript = useMemo(
     () =>
@@ -136,7 +142,7 @@ JOHN: Yeah, let’s keep moving.`,
       }
 
       // 1) Analyze with AI Director
-      const director = await getDirectorJSON(script, effectiveProjectId);
+      const director = await getDirectorJSON(script, effectiveProjectId, "1");
       setDirectorOut(director);
 
       // 2) Generate audio
@@ -153,12 +159,30 @@ JOHN: Yeah, let’s keep moving.`,
     }
   }
 
+  const handleDemoChunksChange = (chunks: ChunkProgressData[]) => {
+    setDemoChunks(chunks);
+    setShowDemo(true);
+  };
+
+  const handleDemoComplete = (chunks: ChunkProgressData[]) => {
+    console.log("Demo completed:", chunks);
+  };
+
   return (
     <div className="rounded-2xl border border-white/10 bg-white/5 p-6 mt-12">
       <h2 className="text-xl font-semibold mb-4">AI Director Debug Panel</h2>
 
       {status && <p className="text-sm mb-3 opacity-80">{status}</p>}
       {errorMsg && <p className="text-sm mb-3 text-red-400">{errorMsg}</p>}
+
+      {/* Demo Section */}
+      <div className="mb-6 p-4 border border-white/10 rounded-lg bg-white/5">
+        <h3 className="text-lg font-medium mb-3">Quick Demo</h3>
+        <ChunkProgressDemo 
+          onChunksChange={handleDemoChunksChange}
+          onComplete={handleDemoComplete}
+        />
+      </div>
 
       {autoProjectId ? (
         <div className="mb-4">
@@ -251,6 +275,16 @@ JOHN: Yeah, let’s keep moving.`,
           <pre className="whitespace-pre-wrap text-xs rounded-xl bg-black/30 p-4 border border-white/10 overflow-auto">
             {JSON.stringify(audioOut, null, 2)}
           </pre>
+        </div>
+      )}
+
+      {/* Script Player Demo */}
+      {showDemo && demoChunks.length > 0 && (
+        <div className="mt-6 p-4 border border-white/10 rounded-lg bg-white/5">
+          <ScriptPlayerDemo 
+            chunks={demoChunks}
+            isVisible={showDemo}
+          />
         </div>
       )}
     </div>

@@ -95,16 +95,34 @@ export const getDirectorJSON = runDirector;
 export const generateAudio = runAudio;
 
 // ---- call the AI director Edge Function, trigger job only ----
-export async function runDirector(projectId: string, script: string): Promise<void> {
+export async function runDirector(
+  projectId: string, 
+  chunk_key: string, 
+  script: string, 
+  chunkIndex?: number, 
+  start?: number, 
+  duration?: number
+): Promise<void> {
+  const messageData: any = { 
+    project_id: projectId, 
+    chunk_key: chunk_key, 
+    script 
+  };
+
+  // Add optional metadata if provided
+  if (chunkIndex !== undefined) messageData.chunk_index = chunkIndex;
+  if (start !== undefined) messageData.start = start;
+  if (duration !== undefined) messageData.duration = duration;
+
   const { error } = await supabase.functions.invoke("ai-director", {
-    body: { 
-      message: JSON.stringify({ project_id: projectId, script })
+    body: {
+      message: JSON.stringify(messageData)
     },
   });
 
   if (error) throw new Error(`ai-director error: ${error.message}`);
   
-  // Job triggered successfully, real-time listener will handle the result
+  // Job triggered successfully,polling listener will handle the result
 }
 
 // ---- call the audio generator Edge Function (legacy) ----

@@ -9,14 +9,18 @@ import ScriptPlayer from "@/features/scripts/components/ScriptPlayer";
 import AudioPlayer from "@/features/scripts/components/AudioPlayer";
 import { useScriptPlayerControls } from "@/features/scripts/hooks/useScriptPlayerControls";
 import { ChunkProgressData } from "@/features/projects/project-chunk.type";
+import { useGenerateProjectAudio } from "@/features/projects/projects";
+import { AudioGenerationRequest } from "@/features/projects/services/audioGenerationApi";
 import { toast } from "sonner";
 
 export default function ProjectDetail() {
   const { id } = useParams<{ id: string }>();
   const [loadedChunks, setLoadedChunks] = useState<ChunkProgressData[]>([]);
   const [duration, setDuration] = useState(30);
-  const [isGeneratingAudio, setIsGeneratingAudio] = useState(false);
   const [generatedAudioUrl, setGeneratedAudioUrl] = useState<string | null>(null);
+
+  // Audio generation mutation
+  const { mutateAsync: generateAudio, isPending: isGeneratingAudio } = useGenerateProjectAudio();
 
   const {
     project,
@@ -92,18 +96,17 @@ export default function ProjectDetail() {
       return;
     }
 
-    setIsGeneratingAudio(true);
-
     try {
-      // Prepare JSON data for export
-      const exportData = {
+      // Prepare request data according to API format
+      const requestData: AudioGenerationRequest = {
         project: {
-          id: project?.id,
-          title: project?.title,
-          created_at: project?.created_at,
+          id: project?.id || "",
+          title: project?.title || "Untitled Project",
+          created_at: project?.created_at || new Date().toISOString(),
         },
-        chunks: loadedChunks.map(chunk => ({
+        chunks: loadedChunks.map((chunk, index) => ({
           chunk_id: chunk.chunk_id,
+          project_id: chunk.project_id,
           scene_title: chunk.scene_title,
           lines: chunk.lines.map(line => ({
             line_id: line.line_id,
@@ -113,7 +116,17 @@ export default function ProjectDetail() {
             duration: line.duration,
             volume: line.volume,
             src: line.src,
-            tts_settings: line.tts_settings
+            tts_settings: {
+              style: line.tts_settings.style,
+              status: line.tts_settings.status,
+              language: line.tts_settings.language,
+              provider: line.tts_settings.provider,
+              character: line.tts_settings.character,
+              voice_key: line.tts_settings.voice_key,
+              stability: line.tts_settings.stability,
+              similarity_boost: line.tts_settings.similarity_boost,
+              credits_used: line.tts_settings.credits_used,
+            }
           })),
           audio_direction: {
             music: chunk.audio_direction.music.map(track => ({
@@ -146,44 +159,33 @@ export default function ProjectDetail() {
               fade_in: track.fade_in,
               fade_out: track.fade_out
             }))
-          }
+          },
+          estimated_chunk_duration: chunk.lines.reduce((max, line) => Math.max(max, line.start + line.duration), 0),
+          global_start: index * 12 // This should be calculated based on previous chunks' durations
         })),
         metadata: {
           total_chunks: loadedChunks.length,
-          total_duration: duration,
           generated_at: new Date().toISOString(),
           version: "1.0"
         }
       };
 
-      console.log("🎵 Generate Audio - Export Data:", exportData);
+      console.log("🎵 Generate Audio - Request Data:", requestData);
 
-      // TODO: Replace with actual API call to fmmedge server
-      // Simulate API call for now
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      // Call real API
+      const response = await generateAudio(requestData);
 
-      // Mock response
-      const mockResponse = {
-        success: true,
-        message: "Audio combined successfully",
-        download_url: "http://storymagic.coraltriangle.dev/api/audio/download/scene1_final.mp3",
-        public_url: "http://storymagic.coraltriangle.dev/api/audio/public/scene1_final.mp3",
-        output_filename: "scene1_final.mp3"
-      };
-
-      setGeneratedAudioUrl(mockResponse.public_url);
+      setGeneratedAudioUrl(response.public_url);
 
       toast.success("Audio generated successfully!", {
-        description: `Download: ${mockResponse.output_filename}`,
+        description: `Download: ${response.output_filename}`,
       });
 
-    } catch (error) {
+    } catch (error: any) {
       console.error("Audio generation failed:", error);
       toast.error("Failed to generate audio", {
-        description: "Please try again later",
+        description: error.message || "Please try again later",
       });
-    } finally {
-      setIsGeneratingAudio(false);
     }
   };
 
@@ -198,13 +200,13 @@ export default function ProjectDetail() {
 
   if (error || !project) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Project Not Found</h1>
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold mb-4">Project Not Found</h1>
           <p className="text-muted-foreground mb-6">{error?.message || "The project you're looking for doesn't exist or you don't have access to it."}</p>
-          <Link to="/dashboard">
-            <Button>Return to Dashboard</Button>
-          </Link>
+            <Link to="/dashboard">
+              <Button>Return to Dashboard</Button>
+            </Link>
         </div>
       </div>
     );
@@ -218,19 +220,19 @@ export default function ProjectDetail() {
           <h1 className="text-3xl font-bold">{project.title || "Untitled Project"}</h1>
         </div>
 
-        <div className="flex items-center gap-4 text-muted-foreground">
-          <span>Created: {new Date(project.created_at).toLocaleString()}</span>
-          <span>•</span>
+          <div className="flex items-center gap-4 text-muted-foreground">
+            <span>Created: {new Date(project.created_at).toLocaleString()}</span>
+            <span>•</span>
           <span className={`font-medium ${getProjectStatus() === 'Complete' ? 'text-cu' :
             getProjectStatus() === 'Analyzed' ? 'text-yellow-600' :
               'text-gray-600'
             }`}>
             Status: {getProjectStatus()}
-          </span>
+            </span>
+          </div>
         </div>
-      </div>
 
-      <div className="grid gap-6">
+        <div className="grid gap-6">
         {/* Chunk Processing Section */}
         {project && (
           <div className="space-y-6">
@@ -302,7 +304,7 @@ export default function ProjectDetail() {
                 {isGeneratingAudio ? "Generating..." : "Generate Audio"}
               </Button>
             </div>
-
+            
             {/* Generated Audio Section */}
             {generatedAudioUrl && (
               <div className="space-y-4">
@@ -314,9 +316,9 @@ export default function ProjectDetail() {
                     className="w-full h-12"
                     src={generatedAudioUrl}
                   >
-                    Your browser does not support the audio element.
-                  </audio>
-                </div>
+                  Your browser does not support the audio element.
+                </audio>
+              </div>
                 
                 {/* Download Link */}
                 <div className="flex items-center gap-2">
