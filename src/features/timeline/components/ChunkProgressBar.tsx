@@ -100,13 +100,13 @@ export default function ChunkProgressBar({
       <div className="space-y-4">
         <div className="space-y-2">
           <div className="flex items-center justify-between text-sm">
-            <span className="font-medium">Loading Chunks</span>
+            <span className="font-medium">Processing Chunks</span>
             <span className="text-muted-foreground">Waiting for chunks...</span>
           </div>
           <Progress value={0} className="h-2" />
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <Clock className="w-3 h-3" />
-            <span>Waiting for project creation and chunk processing...</span>
+            <span>Processing chunks...</span>
           </div>
         </div>
       </div>
@@ -114,11 +114,11 @@ export default function ChunkProgressBar({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 bg-muted/50 rounded-lg p-4">
       {/* Progress Bar Header */}
       <div className="space-y-2">
         <div className="flex items-center justify-between text-sm">
-          <span className="font-medium">Loading Chunks</span>
+          <span className="font-medium">Processing Chunks</span>
           <div className="flex items-center gap-2">
             <span className="text-muted-foreground">
               {loadedChunks}/{totalChunks} loaded
@@ -143,7 +143,7 @@ export default function ChunkProgressBar({
             <>
               <Loader2 className="w-3 h-3 animate-spin" />
               <span>
-                Loading: {currentChunkRef?.scene_title || "Unknown chunk"}...
+                Processing: {currentChunkRef?.scene_title || "Unknown chunk"}...
               </span>
             </>
           )}
@@ -201,7 +201,7 @@ export default function ChunkProgressBar({
                         </button>
                       )}
                       {state.isLoading && (
-                        <span className="text-xs text-primary">Loading...</span>
+                        <span className="text-xs text-primary">Processing...</span>
                       )}
                       {state.data && !state.isLoading && (
                         <span className="text-xs text-green-600">Loaded</span>

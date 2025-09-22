@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { supabase } from '@/integrations/supabase/client'
+import { supabase } from '../../supabase/client'
 import { useToast } from '@/hooks/use-toast'
 
 export interface ElevenLabsVoice {
@@ -65,7 +65,7 @@ export const useElevenLabsVoices = () => {
       setVoices(data.voices || [])
       
       if (data.voices.length === 0) {
-        toast({
+        console.log({
           title: "No voices found",
           description: "No voices were found in your ElevenLabs account. Make sure your API key is correct.",
           variant: "destructive"

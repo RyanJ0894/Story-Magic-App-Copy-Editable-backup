@@ -1,6 +1,5 @@
 export type AudioType = "music" | "ambience" | "sfx" | "voice" | "other";
 
-// Types từ chunk.json
 export type ChunkData = {
   chunk_id: string;
   project_id: string;
@@ -13,7 +12,7 @@ export type ChunkData = {
 
 export type ChunkLine = {
   line_id: string;
-  type: string; // "narration" | "dialogue" - using string for flexibility
+  type: string;
   text: string;
   tts_settings: TTSSettings;
   src: string | null;
@@ -32,7 +31,7 @@ export type TTSSettings = {
   language: string;
   speed?: number;
   pitch?: number;
-  status: string; // "pending" | "done" | "dirty" | "failed" - using string for flexibility
+  status: string;
   credits_used: number;
 };
 
@@ -53,7 +52,6 @@ export type AudioTrack = {
   fade_out: number;
 };
 
-// Timeline component types
 export type TimelineItem = {
   id: string;
   title: string;
@@ -104,7 +102,6 @@ export type TimelineCardProps = {
   onMetaChange?: (next: Partial<TimelineCardData>) => void;
 };
 
-// Hook types
 export type UseTimelinePlaybackProps = {
   duration: number;
   isPlaying: boolean;
@@ -121,7 +118,6 @@ export type UseTimelinePlaybackReturn = {
   seek: (time: number) => void;
 };
 
-// Utility types
 export type TimelineExportData = {
   id: string;
   title: string;

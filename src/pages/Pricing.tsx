@@ -1,14 +1,16 @@
 import { useState, useEffect } from "react";
-import { Check, Star, Users, Shield, Zap, BookOpen, Sparkles } from "lucide-react";
+import { Check, Star, Users, Zap, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Link } from "react-router-dom";
-import { Header } from "@/components/Header";
-import { EnterpriseContactModal, AcademicVerificationModal } from "@/components/PlanSelectionModals";
+import { Header } from "@/components/layout/Header";
+import { EnterpriseContactModal, AcademicVerificationModal } from "@/components/layout/PlanSelectionModals";
 import { useToast } from "@/hooks/use-toast";
+
+
 export default function Pricing() {
   const [billingCycle, setBillingCycle] = useState<"monthly" | "annual">("monthly");
   const [isNewUser, setIsNewUser] = useState(false);

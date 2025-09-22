@@ -1,135 +1,196 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, Play, Loader2, ChevronDown, ChevronRight } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { runAudio } from "@/integrations/filmDirectorApi";
+import { Loader2, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
-
-import { Json } from "@/integrations/supabase/types";
-
-type ProjectData = {
-  id: string;
-  title: string | null;
-  created_at: string;
-  ai_director_json: Json | null;
-  audio_url: string | null;
-  user_id: string;
-};
+import { useProjectDetail } from "@/features/projects/hooks/useProjectDetail";
+import { ChunkProgress } from "@/features/projects/components/ChunkProgress";
+import { ProjectDataViewer } from "@/features/projects/components/ProjectDataViewer";
+import ScriptPlayer from "@/features/scripts/components/ScriptPlayer";
+import AudioPlayer from "@/features/scripts/components/AudioPlayer";
+import { useScriptPlayerControls } from "@/features/scripts/hooks/useScriptPlayerControls";
+import { ChunkProgressData } from "@/features/projects/project-chunk.type";
+import { useGenerateProjectAudio } from "@/features/projects/projects";
+import { AudioGenerationRequest } from "@/features/projects/services/audioGenerationApi";
+import { toast } from "sonner";
 
 export default function ProjectDetail() {
   const { id } = useParams<{ id: string }>();
-  const [project, setProject] = useState<ProjectData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [generatingAudio, setGeneratingAudio] = useState(false);
-  const [directorExpanded, setDirectorExpanded] = useState(false);
-  const { toast } = useToast();
+  const [loadedChunks, setLoadedChunks] = useState<ChunkProgressData[]>([]);
+  const [duration, setDuration] = useState(30);
+  const [generatedAudioUrl, setGeneratedAudioUrl] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!id) return;
-    
-    const loadProject = async () => {
-      try {
-        const { data, error } = await supabase
-          .from("user_projects")
-          .select("id,title,created_at,ai_director_json,audio_url,user_id")
-          .eq("id", id)
-          .single();
+  // Audio generation mutation
+  const { mutateAsync: generateAudio, isPending: isGeneratingAudio } = useGenerateProjectAudio();
 
-        if (error) throw error;
-        setProject(data);
-      } catch (err: any) {
-        console.error("Error loading project:", err);
-        setError(err.message || "Failed to load project");
-      } finally {
-        setLoading(false);
+  const {
+    project,
+    isLoading,
+    error,
+    getProjectStatus,
+  } = useProjectDetail(id);
+
+  // Handle chunks change from ChunkProgress
+  const handleChunksChange = (chunks: ChunkProgressData[]) => {
+    setLoadedChunks(chunks);
+
+    // Calculate duration from chunks
+    if (chunks.length > 0) {
+      let maxEndTime = 0;
+      chunks.forEach(chunk => {
+        chunk.lines.forEach((line: any) => {
+          const endTime = line.start + line.duration;
+          if (endTime > maxEndTime) maxEndTime = endTime;
+        });
+
+        [...chunk.audio_direction.music, ...chunk.audio_direction.ambience, ...chunk.audio_direction.sfx].forEach((audio: any) => {
+          const endTime = audio.start + audio.duration;
+          if (endTime > maxEndTime) maxEndTime = endTime;
+        });
+      });
+
+      if (maxEndTime > 0) {
+        setDuration(Math.ceil(maxEndTime));
       }
-    };
+    }
+  };
 
-    loadProject();
-  }, [id]);
+  const handleChunksComplete = (chunks: ChunkProgressData[]) => {
+    toast.success("All chunks completed", {
+      description: "All chunks have been completed",
+    });
+    console.log("All chunks completed:", chunks);
+  };
 
+  // Script player controls hook
+  const {
+    currentTime,
+    isPlaying,
+    handleSeek,
+    handlePlayPause,
+    handleLineChange,
+    handleVoiceChange,
+    handleVolumeChange,
+    handleSfxChange,
+  } = useScriptPlayerControls({
+    duration,
+    onLineChange: (lineId: string) => {
+      console.log("Active line changed:", lineId);
+    },
+    onVoiceChange: (lineId: string, voiceKey: string) => {
+      console.log("Voice changed:", lineId, voiceKey);
+    },
+    onVolumeChange: (trackId: string, volume: number) => {
+      console.log("Volume changed:", trackId, volume);
+    },
+    onSfxChange: (trackId: string, sfxKey: string) => {
+      console.log("SFX changed:", trackId, sfxKey);
+    },
+  });
+
+  // Generate Audio function
   const handleGenerateAudio = async () => {
-    if (!project || !project.ai_director_json) {
-      toast({
-        title: "Cannot generate audio",
-        description: "Project needs AI Director analysis first",
-        variant: "destructive",
+    if (loadedChunks.length === 0) {
+      toast.error("No chunks available", {
+        description: "Please wait for chunks to be processed",
       });
       return;
     }
 
-    setGeneratingAudio(true);
     try {
-      // Safely parse the director JSON
-      let directorJson;
-      try {
-        if (typeof project.ai_director_json === 'string') {
-          directorJson = JSON.parse(project.ai_director_json);
-        } else {
-          directorJson = project.ai_director_json;
+      // Prepare request data according to API format
+      const requestData: AudioGenerationRequest = {
+        project: {
+          id: project?.id || "",
+          title: project?.title || "Untitled Project",
+          created_at: project?.created_at || new Date().toISOString(),
+        },
+        chunks: loadedChunks.map((chunk, index) => ({
+          chunk_id: chunk.chunk_id,
+          project_id: chunk.project_id,
+          scene_title: chunk.scene_title,
+          lines: chunk.lines.map(line => ({
+            line_id: line.line_id,
+            text: line.text,
+            type: line.type,
+            start: line.start,
+            duration: line.duration,
+            volume: line.volume,
+            src: line.src,
+            tts_settings: {
+              style: line.tts_settings.style,
+              status: line.tts_settings.status,
+              language: line.tts_settings.language,
+              provider: line.tts_settings.provider,
+              character: line.tts_settings.character,
+              voice_key: line.tts_settings.voice_key,
+              stability: line.tts_settings.stability,
+              similarity_boost: line.tts_settings.similarity_boost,
+              credits_used: line.tts_settings.credits_used,
+            }
+          })),
+          audio_direction: {
+            music: chunk.audio_direction.music.map(track => ({
+              track_id: track.track_id,
+              label: track.label,
+              src: track.src,
+              start: track.start,
+              duration: track.duration,
+              volume: track.volume,
+              fade_in: track.fade_in,
+              fade_out: track.fade_out
+            })),
+            ambience: chunk.audio_direction.ambience.map(track => ({
+              track_id: track.track_id,
+              label: track.label,
+              src: track.src,
+              start: track.start,
+              duration: track.duration,
+              volume: track.volume,
+              fade_in: track.fade_in,
+              fade_out: track.fade_out
+            })),
+            sfx: chunk.audio_direction.sfx.map(track => ({
+              track_id: track.track_id,
+              label: track.label,
+              src: track.src,
+              start: track.start,
+              duration: track.duration,
+              volume: track.volume,
+              fade_in: track.fade_in,
+              fade_out: track.fade_out
+            }))
+          },
+          estimated_chunk_duration: chunk.lines.reduce((max, line) => Math.max(max, line.start + line.duration), 0),
+          global_start: index * 12 // This should be calculated based on previous chunks' durations
+        })),
+        metadata: {
+          total_chunks: loadedChunks.length,
+          generated_at: new Date().toISOString(),
+          version: "1.0"
         }
-      } catch (parseError) {
-        throw new Error("Invalid director JSON data");
-      }
+      };
 
-      const audioResult = await runAudio(project.id, directorJson);
-      
-      if (!audioResult.merged_audio?.success) {
-        throw new Error(audioResult.merged_audio?.message || "Audio generation failed");
-      }
-      
-      // Refresh project data to get the new audio_url
-      const { data: updatedProject } = await supabase
-        .from("user_projects")
-        .select("id,title,created_at,ai_director_json,audio_url,user_id")
-        .eq("id", project.id)
-        .single();
-      
-      if (updatedProject) {
-        setProject(updatedProject);
-      }
+      console.log("🎵 Generate Audio - Request Data:", requestData);
 
-      toast({
-        title: "Audio generated successfully",
-        description: "Your audio is now ready to play",
+      // Call real API
+      const response = await generateAudio(requestData);
+
+      setGeneratedAudioUrl(response.public_url);
+
+      toast.success("Audio generated successfully!", {
+        description: `Download: ${response.output_filename}`,
       });
-    } catch (err: any) {
-      console.error("Error generating audio:", err);
-      toast({
-        title: "Audio generation failed",
-        description: err.message || "Failed to generate audio",
-        variant: "destructive",
+
+    } catch (error: any) {
+      console.error("Audio generation failed:", error);
+      toast.error("Failed to generate audio", {
+        description: error.message || "Please try again later",
       });
-    } finally {
-      setGeneratingAudio(false);
     }
   };
 
-  const getStatus = () => {
-    if (!project) return "Unknown";
-    if (project.ai_director_json && project.audio_url) return "Complete";
-    if (project.ai_director_json) return "Analyzed";
-    return "Draft";
-  };
 
-  const safeParseDirectorJson = () => {
-    if (!project?.ai_director_json) return null;
-    
-    try {
-      if (typeof project.ai_director_json === 'string') {
-        return JSON.parse(project.ai_director_json);
-      } else {
-        return project.ai_director_json;
-      }
-    } catch (error) {
-      console.error("Failed to parse director JSON:", error);
-      return { error: "Invalid JSON data", raw: project.ai_director_json };
-    }
-  };
-
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />
@@ -139,145 +200,143 @@ export default function ProjectDetail() {
 
   if (error || !project) {
     return (
-      <div className="min-h-screen bg-background">
-        <header className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-lg">
-          <div className="container mx-auto flex h-16 items-center justify-between px-4">
-            <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-              <img 
-                src="/lovable-uploads/2a81761c-efdc-4094-9e5d-f297e2f44571.png" 
-                alt="Story Magic" 
-                className="h-28"
-              />
-            </Link>
-            
-            <Link 
-              to="/dashboard" 
-              className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Back to Dashboard
-            </Link>
-          </div>
-        </header>
-        
         <div className="container mx-auto px-4 py-8">
           <div className="text-center">
             <h1 className="text-2xl font-bold mb-4">Project Not Found</h1>
-            <p className="text-muted-foreground mb-6">{error || "The project you're looking for doesn't exist or you don't have access to it."}</p>
+          <p className="text-muted-foreground mb-6">{error?.message || "The project you're looking for doesn't exist or you don't have access to it."}</p>
             <Link to="/dashboard">
               <Button>Return to Dashboard</Button>
             </Link>
-          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-lg">
-        <div className="container mx-auto flex h-16 items-center justify-between px-4">
-          <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-            <img 
-              src="/lovable-uploads/2a81761c-efdc-4094-9e5d-f297e2f44571.png" 
-              alt="Story Magic" 
-              className="h-28"
-            />
-          </Link>
-          
-          <Link 
-            to="/dashboard" 
-            className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Dashboard
-          </Link>
+    <div className="container max-w-4xl mx-auto px-4 py-8">
+      {/* Project Header */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-2">
+          <h1 className="text-3xl font-bold">{project.title || "Untitled Project"}</h1>
         </div>
-      </header>
 
-      <div className="container mx-auto px-4 py-8">
-        {/* Project Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">{project.title || "Untitled Project"}</h1>
           <div className="flex items-center gap-4 text-muted-foreground">
             <span>Created: {new Date(project.created_at).toLocaleString()}</span>
             <span>•</span>
-            <span className={`font-medium ${
-              getStatus() === 'Complete' ? 'text-green-600' : 
-              getStatus() === 'Analyzed' ? 'text-yellow-600' : 
+          <span className={`font-medium ${getProjectStatus() === 'Complete' ? 'text-cu' :
+            getProjectStatus() === 'Analyzed' ? 'text-yellow-600' :
               'text-gray-600'
             }`}>
-              Status: {getStatus()}
+            Status: {getProjectStatus()}
             </span>
           </div>
         </div>
 
         <div className="grid gap-6">
-          {/* Director JSON Section */}
-          {project.ai_director_json && (
-            <div className="rounded-lg border border-border p-6">
-              <button
-                onClick={() => setDirectorExpanded(!directorExpanded)}
-                className="flex items-center gap-2 w-full text-left"
-              >
-                {directorExpanded ? (
-                  <ChevronDown className="h-5 w-5" />
-                ) : (
-                  <ChevronRight className="h-5 w-5" />
-                )}
-                <h2 className="text-xl font-semibold">Director JSON</h2>
-              </button>
-              
-              {directorExpanded && (
-                <pre className="mt-4 text-xs bg-muted rounded-md p-4 overflow-auto max-h-96 whitespace-pre-wrap">
-                  {JSON.stringify(safeParseDirectorJson(), null, 2)}
-                </pre>
-              )}
-            </div>
-          )}
+        {/* Chunk Processing Section */}
+        {project && (
+          <div className="space-y-6">
+              <ChunkProgress
+              projectId={id!}
+              script={project.script}
+              onChunksChange={handleChunksChange}
+              onComplete={handleChunksComplete}
+            />
+          </div>
+        )}
 
-          {/* Audio Section */}
-          <div className="rounded-lg border border-border p-6">
-            <h2 className="text-xl font-semibold mb-4">Audio</h2>
+        {/* Script Player Section */}
+        {loadedChunks.length > 0 && (
+          <div className="space-y-6">
+            <h2 className="text-2xl font-bold">Script Player</h2>
+
+            <AudioPlayer
+              chunks={loadedChunks}
+              currentTime={currentTime}
+              isPlaying={isPlaying}
+            />
+
+            <ScriptPlayer
+              chunks={loadedChunks}
+              currentTime={currentTime}
+              isPlaying={isPlaying}
+              duration={duration}
+              onSeek={handleSeek}
+              onPlayPause={handlePlayPause}
+              onLineChange={handleLineChange}
+              onVoiceChange={handleVoiceChange}
+              onVolumeChange={handleVolumeChange}
+              onSfxChange={handleSfxChange}
+            />
+          </div>
+        )}
+
+        {/* Project Data Viewer */}
+        <ProjectDataViewer
+          chunks={loadedChunks}
+          projectId={project?.id}
+          projectTitle={project?.title}
+          projectCreatedAt={project?.created_at}
+        />
+
+      </div>
+
+      {/* Generate Audio Section - Moved to bottom */}
+      {loadedChunks.length > 0 && (
+        <div className="mt-8 p-6 border border-border rounded-lg bg-card">
+          <div className="mb-6">
+            <h3 className="text-xl font-semibold text-foreground">Final Audio Generation</h3>
+            <p className="text-sm text-muted-foreground mt-1">
+              Generate the final combined audio file from all processed chunks
+            </p>
+          </div>
+
+          <div className="space-y-6">
+            {/* Generate Button */}
+            <div className="flex justify-start">
+              <Button
+                onClick={handleGenerateAudio}
+                disabled={isGeneratingAudio}
+                className="flex items-center gap-2"
+                size="lg"
+              >
+                <Download className="h-4 w-4" />
+                {isGeneratingAudio ? "Generating..." : "Generate Audio"}
+              </Button>
+            </div>
             
-            {project.audio_url ? (
+            {/* Generated Audio Section */}
+            {generatedAudioUrl && (
               <div className="space-y-4">
-                <audio controls className="w-full">
-                  <source src={project.audio_url} type="audio/mpeg" />
+                {/* Audio Player - Full width */}
+                <div className="bg-muted/30 rounded-lg p-6">
+                  <h4 className="font-medium text-foreground mb-4">Generated Audio</h4>
+                  <audio 
+                    controls 
+                    className="w-full h-12"
+                    src={generatedAudioUrl}
+                  >
                   Your browser does not support the audio element.
                 </audio>
-                <p className="text-sm text-muted-foreground">
-                  Audio generated from AI Director analysis
-                </p>
               </div>
-            ) : (
-              <div className="space-y-4">
-                <p className="text-muted-foreground">No audio generated yet.</p>
                 
-                {project.ai_director_json ? (
-                  <Button 
-                    onClick={handleGenerateAudio}
-                    disabled={generatingAudio}
-                    className="flex items-center gap-2"
+                {/* Download Link */}
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">Download:</span>
+                  <a 
+                    href={generatedAudioUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-sm text-primary hover:text-primary/80 underline font-medium"
                   >
-                    {generatingAudio ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Play className="h-4 w-4" />
-                    )}
-                    {generatingAudio ? "Generating Audio..." : "Generate Audio"}
-                  </Button>
-                ) : (
-                  <p className="text-sm text-muted-foreground">
-                    Run AI Director analysis first to enable audio generation.
-                  </p>
-                )}
+                    Download Audio File
+                  </a>
+                </div>
               </div>
             )}
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

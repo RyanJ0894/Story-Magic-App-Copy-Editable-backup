@@ -1,31 +1,26 @@
-// src/pages/Index.tsx
 import { useEffect, useMemo, useState } from "react";
+import { Header } from "@/components/layout/Header";
+import { HeroSection } from "@/components/layout/HeroSection";
+import { ScriptUpload } from "@/components/feature/ScriptUpload";
+import { VoiceCasting } from "@/components/feature/VoiceCasting";
+import { AudioPlayer } from "@/components/feature/AudioPlayer";
+import { FeedbackForm } from "@/components/layout/FeedbackForm";
+import ChunkProgressDemo from "@/components/demo/ChunkProgressDemo";
+import ScriptPlayerDemo from "@/components/demo/ScriptPlayerDemo";
+import { supabase } from "../../supabase/client";
+import { getDirectorJSON, generateAudio, DirectorJSON } from "../../supabase/filmDirectorApi";
+import { ChunkProgressData } from "@/features/projects/project-chunk.type";
 
-// --- your existing sections (keep these imports as-is) ---
-import { Header } from "@/components/Header";
-import { HeroSection } from "@/components/HeroSection";
-import { ScriptUpload } from "@/components/ScriptUpload";
-import { VoiceCasting } from "@/components/VoiceCasting";
-import { AudioPlayer } from "@/components/AudioPlayer";
-import { FeedbackForm } from "@/components/FeedbackForm";
-
-// --- integrations you already have ---
-import { supabase } from "@/integrations/supabase/client";
-import { getDirectorJSON, generateAudio } from "@/integrations/filmDirectorApi";
-
-// Utility: try different orders safely without crashing if column doesn't exist
 async function selectLatestProjectId(userId: string | null) {
   if (!userId) {
     throw new Error("User must be authenticated to access projects");
   }
 
-  const base = supabase.from("user_projects").select("id, created_at", { head: false });
+  const base = supabase.from("projects").select("id, created_at", { head: false });
   const scoped = base.eq("user_id", userId);
 
-  // Try common timestamp columns in order; if error, fall back to a plain select
   const orders = [
     { column: "created_at", ascending: false },
-    { column: "inserted_at", ascending: false },
     { column: "updated_at", ascending: false },
   ];
 
@@ -51,6 +46,10 @@ function AIDirectorDebugPanel() {
 
   const [directorOut, setDirectorOut] = useState<any>(null);
   const [audioOut, setAudioOut] = useState<any>(null);
+  
+  // Demo state
+  const [demoChunks, setDemoChunks] = useState<ChunkProgressData[]>([]);
+  const [showDemo, setShowDemo] = useState(false);
 
   const defaultScript = useMemo(
     () =>
@@ -62,7 +61,6 @@ JOHN: Yeah, let’s keep moving.`,
   );
   const [script, setScript] = useState<string>(defaultScript);
 
-  // Try to auto-resolve (or create) a project on mount
   useEffect(() => {
     let mounted = true;
 
@@ -88,9 +86,15 @@ JOHN: Yeah, let’s keep moving.`,
 
         // 3) If none found or selection blocked by RLS, try to create one
         if (!projectId) {
+          const projectKey = `project_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
           const { data: inserted, error: insertErr } = await supabase
-            .from("user_projects")
-            .insert([{ user_id: userId, title: "Untitled Project", status: "draft" }])
+            .from("projects")
+            .insert([{ 
+              user_id: userId, 
+              title: "Untitled Project", 
+              status: "draft",
+              project_key: projectKey
+            }])
             .select("id")
             .single();
 
@@ -138,11 +142,11 @@ JOHN: Yeah, let’s keep moving.`,
       }
 
       // 1) Analyze with AI Director
-      const director = await getDirectorJSON(script, effectiveProjectId);
+      const director = await getDirectorJSON(script, effectiveProjectId, "1");
       setDirectorOut(director);
 
       // 2) Generate audio
-      const audio = await generateAudio(effectiveProjectId, director);
+      const audio = await generateAudio(effectiveProjectId, director as unknown as DirectorJSON);
       setAudioOut(audio);
 
       setStatus("Done.");
@@ -155,12 +159,30 @@ JOHN: Yeah, let’s keep moving.`,
     }
   }
 
+  const handleDemoChunksChange = (chunks: ChunkProgressData[]) => {
+    setDemoChunks(chunks);
+    setShowDemo(true);
+  };
+
+  const handleDemoComplete = (chunks: ChunkProgressData[]) => {
+    console.log("Demo completed:", chunks);
+  };
+
   return (
     <div className="rounded-2xl border border-white/10 bg-white/5 p-6 mt-12">
       <h2 className="text-xl font-semibold mb-4">AI Director Debug Panel</h2>
 
       {status && <p className="text-sm mb-3 opacity-80">{status}</p>}
       {errorMsg && <p className="text-sm mb-3 text-red-400">{errorMsg}</p>}
+
+      {/* Demo Section */}
+      <div className="mb-6 p-4 border border-white/10 rounded-lg bg-white/5">
+        <h3 className="text-lg font-medium mb-3">Quick Demo</h3>
+        <ChunkProgressDemo 
+          onChunksChange={handleDemoChunksChange}
+          onComplete={handleDemoComplete}
+        />
+      </div>
 
       {autoProjectId ? (
         <div className="mb-4">
@@ -185,9 +207,15 @@ JOHN: Yeah, let’s keep moving.`,
               }
               let pid = await selectLatestProjectId(userId);
               if (!pid) {
+                const projectKey = `project_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
                 const { data: inserted } = await supabase
-                  .from("user_projects")
-                  .insert([{ user_id: userId, title: "Untitled Project", status: "draft" }])
+                  .from("projects")
+                  .insert([{ 
+                    user_id: userId, 
+                    title: "Untitled Project", 
+                    status: "draft",
+                    project_key: projectKey
+                  }])
                   .select("id")
                   .single();
                 pid = inserted?.id ?? null;
@@ -210,7 +238,7 @@ JOHN: Yeah, let’s keep moving.`,
           <label className="block text-sm mb-1">Project ID (UUID)</label>
           <input
             className="w-full rounded-lg border border-white/10 bg-black/20 px-3 py-2"
-            placeholder="Paste a user_projects.id UUID"
+            placeholder="Paste a projects.id UUID"
             value={manualProjectId}
             onChange={(e) => setManualProjectId(e.target.value)}
           />
@@ -247,6 +275,16 @@ JOHN: Yeah, let’s keep moving.`,
           <pre className="whitespace-pre-wrap text-xs rounded-xl bg-black/30 p-4 border border-white/10 overflow-auto">
             {JSON.stringify(audioOut, null, 2)}
           </pre>
+        </div>
+      )}
+
+      {/* Script Player Demo */}
+      {showDemo && demoChunks.length > 0 && (
+        <div className="mt-6 p-4 border border-white/10 rounded-lg bg-white/5">
+          <ScriptPlayerDemo 
+            chunks={demoChunks}
+            isVisible={showDemo}
+          />
         </div>
       )}
     </div>
