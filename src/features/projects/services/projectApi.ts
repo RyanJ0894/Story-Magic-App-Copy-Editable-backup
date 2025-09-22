@@ -62,14 +62,17 @@ export const projectApi = {
     return result as Project;
   },
 
-  // Delete project
-  deleteProject: async (id: string): Promise<void> => {
-    const { error } = await supabase
+  // Delete project and return the deleted row to ensure it actually deleted
+  deleteProject: async (id: string): Promise<Project> => {
+    const { data, error } = await supabase
       .from("projects")
       .delete()
-      .eq("id", id);
+      .eq("id", id)
+      .select()
+      .single();
 
     if (error) throw error;
+    return data as Project;
   },
 
   // Update project

@@ -174,7 +174,7 @@ export default function ProjectDetail() {
 
       // Call real API
       const response = await generateAudio(requestData);
-
+      console.log("🎵 Generate Audio - Response:", response);
       setGeneratedAudioUrl(response.public_url);
 
       toast.success("Audio generated successfully!", {

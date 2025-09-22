@@ -9,12 +9,15 @@ export const useDashboard = () => {
 
   const handleDeleteProject = async (projectId: string, projectTitle: string) => {
     try {
-      await deleteProjectMutation.mutateAsync(projectId);
+      const deletedProject = await deleteProjectMutation.mutateAsync(projectId);
       
+      if (deletedProject) {
       toast({
         title: "Project deleted",
-        description: `"${projectTitle}" has been successfully deleted.`,
-      });
+          description: `"${projectTitle}" has been successfully deleted.`,
+        });
+      }
+      return deletedProject;
     } catch (error: any) {
       console.error("Delete error:", error);
       toast({
