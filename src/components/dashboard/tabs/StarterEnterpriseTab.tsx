@@ -128,7 +128,10 @@ export function StarterEnterpriseTab({
 
           {/* Quick Actions */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card className="cursor-pointer hover:bg-muted/50 transition-colors">
+            <Card 
+              className="cursor-pointer hover:bg-muted/50 transition-colors"
+              onClick={() => setActiveTeamTab("team")}
+            >
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base">
                   <Users className="h-4 w-4" />
