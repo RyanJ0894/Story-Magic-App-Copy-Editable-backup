@@ -42,7 +42,7 @@ function App() {
         } />
         <Route path="/pricing" element={<Pricing />} />
         <Route path="/show-audio" element={<ShowAudio />} />
-        <Route path="/script-demo" element={<ScriptPlayerDemo />} />
+        <Route path="/script-demo" element={<ScriptPlayerDemo chunks={[]} isVisible={true} />} />
       </Routes>
       <Toaster />
     </BrowserRouter>

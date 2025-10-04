@@ -43,6 +43,8 @@ export function DashboardTabs({ currentPlan, availablePackages, projects, onDele
 
   const handleUpgradeSuccess = (newPlan: PlanTier) => {
     setUserCurrentPlan(newPlan);
+    // Force page reload to refresh available packages from database
+    window.location.reload();
   };
 
   const handleTabClick = (planTier: PlanTier) => {

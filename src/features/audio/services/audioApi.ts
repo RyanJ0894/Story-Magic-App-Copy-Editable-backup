@@ -1,5 +1,5 @@
 import { supabase } from '../../../../supabase/client';
-import { runAudio } from '@/integrations/filmDirectorApi';
+import { runAudio } from '../../../../supabase/filmDirectorApi';
 
 export type AudioGeneration = {
   id: string;
