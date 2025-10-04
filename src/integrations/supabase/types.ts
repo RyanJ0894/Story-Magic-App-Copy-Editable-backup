@@ -405,6 +405,10 @@ export type Database = {
         Args: { user_id_param?: string }
         Returns: string
       }
+      owns_project: {
+        Args: { project_uuid: string }
+        Returns: boolean
+      }
       validate_invitation_token: {
         Args: { token_to_validate: string }
         Returns: {
