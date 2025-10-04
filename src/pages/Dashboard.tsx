@@ -1,9 +1,8 @@
 import { Link } from "react-router-dom";
 import { usePlanProtection } from "@/hooks/usePlanProtection";
-import { RoleDashboard } from "@/components/dashboard/RoleDashboard";
+import { DashboardTabs } from "@/components/dashboard/DashboardTabs";
 import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
 import { useDashboard } from "@/features/projects/hooks/useDashboard";
-import { useUserRole } from "@/hooks/useUserRole";
 
 export default function Dashboard() {
   const {
@@ -13,8 +12,6 @@ export default function Dashboard() {
     loading: planLoading
   } = usePlanProtection();
 
-  const { currentRole, loading: roleLoading } = useUserRole();
-
   const {
     projects,
     isLoading,
@@ -23,7 +20,7 @@ export default function Dashboard() {
     handleDeleteProject,
   } = useDashboard();
 
-  if (isLoading || planLoading || roleLoading) return <DashboardSkeleton />;
+  if (isLoading || planLoading) return <DashboardSkeleton />;
   if (error) return <div className="min-h-screen flex items-center justify-center text-destructive">{error.message}</div>;
 
   return (
@@ -56,8 +53,9 @@ export default function Dashboard() {
         </div>
       )}
 
-      <RoleDashboard
-        userRole={currentRole}
+      <DashboardTabs
+        currentPlan={currentPlan}
+        availablePackages={availablePackages}
         projects={projects}
         onDeleteProject={handleDeleteProject}
         deletingId={null}
