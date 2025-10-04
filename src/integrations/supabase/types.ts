@@ -401,6 +401,10 @@ export type Database = {
         Args: { target_user_id: string }
         Returns: boolean
       }
+      get_user_email: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       get_user_role: {
         Args: { user_id_param?: string }
         Returns: string
