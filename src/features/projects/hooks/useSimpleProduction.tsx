@@ -29,8 +29,7 @@ export const useSimpleProduction = (projectId: string) => {
       });
 
       // Step 1: Call RelevanceAI "Ace" agent via webhook
-      const webhookUrl = 'https://api-bcbe5a.stack.tryrelevance.com/latest/agents/hooks/custom-trigger/234084c7-e850-4e25-8a73-103f803cfd41/997af966-7764-41c8-a108-76821203feed';
-      if (!webhookUrl) {
+        const webhookUrl = 'https://api-bcbe5a.stack.tryrelevance.com/latest/agents/hooks/custom-trigger/234084c7-e850-4e25-8a73-103f803cfd41/c79e2bc6-9126-455d-9623-a50b703605e1';      if (!webhookUrl) {
         throw new Error('RelevanceAI webhook URL not configured');
       }
 
