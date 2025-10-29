@@ -66,7 +66,7 @@ export default function NewProject() {
             Your browser does not support the audio element.
           </audio>
           <div className="mt-3 flex gap-3">
-            
+            <a
               href={production.audioUrl}
               download
               className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
