@@ -74,6 +74,108 @@ export type Database = {
         }
         Relationships: []
       }
+      alignments: {
+        Row: {
+          alignment_json: Json
+          created_at: string | null
+          project_id: string
+          scene_id: string
+        }
+        Insert: {
+          alignment_json: Json
+          created_at?: string | null
+          project_id: string
+          scene_id: string
+        }
+        Update: {
+          alignment_json?: Json
+          created_at?: string | null
+          project_id?: string
+          scene_id?: string
+        }
+        Relationships: []
+      }
+      cue_choices: {
+        Row: {
+          ambience: Json
+          created_at: string | null
+          music: Json
+          project_id: string
+          scene_id: string
+        }
+        Insert: {
+          ambience?: Json
+          created_at?: string | null
+          music?: Json
+          project_id: string
+          scene_id: string
+        }
+        Update: {
+          ambience?: Json
+          created_at?: string | null
+          music?: Json
+          project_id?: string
+          scene_id?: string
+        }
+        Relationships: []
+      }
+      dead_letter_queue: {
+        Row: {
+          created_at: string | null
+          error_message: string | null
+          error_stack: string | null
+          id: string
+          job_payload: Json
+          job_type: string
+          last_retry_at: string | null
+          retry_count: number | null
+          status: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          error_message?: string | null
+          error_stack?: string | null
+          id?: string
+          job_payload: Json
+          job_type: string
+          last_retry_at?: string | null
+          retry_count?: number | null
+          status?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          error_message?: string | null
+          error_stack?: string | null
+          id?: string
+          job_payload?: Json
+          job_type?: string
+          last_retry_at?: string | null
+          retry_count?: number | null
+          status?: string | null
+        }
+        Relationships: []
+      }
+      director_json: {
+        Row: {
+          created_at: string
+          id: string
+          json_data: Json
+          project_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          json_data: Json
+          project_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          json_data?: Json
+          project_id?: string
+        }
+        Relationships: []
+      }
       mix_jobs: {
         Row: {
           created_at: string
@@ -107,6 +209,27 @@ export type Database = {
           status?: string
           updated_at?: string
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      mix_manifests: {
+        Row: {
+          created_at: string | null
+          mix_manifest_json: Json
+          project_id: string
+          scene_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          mix_manifest_json: Json
+          project_id: string
+          scene_id: string
+        }
+        Update: {
+          created_at?: string | null
+          mix_manifest_json?: Json
+          project_id?: string
+          scene_id?: string
         }
         Relationships: []
       }
@@ -288,6 +411,30 @@ export type Database = {
         }
         Relationships: []
       }
+      renders: {
+        Row: {
+          created_at: string | null
+          path_mp3: string | null
+          path_wav: string | null
+          project_id: string
+          scene_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          path_mp3?: string | null
+          path_wav?: string | null
+          project_id: string
+          scene_id: string
+        }
+        Update: {
+          created_at?: string | null
+          path_mp3?: string | null
+          path_wav?: string | null
+          project_id?: string
+          scene_id?: string
+        }
+        Relationships: []
+      }
       team_invitations: {
         Row: {
           accepted_at: string | null
@@ -331,6 +478,60 @@ export type Database = {
             referencedColumns: ["user_id"]
           },
         ]
+      }
+      timelines: {
+        Row: {
+          created_at: string | null
+          project_id: string
+          scene_id: string
+          timeline_json: Json
+        }
+        Insert: {
+          created_at?: string | null
+          project_id: string
+          scene_id: string
+          timeline_json: Json
+        }
+        Update: {
+          created_at?: string | null
+          project_id?: string
+          scene_id?: string
+          timeline_json?: Json
+        }
+        Relationships: []
+      }
+      tts_stems: {
+        Row: {
+          created_at: string | null
+          duration_s: number | null
+          line_id: string
+          path: string
+          project_id: string
+          scene_id: string
+          text_hash: string
+          voice_hash: string
+        }
+        Insert: {
+          created_at?: string | null
+          duration_s?: number | null
+          line_id: string
+          path: string
+          project_id: string
+          scene_id: string
+          text_hash: string
+          voice_hash: string
+        }
+        Update: {
+          created_at?: string | null
+          duration_s?: number | null
+          line_id?: string
+          path?: string
+          project_id?: string
+          scene_id?: string
+          text_hash?: string
+          voice_hash?: string
+        }
+        Relationships: []
       }
       user_projects: {
         Row: {
@@ -392,27 +593,39 @@ export type Database = {
         }
         Relationships: []
       }
+      voice_map: {
+        Row: {
+          character: string
+          params_json: Json
+          project_id: string
+          provider: string
+          voice_id: string
+        }
+        Insert: {
+          character: string
+          params_json?: Json
+          project_id: string
+          provider: string
+          voice_id: string
+        }
+        Update: {
+          character?: string
+          params_json?: Json
+          project_id?: string
+          provider?: string
+          voice_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      can_see_user: {
-        Args: { target_user_id: string }
-        Returns: boolean
-      }
-      get_user_email: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      get_user_role: {
-        Args: { user_id_param?: string }
-        Returns: string
-      }
-      owns_project: {
-        Args: { project_uuid: string }
-        Returns: boolean
-      }
+      can_see_user: { Args: { target_user_id: string }; Returns: boolean }
+      get_user_email: { Args: never; Returns: string }
+      get_user_role: { Args: { user_id_param?: string }; Returns: string }
+      owns_project: { Args: { project_uuid: string }; Returns: boolean }
       validate_invitation_token: {
         Args: { token_to_validate: string }
         Returns: {

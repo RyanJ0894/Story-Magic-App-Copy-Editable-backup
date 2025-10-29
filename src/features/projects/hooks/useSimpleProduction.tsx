@@ -57,8 +57,9 @@ export const useSimpleProduction = (projectId: string) => {
       setState(prev => ({ ...prev, step: 'Retrieving Director JSON...' }));
       console.log('📥 Fetching Director JSON from Supabase...');
 
+      // Use type assertion to work around TypeScript types not being regenerated yet
       const { data: directorData, error: fetchError } = await supabase
-        .from('director_json')
+        .from('director_json' as any)
         .select('*')
         .eq('project_id', projectId)
         .order('created_at', { ascending: false })
@@ -69,7 +70,7 @@ export const useSimpleProduction = (projectId: string) => {
         throw new Error('Failed to retrieve Director JSON from database');
       }
 
-      const directorJSON: DirectorJSON = directorData.json_data;
+      const directorJSON: DirectorJSON = (directorData as any).json_data;
       console.log('✅ Director JSON retrieved:', directorJSON);
 
       // Step 3: Send to Railway Orchestrator
