@@ -37,6 +37,14 @@ export default function NewProject() {
     }
   };
 
+  const goToDashboard = function() {
+    navigate("/dashboard");
+  };
+
+  const reloadPage = function() {
+    window.location.reload();
+  };
+
   return (
     <div className="max-w-4xl mx-auto py-10">
       <h1 className="text-3xl font-bold mb-6">Create New Project</h1>
@@ -67,7 +75,7 @@ export default function NewProject() {
               Download Audio
             </a>
             <button
-              onClick={() => navigate("/dashboard")}
+              onClick={goToDashboard}
               className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
             >
               Go to Dashboard
@@ -81,7 +89,7 @@ export default function NewProject() {
           <h2 className="font-semibold text-red-900 mb-2">❌ Production Failed</h2>
           <p className="text-red-700">{production.error}</p>
           <button
-            onClick={() => window.location.reload()}
+            onClick={reloadPage}
             className="mt-3 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
           >
             Try Again
