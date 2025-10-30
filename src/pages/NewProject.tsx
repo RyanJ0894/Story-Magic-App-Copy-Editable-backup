@@ -1,107 +1,145 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useNewProject } from "@/features/projects/hooks/useNewProject";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import { useToast } from "@/hooks/use-toast";
 import { useSimpleProduction } from "@/features/projects/hooks/useSimpleProduction";
-import { ProjectForm } from "@/features/projects/components/ProjectForm";
-import { ProjectFormData } from "@/features/projects/components/ProjectForm/schema";
-import { useAuth } from "@/features/auth/auth";
-import { toast } from "sonner";
 
-export default function NewProject() {
+export default function CreateProject() {
   const navigate = useNavigate();
-  const { data: currentUser } = useAuth();
-  const [projectId, setProjectId] = useState<string | null>(null);
+  const { toast } = useToast();
+  const [title, setTitle] = useState("Untitled Project");
+  const [script, setScript] = useState("");
+  const [runAiDirector, setRunAiDirector] = useState(true);
+  const [isCreating, setIsCreating] = useState(false);
 
-  const { createProject, isCreating, error: createError } = useNewProject();
-  const production = useSimpleProduction(projectId || '');
+  // We'll set projectId after creating the project
+  const [projectId, setProjectId] = useState<string>("");
+  const { isProcessing, step, processProduction } = useSimpleProduction(projectId);
 
-  const handleProjectSubmit = async (data: ProjectFormData) => {
-    if (!currentUser) {
-      toast.error("User must be authenticated to create a project");
+  const handleCreateProject = async () => {
+    if (!script.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a script",
+        variant: "destructive",
+      });
       return;
     }
 
+    setIsCreating(true);
+
     try {
-      // Step 1: Create project in database
-      const project = await createProject({
-        title: data.title,
-        script: data.script,
-        user_id: currentUser.id,
+      // Step 1: Create project in database first
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error("Not authenticated");
+      }
+
+      // Generate project ID
+      const newProjectId = `proj_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      
+      // Insert project into database
+      const { error: insertError } = await supabase
+        .from('projects')
+        .insert({
+          id: newProjectId,
+          title: title,
+          script_text: script,
+          user_id: user.id,
+          status: 'draft'
+        });
+
+      if (insertError) {
+        throw insertError;
+      }
+
+      // Set the projectId for the hook
+      setProjectId(newProjectId);
+
+      // Step 2: If "Run AI Director" is checked, trigger production
+      if (runAiDirector) {
+        await processProduction(script);
+      }
+
+      toast({
+        title: "Success",
+        description: "Project created successfully",
       });
 
-      setProjectId(project.id);
-
-      // Step 2: Start audio production
-      await production.processProduction(data.script);
-
-      // Note: We don't navigate away immediately - user sees processing status
-      // They can navigate to Dashboard to see their project list
-    } catch (error) {
-      console.error("Failed to create project:", error);
-      toast.error("Failed to create project");
+      // Navigate to project page
+      navigate(`/projects/${newProjectId}`);
+      
+    } catch (error: any) {
+      console.error("Error creating project:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create project",
+        variant: "destructive",
+      });
+    } finally {
+      setIsCreating(false);
     }
   };
 
   return (
-    <div className="max-w-4xl mx-auto py-10">
-      <h1 className="text-3xl font-bold mb-6">Create New Project</h1>
+    <div className="container max-w-4xl py-8">
+      <h1 className="text-3xl font-bold mb-8">Create New Project</h1>
 
-      {/* Show production status if processing */}
-      {production.isProcessing && (
+      {(isProcessing || isCreating) && (
         <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-          <h2 className="font-semibold text-blue-900 mb-2">Processing...</h2>
-          <p className="text-blue-700">{production.step}</p>
-          <div className="mt-3">
-            <div className="animate-pulse bg-blue-200 h-2 rounded"></div>
-          </div>
+          <h3 className="font-semibold mb-2">Processing...</h3>
+          <p className="text-sm text-gray-600">{step || "Creating project..."}</p>
         </div>
       )}
 
-      {/* Show success with audio player */}
-      {production.audioUrl && (
-        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-          <h2 className="font-semibold text-green-900 mb-2">✅ Production Complete!</h2>
-          <audio controls className="w-full mt-3">
-            <source src={production.audioUrl} type="audio/mp4" />
-            Your browser does not support the audio element.
-          </audio>
-          <div className="mt-3 flex gap-3">
-            <a
-              href={production.audioUrl}
-              download
-              className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-            >
-              Download Audio
-            </a>
-            <button
-              onClick={() => navigate("/dashboard")}
-              className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
-            >
-              Go to Dashboard
-            </button>
-          </div>
+      <div className="space-y-6">
+        <div>
+          <Label htmlFor="title">Title</Label>
+          <Input
+            id="title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Enter project title"
+          />
         </div>
-      )}
 
-      {/* Show error if failed */}
-      {production.error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-          <h2 className="font-semibold text-red-900 mb-2">❌ Production Failed</h2>
-          <p className="text-red-700">{production.error}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="mt-3 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-          >
-            Try Again
-          </button>
+        <div>
+          <Label htmlFor="script">Script</Label>
+          <Textarea
+            id="script"
+            value={script}
+            onChange={(e) => setScript(e.target.value)}
+            placeholder="Paste your screenplay here..."
+            rows={15}
+            className="font-mono"
+          />
         </div>
-      )}
 
-      {/* Project creation form */}
-      <ProjectForm
-        onSubmit={handleProjectSubmit}
-        isSubmitting={isCreating || production.isProcessing}
-      />
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id="runAiDirector"
+            checked={runAiDirector}
+            onCheckedChange={(checked) => setRunAiDirector(checked as boolean)}
+          />
+          <Label htmlFor="runAiDirector" className="cursor-pointer">
+            Run AI Director (analyze script)
+          </Label>
+        </div>
+
+        <Button
+          onClick={handleCreateProject}
+          disabled={isCreating || isProcessing}
+          className="w-full"
+        >
+          {isCreating || isProcessing ? "Creating..." : "Create Project"}
+        </Button>
+      </div>
     </div>
   );
 }
