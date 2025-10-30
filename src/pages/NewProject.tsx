@@ -32,7 +32,7 @@ export default function NewProject() {
       setProjectId(project.id);
 
       // Step 2: Start audio production
-      production.startProduction(data.script);
+      await production.processProduction(data.script);
 
       // Note: We don't navigate away immediately - user sees processing status
       // They can navigate to Dashboard to see their project list
