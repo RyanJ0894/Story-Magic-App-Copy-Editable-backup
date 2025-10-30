@@ -6,20 +6,53 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
 import { useSimpleProduction } from "@/features/projects/hooks/useSimpleProduction";
+import { Upload } from "lucide-react";
 
 export default function CreateProject() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [title, setTitle] = useState("Untitled Project");
   const [script, setScript] = useState("");
+  const [scriptMode, setScriptMode] = useState<"replace" | "append">("replace");
   const [runAiDirector, setRunAiDirector] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
 
-  // We'll set projectId after creating the project
   const [projectId, setProjectId] = useState<string>("");
   const { isProcessing, step, processProduction } = useSimpleProduction(projectId);
+
+  const handlePdfUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || file.type !== "application/pdf") {
+      toast({
+        title: "Error",
+        description: "Please upload a PDF file",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      // TODO: Implement PDF text extraction
+      // For now, show a message
+      toast({
+        title: "PDF Upload",
+        description: "PDF processing will be implemented soon",
+      });
+    } catch (error) {
+      console.error("Error processing PDF:", error);
+      toast({
+        title: "Error",
+        description: "Failed to process PDF",
+        variant: "destructive",
+      });
+    }
+  };
 
   const handleCreateProject = async () => {
     if (!script.trim()) {
@@ -34,7 +67,6 @@ export default function CreateProject() {
     setIsCreating(true);
 
     try {
-      // Step 1: Create project in database first
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
@@ -59,10 +91,8 @@ export default function CreateProject() {
         throw insertError;
       }
 
-      // Set the projectId for the hook
       setProjectId(newProjectId);
 
-      // Step 2: If "Run AI Director" is checked, trigger production
       if (runAiDirector) {
         await processProduction(script);
       }
@@ -72,7 +102,6 @@ export default function CreateProject() {
         description: "Project created successfully",
       });
 
-      // Navigate to project page
       navigate(`/projects/${newProjectId}`);
       
     } catch (error: any) {
@@ -107,6 +136,42 @@ export default function CreateProject() {
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Enter project title"
           />
+        </div>
+
+        <div>
+          <Label>Upload PDF</Label>
+          <div className="flex items-center gap-4">
+            <Button
+              variant="outline"
+              onClick={() => document.getElementById("pdf-upload")?.click()}
+              className="w-full"
+            >
+              <Upload className="w-4 h-4 mr-2" />
+              Upload PDF
+            </Button>
+            <input
+              id="pdf-upload"
+              type="file"
+              accept="application/pdf"
+              onChange={handlePdfUpload}
+              className="hidden"
+            />
+          </div>
+          
+          <RadioGroup
+            value={scriptMode}
+            onValueChange={(value) => setScriptMode(value as "replace" | "append")}
+            className="flex gap-4 mt-2"
+          >
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="replace" id="replace" />
+              <Label htmlFor="replace">Replace text</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="append" id="append" />
+              <Label htmlFor="append">Append text</Label>
+            </div>
+          </RadioGroup>
         </div>
 
         <div>
