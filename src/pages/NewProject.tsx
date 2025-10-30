@@ -31,8 +31,8 @@ export default function NewProject() {
 
       setProjectId(project.id);
 
-      // Step 2: Start audio production WITH THE REAL PROJECT ID
-      await production.processProduction(data.script, project.id);
+      // Step 2: Start audio production
+      await production.processProduction(data.script);
 
       // Note: We don't navigate away immediately - user sees processing status
       // They can navigate to Dashboard to see their project list
@@ -42,11 +42,14 @@ export default function NewProject() {
     }
   };
 
+  const handleNavigateToDashboard = () => {
+    navigate("/dashboard");
+  };
+
   return (
     <div className="max-w-4xl mx-auto py-10">
       <h1 className="text-3xl font-bold mb-6">Create New Project</h1>
 
-      {/* Show production status if processing */}
       {production.isProcessing && (
         <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
           <h2 className="font-semibold text-blue-900 mb-2">Processing...</h2>
@@ -57,7 +60,6 @@ export default function NewProject() {
         </div>
       )}
 
-      {/* Show success with audio player */}
       {production.audioUrl && (
         <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
           <h2 className="font-semibold text-green-900 mb-2">✅ Production Complete!</h2>
@@ -74,7 +76,7 @@ export default function NewProject() {
               Download Audio
             </a>
             <button
-              onClick={() => navigate("/dashboard")}
+              onClick={handleNavigateToDashboard}
               className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
             >
               Go to Dashboard
@@ -83,7 +85,6 @@ export default function NewProject() {
         </div>
       )}
 
-      {/* Show error if failed */}
       {production.error && (
         <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
           <h2 className="font-semibold text-red-900 mb-2">❌ Production Failed</h2>
@@ -97,7 +98,6 @@ export default function NewProject() {
         </div>
       )}
 
-      {/* Project creation form */}
       <ProjectForm
         onSubmit={handleProjectSubmit}
         isSubmitting={isCreating || production.isProcessing}
