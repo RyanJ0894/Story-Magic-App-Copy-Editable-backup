@@ -31,8 +31,8 @@ export default function NewProject() {
 
       setProjectId(project.id);
 
-      // Step 2: Start audio production
-      await production.processProduction(data.script);
+      // Step 2: Start audio production WITH THE REAL PROJECT ID
+      await production.processProduction(data.script, project.id);
 
       // Note: We don't navigate away immediately - user sees processing status
       // They can navigate to Dashboard to see their project list
@@ -66,7 +66,7 @@ export default function NewProject() {
             Your browser does not support the audio element.
           </audio>
           <div className="mt-3 flex gap-3">
-            <a
+            
               href={production.audioUrl}
               download
               className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
