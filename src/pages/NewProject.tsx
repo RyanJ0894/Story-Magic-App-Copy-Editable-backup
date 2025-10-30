@@ -1,210 +1,107 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { useToast } from "@/hooks/use-toast";
+import { useNewProject } from "@/features/projects/hooks/useNewProject";
 import { useSimpleProduction } from "@/features/projects/hooks/useSimpleProduction";
-import { Upload } from "lucide-react";
+import { ProjectForm } from "@/features/projects/components/ProjectForm";
+import { ProjectFormData } from "@/features/projects/components/ProjectForm/schema";
+import { useAuth } from "@/features/auth/auth";
+import { toast } from "sonner";
 
-export default function CreateProject() {
+export default function NewProject() {
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const [title, setTitle] = useState("Untitled Project");
-  const [script, setScript] = useState("");
-  const [scriptMode, setScriptMode] = useState<"replace" | "append">("replace");
-  const [runAiDirector, setRunAiDirector] = useState(true);
-  const [isCreating, setIsCreating] = useState(false);
+  const { data: currentUser } = useAuth();
+  const [projectId, setProjectId] = useState<string | null>(null);
 
-  const [projectId, setProjectId] = useState<string>("");
-  const { isProcessing, step, processProduction } = useSimpleProduction(projectId);
+  const { createProject, isCreating, error: createError } = useNewProject();
+  const production = useSimpleProduction(projectId || '');
 
-  const handlePdfUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file || file.type !== "application/pdf") {
-      toast({
-        title: "Error",
-        description: "Please upload a PDF file",
-        variant: "destructive",
-      });
+  const handleProjectSubmit = async (data: ProjectFormData) => {
+    if (!currentUser) {
+      toast.error("User must be authenticated to create a project");
       return;
     }
 
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-
-      // TODO: Implement PDF text extraction
-      // For now, show a message
-      toast({
-        title: "PDF Upload",
-        description: "PDF processing will be implemented soon",
+      // Step 1: Create project in database
+      const project = await createProject({
+        title: data.title,
+        script: data.script,
+        user_id: currentUser.id,
       });
+
+      setProjectId(project.id);
+
+      // Step 2: Start audio production
+      await production.processProduction(data.script);
+
+      // Note: We don't navigate away immediately - user sees processing status
+      // They can navigate to Dashboard to see their project list
     } catch (error) {
-      console.error("Error processing PDF:", error);
-      toast({
-        title: "Error",
-        description: "Failed to process PDF",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleCreateProject = async () => {
-    if (!script.trim()) {
-      toast({
-        title: "Error",
-        description: "Please enter a script",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsCreating(true);
-
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        throw new Error("Not authenticated");
-      }
-
-      // Generate project ID
-      const newProjectId = `proj_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      
-      // Insert project into database
-      const { error: insertError } = await supabase
-        .from('projects')
-        .insert({
-          id: newProjectId,
-          title: title,
-          script_text: script,
-          user_id: user.id,
-          status: 'draft'
-        });
-
-      if (insertError) {
-        throw insertError;
-      }
-
-      setProjectId(newProjectId);
-
-      if (runAiDirector) {
-        await processProduction(script);
-      }
-
-      toast({
-        title: "Success",
-        description: "Project created successfully",
-      });
-
-      navigate(`/projects/${newProjectId}`);
-      
-    } catch (error: any) {
-      console.error("Error creating project:", error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to create project",
-        variant: "destructive",
-      });
-    } finally {
-      setIsCreating(false);
+      console.error("Failed to create project:", error);
+      toast.error("Failed to create project");
     }
   };
 
   return (
-    <div className="container max-w-4xl py-8">
-      <h1 className="text-3xl font-bold mb-8">Create New Project</h1>
+    <div className="max-w-4xl mx-auto py-10">
+      <h1 className="text-3xl font-bold mb-6">Create New Project</h1>
 
-      {(isProcessing || isCreating) && (
+      {/* Show production status if processing */}
+      {production.isProcessing && (
         <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-          <h3 className="font-semibold mb-2">Processing...</h3>
-          <p className="text-sm text-gray-600">{step || "Creating project..."}</p>
+          <h2 className="font-semibold text-blue-900 mb-2">Processing...</h2>
+          <p className="text-blue-700">{production.step}</p>
+          <div className="mt-3">
+            <div className="animate-pulse bg-blue-200 h-2 rounded"></div>
+          </div>
         </div>
       )}
 
-      <div className="space-y-6">
-        <div>
-          <Label htmlFor="title">Title</Label>
-          <Input
-            id="title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Enter project title"
-          />
-        </div>
-
-        <div>
-          <Label>Upload PDF</Label>
-          <div className="flex items-center gap-4">
-            <Button
-              variant="outline"
-              onClick={() => document.getElementById("pdf-upload")?.click()}
-              className="w-full"
+      {/* Show success with audio player */}
+      {production.audioUrl && (
+        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+          <h2 className="font-semibold text-green-900 mb-2">✅ Production Complete!</h2>
+          <audio controls className="w-full mt-3">
+            <source src={production.audioUrl} type="audio/mp4" />
+            Your browser does not support the audio element.
+          </audio>
+          <div className="mt-3 flex gap-3">
+            <a
+              href={production.audioUrl}
+              download
+              className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
             >
-              <Upload className="w-4 h-4 mr-2" />
-              Upload PDF
-            </Button>
-            <input
-              id="pdf-upload"
-              type="file"
-              accept="application/pdf"
-              onChange={handlePdfUpload}
-              className="hidden"
-            />
+              Download Audio
+            </a>
+            <button
+              onClick={() => navigate("/dashboard")}
+              className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
+            >
+              Go to Dashboard
+            </button>
           </div>
-          
-          <RadioGroup
-            value={scriptMode}
-            onValueChange={(value) => setScriptMode(value as "replace" | "append")}
-            className="flex gap-4 mt-2"
+        </div>
+      )}
+
+      {/* Show error if failed */}
+      {production.error && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <h2 className="font-semibold text-red-900 mb-2">❌ Production Failed</h2>
+          <p className="text-red-700">{production.error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-3 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
           >
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="replace" id="replace" />
-              <Label htmlFor="replace">Replace text</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="append" id="append" />
-              <Label htmlFor="append">Append text</Label>
-            </div>
-          </RadioGroup>
+            Try Again
+          </button>
         </div>
+      )}
 
-        <div>
-          <Label htmlFor="script">Script</Label>
-          <Textarea
-            id="script"
-            value={script}
-            onChange={(e) => setScript(e.target.value)}
-            placeholder="Paste your screenplay here..."
-            rows={15}
-            className="font-mono"
-          />
-        </div>
-
-        <div className="flex items-center space-x-2">
-          <Checkbox
-            id="runAiDirector"
-            checked={runAiDirector}
-            onCheckedChange={(checked) => setRunAiDirector(checked as boolean)}
-          />
-          <Label htmlFor="runAiDirector" className="cursor-pointer">
-            Run AI Director (analyze script)
-          </Label>
-        </div>
-
-        <Button
-          onClick={handleCreateProject}
-          disabled={isCreating || isProcessing}
-          className="w-full"
-        >
-          {isCreating || isProcessing ? "Creating..." : "Create Project"}
-        </Button>
-      </div>
+      {/* Project creation form */}
+      <ProjectForm
+        onSubmit={handleProjectSubmit}
+        isSubmitting={isCreating || production.isProcessing}
+      />
     </div>
   );
 }
