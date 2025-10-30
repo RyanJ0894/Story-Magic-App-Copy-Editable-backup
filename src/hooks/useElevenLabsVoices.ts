@@ -78,8 +78,11 @@ export const useElevenLabsVoices = () => {
       console.error('Error fetching ElevenLabs voices:', err)
       
       // Only show error toast for authenticated users, not demo users
+      // Don't show error if API key is not configured (this is expected during initial setup)
       const { data: { session } } = await supabase.auth.getSession()
-      if (session && !isDemo) {
+      const isApiKeyError = errorMessage.includes('API key') || errorMessage.includes('not configured')
+      
+      if (session && !isDemo && !isApiKeyError) {
         toast({
           title: "Failed to load voices",
           description: errorMessage,
