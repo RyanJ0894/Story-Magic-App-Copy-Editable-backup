@@ -28,7 +28,7 @@ export const useSimpleProduction = (projectId: string) => {
 
       // Step 1: Get current session for authentication
       const { data: { session } } = await supabase.auth.getSession();
-      
+
       if (!session) {
         throw new Error('Not authenticated. Please log in.');
       }
@@ -44,11 +44,13 @@ export const useSimpleProduction = (projectId: string) => {
         }
       });
 
-      if (triggerError) {
-        throw new Error(`RelevanceAI webhook failed: ${triggerError.message}`);
+      // Check if the Edge Function actually succeeded
+      if (triggerError || !triggerData?.success) {
+        console.error('❌ Edge Function error:', triggerError || triggerData);
+        throw new Error(`RelevanceAI webhook failed: ${triggerError?.message || 'Unknown error'}`);
       }
 
-      console.log('✅ RelevanceAI triggered successfully');
+      console.log('✅ RelevanceAI triggered successfully:', triggerData);
 
       // Step 3: Poll Supabase for Director JSON (wait for RelevanceAI to save it)
       setState(prev => ({ ...prev, step: 'Retrieving Director JSON...' }));
@@ -58,6 +60,8 @@ export const useSimpleProduction = (projectId: string) => {
       let directorJson = null;
 
       while (attempts < maxAttempts && !directorJson) {
+        console.log(`🔍 Poll attempt ${attempts + 1}/${maxAttempts} for project ${projectId}`);
+        
         const { data, error } = await supabase
           .from('director_json')
           .select('json_data')
@@ -66,7 +70,12 @@ export const useSimpleProduction = (projectId: string) => {
           .limit(1)
           .single();
 
+        if (error) {
+          console.error('❌ Supabase query error:', error);
+        }
+
         if (data?.json_data) {
+          console.log('✅ Director JSON found!');
           directorJson = data.json_data;
           break;
         }
@@ -76,7 +85,8 @@ export const useSimpleProduction = (projectId: string) => {
       }
 
       if (!directorJson) {
-        throw new Error('Failed to retrieve Director JSON from database');
+        console.error(`❌ Failed to retrieve Director JSON after ${maxAttempts} attempts`);
+        throw new Error('Failed to retrieve Director JSON from database. Please check RelevanceAI agent status.');
       }
 
       console.log('✅ Director JSON retrieved from Supabase');
