@@ -12,7 +12,7 @@ export default function NewProject() {
   const { data: currentUser } = useAuth();
   const [projectId, setProjectId] = useState<string | null>(null);
 
-  const { createProject, isCreating, error: createError } = useNewProject();
+  const { createProject, isCreating } = useNewProject();
   const production = useSimpleProduction(projectId || '');
 
   const handleProjectSubmit = async (data: ProjectFormData) => {
@@ -22,7 +22,6 @@ export default function NewProject() {
     }
 
     try {
-      // Step 1: Create project in database
       const project = await createProject({
         title: data.title,
         script: data.script,
@@ -31,19 +30,11 @@ export default function NewProject() {
 
       setProjectId(project.id);
 
-      // Step 2: Start audio production
-      await production.processProduction(data.script);
-
-      // Note: We don't navigate away immediately - user sees processing status
-      // They can navigate to Dashboard to see their project list
+      await production.processProduction(data.script, project.id);
     } catch (error) {
       console.error("Failed to create project:", error);
       toast.error("Failed to create project");
     }
-  };
-
-  const handleNavigateToDashboard = () => {
-    navigate("/dashboard");
   };
 
   return (
@@ -76,7 +67,7 @@ export default function NewProject() {
               Download Audio
             </a>
             <button
-              onClick={handleNavigateToDashboard}
+              onClick={() => navigate("/dashboard")}
               className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
             >
               Go to Dashboard
