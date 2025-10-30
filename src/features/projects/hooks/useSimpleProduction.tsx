@@ -26,40 +26,33 @@ export const useSimpleProduction = (projectId: string) => {
         error: null,
       });
 
-      // Step 1: Call Supabase Edge Function to trigger RelevanceAI
+      // Step 1: Get current session for authentication
       const { data: { session } } = await supabase.auth.getSession();
-      const webhookUrl = `https://bcuhyyyerxwgkrkbrqbs.supabase.co/functions/v1/trigger-relevance`;
       
-      if (!webhookUrl) {
-        throw new Error('RelevanceAI webhook URL not configured');
+      if (!session) {
+        throw new Error('Not authenticated. Please log in.');
       }
 
-      console.log('🎬 Sending script to RelevanceAI Ace agent...');
+      // Step 2: Call Supabase Edge Function to trigger RelevanceAI
+      console.log('📤 Sending script to RelevanceAI via Edge Function...');
       setState(prev => ({ ...prev, step: 'AI Director analyzing script...' }));
 
-      const webhookResponse = await fetch(webhookUrl, {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session?.access_token}`,
-          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJjdWh5eXllcnh3Z2tya2JycWJzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ0MzQyOTEsImV4cCI6MjA3MDAxMDI5MX0.-9pGj4UEiT_3jC9hJit2LbCrXy2KlaqGgvv4giA6RV4'
-        },
-        body: JSON.stringify({
+      const { data: triggerData, error: triggerError } = await supabase.functions.invoke('trigger-relevance', {
+        body: {
           project_id: projectId,
           script_text: script
-        })
+        }
       });
 
-      if (!webhookResponse.ok) {
-        throw new Error(`RelevanceAI webhook failed: ${webhookResponse.status}`);
+      if (triggerError) {
+        throw new Error(`RelevanceAI webhook failed: ${triggerError.message}`);
       }
 
-      // Wait a moment for RelevanceAI to process and post to Supabase
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      console.log('✅ RelevanceAI triggered successfully');
 
-      // Step 2: Fetch Director JSON from Supabase
+      // Step 3: Poll Supabase for Director JSON (wait for RelevanceAI to save it)
       setState(prev => ({ ...prev, step: 'Retrieving Director JSON...' }));
-      
+
       let attempts = 0;
       const maxAttempts = 30;
       let directorJson = null;
@@ -88,9 +81,9 @@ export const useSimpleProduction = (projectId: string) => {
 
       console.log('✅ Director JSON retrieved from Supabase');
 
-      // Step 3: Send Director JSON to Railway orchestrator
+      // Step 4: Send Director JSON to Railway orchestrator
       setState(prev => ({ ...prev, step: 'Generating audio...' }));
-      
+
       const result = await orchestrateAudio(directorJson);
 
       setState({
