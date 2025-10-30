@@ -14,7 +14,13 @@ serve(async (req)=>{
     // Get ElevenLabs API key from Supabase secrets
     const elevenLabsApiKey = Deno.env.get('ELEVENLABS_API_KEY');
     if (!elevenLabsApiKey) {
-      throw new Error('ElevenLabs API key not configured');
+      console.log('ElevenLabs API key not configured, returning empty demo voices list');
+      return new Response(JSON.stringify({
+        voices: [],
+        count: 0
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
     }
     // Fetch voices from ElevenLabs API
     const response = await fetch('https://api.elevenlabs.io/v1/voices', {

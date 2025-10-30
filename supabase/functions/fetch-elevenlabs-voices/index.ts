@@ -28,7 +28,13 @@ serve(async (req)=>{
     // Verify user is authenticated
     const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
     if (userError || !user) {
-      throw new Error('User not authenticated');
+      console.log('User not authenticated, returning empty voices list');
+      return new Response(JSON.stringify({
+        voices: [],
+        count: 0
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
     }
     // Get ElevenLabs API key from Supabase secrets
     const elevenLabsApiKey = Deno.env.get('ELEVENLABS_API_KEY');
