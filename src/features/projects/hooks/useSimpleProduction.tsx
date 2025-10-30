@@ -18,7 +18,7 @@ export const useSimpleProduction = (projectId: string) => {
   });
 
   const processProductionMutation = {
-    mutationFn: async (script: string): Promise<OrchestrationResult> => {
+    mutationFn: async ({ script, projectId }: { script: string; projectId: string }): Promise<OrchestrationResult> => {
       setState({
         isProcessing: true,
         step: 'Sending script to AI Director...',
@@ -34,7 +34,7 @@ export const useSimpleProduction = (projectId: string) => {
       }
 
       // Step 2: Call Supabase Edge Function to trigger RelevanceAI
-      console.log('📤 Sending script to RelevanceAI via Edge Function...');
+      console.log('🎬 Sending script to RelevanceAI via Edge Function...');
       setState(prev => ({ ...prev, step: 'AI Director analyzing script...' }));
 
       const { data: triggerData, error: triggerError } = await supabase.functions.invoke('trigger-relevance', {
@@ -50,7 +50,7 @@ export const useSimpleProduction = (projectId: string) => {
         throw new Error(`RelevanceAI webhook failed: ${triggerError?.message || 'Unknown error'}`);
       }
 
-      console.log('✅ RelevanceAI triggered successfully:', triggerData);
+      console.log('✅ RelevanceAI triggered successfully!', triggerData);
 
       // Step 3: Poll Supabase for Director JSON (wait for RelevanceAI to save it)
       setState(prev => ({ ...prev, step: 'Retrieving Director JSON...' }));
@@ -61,7 +61,7 @@ export const useSimpleProduction = (projectId: string) => {
 
       while (attempts < maxAttempts && !directorJson) {
         console.log(`🔍 Poll attempt ${attempts + 1}/${maxAttempts} for project ${projectId}`);
-        
+
         const { data, error } = await supabase
           .from('director_json')
           .select('json_data')
@@ -85,7 +85,7 @@ export const useSimpleProduction = (projectId: string) => {
       }
 
       if (!directorJson) {
-        console.error(`❌ Failed to retrieve Director JSON after ${maxAttempts} attempts`);
+        console.error('❌ Failed to retrieve Director JSON after ${maxAttempts} attempts');
         throw new Error('Failed to retrieve Director JSON from database. Please check RelevanceAI agent status.');
       }
 
@@ -117,6 +117,6 @@ export const useSimpleProduction = (projectId: string) => {
 
   return {
     ...state,
-    processProduction: processProductionMutation.mutationFn,
+    processProduction: (script: string, projectId: string) => processProductionMutation.mutationFn({ script, projectId }),
   };
 };
