@@ -28,24 +28,12 @@ serve(async (req)=>{
     // Verify user is authenticated
     const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
     if (userError || !user) {
-      console.log('User not authenticated, returning empty voices list');
-      return new Response(JSON.stringify({
-        voices: [],
-        count: 0
-      }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
+      throw new Error('User not authenticated');
     }
     // Get ElevenLabs API key from Supabase secrets
     const elevenLabsApiKey = Deno.env.get('ELEVENLABS_API_KEY');
     if (!elevenLabsApiKey) {
-      console.log('ElevenLabs API key not configured, returning empty voices list');
-      return new Response(JSON.stringify({
-        voices: [],
-        count: 0
-      }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
+      throw new Error('ElevenLabs API key not configured');
     }
     // Fetch voices from ElevenLabs API
     const response = await fetch('https://api.elevenlabs.io/v1/voices', {
