@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { orchestrateAudio } from '@/integrations/supabase/railwayOrchestrator';
+import { orchestrateAudio, OrchestrationResult } from '@/integrations/supabase/railwayOrchestrator';
 
 interface ProductionState {
   isProcessing: boolean;
@@ -42,7 +42,7 @@ export const useSimpleProduction = (projectId: string) => {
         headers: { 
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${session?.access_token}`,
-          'apikey': supabase.supabaseKey
+          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJjdWh5eXllcnh3Z2tya2JycWJzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ0MzQyOTEsImV4cCI6MjA3MDAxMDI5MX0.-9pGj4UEiT_3jC9hJit2LbCrXy2KlaqGgvv4giA6RV4'
         },
         body: JSON.stringify({
           project_id: projectId,
@@ -96,7 +96,7 @@ export const useSimpleProduction = (projectId: string) => {
       setState({
         isProcessing: false,
         step: 'Complete',
-        audioUrl: result.publicUrl || null,
+        audioUrl: result.public_url || null,
         error: null,
       });
 
