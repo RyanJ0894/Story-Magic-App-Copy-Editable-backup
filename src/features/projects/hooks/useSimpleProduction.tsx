@@ -17,15 +17,15 @@ export const useSimpleProduction = () => {
     error: null,
   });
 
-  const processProductionMutation = {
-    mutationFn: async ({ script, projectId }: { script: string; projectId: string }): Promise<OrchestrationResult> => {
-      setState({
-        isProcessing: true,
-        step: 'Sending script to AI Director...',
-        audioUrl: null,
-        error: null,
-      });
+  const processProduction = async (script: string, projectId: string): Promise<OrchestrationResult> => {
+    setState({
+      isProcessing: true,
+      step: 'Sending script to AI Director...',
+      audioUrl: null,
+      error: null,
+    });
 
+    try {
       // Step 1: Get current session for authentication
       const { data: { session } } = await supabase.auth.getSession();
 
@@ -82,7 +82,7 @@ export const useSimpleProduction = () => {
       }
 
       if (!directorJson) {
-        console.error('❌ Failed to retrieve Director JSON after ${maxAttempts} attempts');
+        console.error(`❌ Failed to retrieve Director JSON after ${maxAttempts} attempts`);
         throw new Error('Failed to retrieve Director JSON from database. Please check RelevanceAI agent status.');
       }
 
@@ -101,19 +101,20 @@ export const useSimpleProduction = () => {
       });
 
       return result;
-    },
-    onError: (error: Error) => {
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       setState({
         isProcessing: false,
         step: '',
         audioUrl: null,
-        error: error.message,
+        error: errorMessage,
       });
-    },
+      throw error;
+    }
   };
 
   return {
     ...state,
-    processProduction: (script: string, projectId: string) => processProductionMutation.mutationFn({ script, projectId }),
+    processProduction,
   };
 };
