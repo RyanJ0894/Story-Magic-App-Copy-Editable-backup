@@ -9,7 +9,7 @@ interface ProductionState {
   error: string | null;
 }
 
-export const useSimpleProduction = (projectId: string) => {
+export const useSimpleProduction = () => {
   const [state, setState] = useState<ProductionState>({
     isProcessing: false,
     step: '',
@@ -34,9 +34,6 @@ export const useSimpleProduction = (projectId: string) => {
       }
 
       // Step 2: Call Supabase Edge Function to trigger RelevanceAI
-      console.log('🎬 Sending script to RelevanceAI via Edge Function...');
-      setState(prev => ({ ...prev, step: 'AI Director analyzing script...' }));
-
       const { data: triggerData, error: triggerError } = await supabase.functions.invoke('trigger-relevance', {
         body: {
           project_id: projectId,
@@ -46,7 +43,7 @@ export const useSimpleProduction = (projectId: string) => {
 
       // Check if the Edge Function actually succeeded
       if (triggerError || !triggerData?.success) {
-        console.error('❌ Edge Function error:', triggerError || triggerData);
+        console.error('❌ Edge Function error:', triggerError, triggerData);
         throw new Error(`RelevanceAI webhook failed: ${triggerError?.message || 'Unknown error'}`);
       }
 
