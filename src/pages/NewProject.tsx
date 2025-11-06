@@ -59,16 +59,16 @@ export default function NewProject() {
             ✅ Production Complete!
           </h2>
 
-          <audio controls>
-            <audio
-              controls
-              className="w-full mt-3 accent-yellow-500 bg-[#1b1b1b] rounded-xl p-1 shadow-sm border border-gray-700"
-              style={{ accentColor: "#facc15", backgroundColor: "#1b1b1b" }}
-            >
-              <source src={production.audioUrl} type="audio/mp4" />
-              Your browser does not support the audio element.
-            </audio>
-          </audio>
+          <audio
+            controls
+<audio
+  controls
+  className="w-full mt-3 accent-yellow-500 bg-[#1b1b1b] rounded-xl p-1 shadow-sm border border-gray-700"
+  style={{ accentColor: "#facc15", backgroundColor: "#1b1b1b" }}
+>
+  <source src={production.audioUrl} type="audio/mp4" />
+  Your browser does not support the audio element.
+</audio>
 
           <div className="mt-3 flex gap-3">
             <a
