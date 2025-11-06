@@ -26,13 +26,13 @@ export const useSimpleProduction = () => {
     });
 
     try {
-      // Step 1: Ensure the user is authenticated
+      // Step 1: Ensure user is authenticated
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         throw new Error('Not authenticated. Please log in.');
       }
 
-      // Step 2: Trigger RelevanceAI agent via Supabase Edge Function (
+      // Step 2: Trigger RelevanceAI agent via Supabase Edge Function
       const { data: triggerData, error: triggerError } = await supabase.functions.invoke('trigger-relevance', {
         body: { project_id: projectId, script_text: script },
       });
@@ -44,40 +44,44 @@ export const useSimpleProduction = () => {
 
       console.log('✅ RelevanceAI triggered successfully!', triggerData);
 
-      // Step 3: Poll Supabase for Director JSON (wait for AI Director output)
-      setState(prev => ({ ...prev, step: 'Waiting for AI Director (RelevanceAI) to generate Director JSON...' }));
+      // Step 3: Poll Supabase for Director JSON (wait up to 10 minutes)
+      setState(prev => ({
+        ...prev,
+        step: 'Waiting for AI Director (RelevanceAI) to generate Director JSON...',
+      }));
 
       let attempts = 0;
-      const maxAttempts = 60; // up to 60 seconds total
+      const pollInterval = 5000; // every 5 seconds
+      const maxAttempts = (20 * 60 * 1000) / pollInterval; // 20 minutes total
       let directorJson: any = null;
 
-    while (attempts < maxAttempts && !directorJson) {
-  console.log(`🔍 Poll attempt ${attempts + 1}/${maxAttempts} for project ${projectId}`);
+      while (attempts < maxAttempts && !directorJson) {
+        const remaining = Math.round((maxAttempts - attempts) * (pollInterval / 1000));
+        console.log(`🔍 Poll attempt ${attempts + 1}/${maxAttempts} for project ${projectId} — ${remaining}s left`);
 
-  const { data, error } = await supabase
-    .from('director_json')
-    .select('json_data')
-    .eq('project_id', projectId)
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .single();
+        const { data, error } = await supabase
+          .from('director_json')
+          .select('json_data')
+          .eq('project_id', projectId)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single();
 
-  if (error) console.error('❌ Supabase query error:', error);
+        if (error) console.error('❌ Supabase query error:', error);
 
-  const json = data?.json_data as unknown as Record<string, any>; // 👈 fix here
+        const json = data?.json_data as unknown as Record<string, any>;
 
-  if (json && typeof json === 'object' && Array.isArray(json.scenes)) {
-    console.log('✅ Valid Director JSON found!');
-    directorJson = json;
-    break;
-  } else if (json) {
-    console.warn('⚠️ Director JSON found but not ready yet (missing scenes)');
-  }
+        if (json && typeof json === 'object' && Array.isArray(json.scenes)) {
+          console.log('✅ Valid Director JSON found!');
+          directorJson = json;
+          break;
+        } else if (json) {
+          console.warn('⚠️ Director JSON found but not ready yet (missing scenes)');
+        }
 
-  attempts++;
-  await new Promise(resolve => setTimeout(resolve, 1000)); // wait 1s
-}
-
+        attempts++;
+        await new Promise(resolve => setTimeout(resolve, pollInterval));
+      }
 
       if (!directorJson) {
         throw new Error('❌ Timed out waiting for Director JSON with scenes. Please check RelevanceAI agent output.');
@@ -85,7 +89,7 @@ export const useSimpleProduction = () => {
 
       console.log('✅ Director JSON retrieved successfully from Supabase.');
 
-      // Step 4: Send valid Director JSON to Railway orchestrator
+      // Step 4: Send valid Director JSON to Railway Orchestrator
       setState(prev => ({ ...prev, step: 'Generating audio with Railway Orchestrator...' }));
 
       const result = await orchestrateAudio(directorJson);
