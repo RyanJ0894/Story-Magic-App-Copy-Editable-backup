@@ -26,40 +26,27 @@ export const useSimpleProduction = () => {
     });
 
     try {
-      // Step 1: Ensure user is authenticated
+      // Step 1: Ensure authentication
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        throw new Error('Not authenticated. Please log in.');
-      }
+      if (!session) throw new Error('Not authenticated. Please log in.');
 
-      // Step 2: Trigger RelevanceAI agent via Supabase Edge Function
+      // Step 2: Trigger RelevanceAI
       const { data: triggerData, error: triggerError } = await supabase.functions.invoke('trigger-relevance', {
         body: { project_id: projectId, script_text: script },
       });
-
-      if (triggerError || !triggerData?.success) {
-        console.error('❌ Edge Function error:', triggerError, triggerData);
+      if (triggerError || !triggerData?.success)
         throw new Error(`RelevanceAI webhook failed: ${triggerError?.message || 'Unknown error'}`);
-      }
 
-      console.log('✅ RelevanceAI triggered successfully!', triggerData);
+      setState(prev => ({ ...prev, step: 'Waiting for AI Director to generate Director JSON...' }));
 
-      // Step 3: Poll Supabase for Director JSON (wait up to 10 minutes)
-      setState(prev => ({
-        ...prev,
-        step: 'Waiting for AI Director (RelevanceAI) to generate Director JSON...',
-      }));
-
+      // Step 3: Poll Supabase for Director JSON
       let attempts = 0;
-      const pollInterval = 5000; // every 5 seconds
-      const maxAttempts = (20 * 60 * 1000) / pollInterval; // 20 minutes total
+      const pollInterval = 5000;
+      const maxAttempts = (20 * 60 * 1000) / pollInterval;
       let directorJson: any = null;
 
       while (attempts < maxAttempts && !directorJson) {
-        const remaining = Math.round((maxAttempts - attempts) * (pollInterval / 1000));
-        console.log(`🔍 Poll attempt ${attempts + 1}/${maxAttempts} for project ${projectId} — ${remaining}s left`);
-
-        const { data, error } = await supabase
+        const { data } = await supabase
           .from('director_json')
           .select('json_data')
           .eq('project_id', projectId)
@@ -67,60 +54,65 @@ export const useSimpleProduction = () => {
           .limit(1)
           .single();
 
-        if (error) console.error('❌ Supabase query error:', error);
-
-        const json = data?.json_data as unknown as Record<string, any>;
-
-        if (json && typeof json === 'object' && Array.isArray(json.scenes)) {
-          console.log('✅ Valid Director JSON found!');
+        const json = data?.json_data as Record<string, any> | null;
+        if (json?.scenes?.length) {
           directorJson = json;
           break;
-        } else if (json) {
-          console.warn('⚠️ Director JSON found but not ready yet (missing scenes)');
         }
 
         attempts++;
-        await new Promise(resolve => setTimeout(resolve, pollInterval));
+        await new Promise(r => setTimeout(r, pollInterval));
       }
 
-      if (!directorJson) {
-        throw new Error('❌ Timed out waiting for Director JSON with scenes. Please check RelevanceAI agent output.');
-      }
+      if (!directorJson) throw new Error('Timed out waiting for Director JSON with scenes.');
 
-      console.log('✅ Director JSON retrieved successfully from Supabase.');
-
-      // Step 4: Send valid Director JSON to Railway Orchestrator
+      // Step 4: Generate audio via Railway orchestrator
       setState(prev => ({ ...prev, step: 'Generating audio with Railway Orchestrator...' }));
 
       const result = await orchestrateAudio(directorJson);
+      if (result.status === 'error') throw new Error(result.error || 'Railway orchestration failed');
 
-      if (result.status === 'error') {
-        throw new Error(result.error || 'Railway orchestration failed');
+      // Step 5: Try to resolve final public URL
+      let publicUrl: string | null = null;
+
+      // Case 1: result already includes it
+      publicUrl = result.public_url || result.manifest?.public_url || null;
+
+      // Case 2: fetch manifest.json from Supabase
+      if (!publicUrl) {
+        const { data: manifestData } = await supabase.storage
+          .from('audio')
+          .download(`${projectId}/manifest.json`);
+        if (manifestData) {
+          const manifestText = await manifestData.text();
+          const manifestJson = JSON.parse(manifestText);
+          publicUrl = manifestJson.public_url || null;
+        }
       }
 
-      // Step 5: Update final state
+      if (!publicUrl) throw new Error('Audio file generated but no public URL found.');
+
+      // Step 6: Update UI state
       setState({
         isProcessing: false,
         step: '✅ Complete',
-        audioUrl: result.public_url || result.manifest?.public_url || null,
+        audioUrl: publicUrl,
         error: null,
       });
 
-      console.log('🎵 Audio generation completed successfully:', result);
-      return result;
+      console.log('🎵 Audio ready at:', publicUrl);
+      return { ...result, public_url: publicUrl };
 
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unknown error';
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Unknown error';
       console.error('❌ Production failed:', message);
-
       setState({
         isProcessing: false,
         step: '❌ Failed',
         audioUrl: null,
         error: message,
       });
-
-      throw error;
+      throw err;
     }
   };
 
