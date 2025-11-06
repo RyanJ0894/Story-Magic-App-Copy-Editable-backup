@@ -2,184 +2,35 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
-
-@layer base {
-  :root {
-    /* Cinematic dark theme */
-    --background: 222 22% 8%;
-    --foreground: 210 20% 92%;
-
-    --card: 222 22% 10%;
-    --card-foreground: 210 20% 92%;
-
-    --popover: 222 22% 10%;
-    --popover-foreground: 210 20% 92%;
-
-    --primary: 45 90% 65%;
-    --primary-foreground: 222 22% 8%;
-
-    --secondary: 222 15% 15%;
-    --secondary-foreground: 210 20% 92%;
-
-    --muted: 222 15% 15%;
-    --muted-foreground: 215 15% 65%;
-
-    --accent: 214 85% 55%;
-    --accent-foreground: 210 20% 92%;
-
-    --destructive: 0 75% 55%;
-    --destructive-foreground: 210 20% 92%;
-
-    --border: 222 15% 15%;
-    --input: 222 15% 15%;
-    --ring: 45 90% 65%;
-
-    /* Custom design tokens */
-    --cinema-gold: 45 90% 65%;
-    --cinema-blue: 214 85% 55%;
-    --cinema-dark: 222 22% 6%;
-    --cinema-surface: 222 22% 10%;
-    --cinema-surface-hover: 222 22% 12%;
-    
-    /* Gradients */
-    --gradient-hero: linear-gradient(135deg, hsl(var(--cinema-dark)), hsl(222 22% 10%));
-    --gradient-card: linear-gradient(145deg, hsl(var(--cinema-surface)), hsl(222 15% 12%));
-    --gradient-accent: linear-gradient(90deg, hsl(var(--cinema-gold)), hsl(var(--cinema-blue)));
-    
-    /* Shadows */
-    --shadow-cinematic: 0 20px 40px -10px hsl(222 22% 4% / 0.4);
-    --shadow-glow: 0 0 30px hsl(var(--cinema-gold) / 0.2);
-
-    --radius: 0.5rem;
-
-    --sidebar-background: 0 0% 98%;
-
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
-
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
+/* --- Custom Audio Player Theme --- */
+audio {
+  width: 100%;
+  border-radius: 0.75rem;
+  background-color: #1b1b1b;
+  accent-color: #facc15; /* Tailwind yellow-400 */
+  padding: 0.25rem;
+  border: 1px solid #3f3f46;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
-@layer base {
-  * {
-    @apply border-border;
-  }
-
-  body {
-    @apply bg-background text-foreground;
-  }
+audio::-webkit-media-controls-panel {
+  background-color: #1b1b1b;
+  color: #facc15;
+  border-radius: 0.75rem;
 }
 
-/* Tailwind-like thin scrollbar without external plugin */
-.thin-scrollbar {
-  scrollbar-width: thin; /* Firefox */
-  scrollbar-color: hsl(var(--muted-foreground)) transparent;
-}
-.thin-scrollbar::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-.thin-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
-}
-.thin-scrollbar::-webkit-scrollbar-thumb {
-  background-color: hsl(var(--muted-foreground) / 0.5);
-  border-radius: 9999px;
-}
-.thin-scrollbar::-webkit-scrollbar-thumb:hover {
-  background-color: hsl(var(--muted-foreground));
+audio::-webkit-media-controls-play-button,
+audio::-webkit-media-controls-timeline,
+audio::-webkit-media-controls-current-time-display,
+audio::-webkit-media-controls-time-remaining-display {
+  filter: invert(80%) sepia(70%) saturate(400%) hue-rotate(20deg);
 }
 
-/* Thin slider utility for vertical sliders */
-.slider-thin .radix-slider-track { width: 4px !important; }
-.slider-thin .radix-slider-range { width: 100% !important; }
-.slider-thin .radix-slider-thumb { width: 10px !important; height: 10px !important; }
-
-/* VSCode-like JSON Theme */
-.vscode-json-theme {
-  --w-rjv-font-family: 'JetBrains Mono', 'Fira Code', 'Monaco', 'Consolas', 'Courier New', monospace;
-  --w-rjv-font-size: 12px;
-  --w-rjv-line-height: 1.4;
-  
-  /* VSCode Dark+ colors */
-  --w-rjv-background-color: #1e1e1e;
-  --w-rjv-curlybraces-color: #d4d4d4;
-  --w-rjv-colon-color: #d4d4d4;
-  --w-rjv-brackets-color: #d4d4d4;
-  --w-rjv-quotes-color: #ce9178;
-  --w-rjv-quotes-string-color: #ce9178;
-  --w-rjv-type-string-color: #ce9178;
-  --w-rjv-type-int-color: #b5cea8;
-  --w-rjv-type-float-color: #b5cea8;
-  --w-rjv-type-bigint-color: #b5cea8;
-  --w-rjv-type-boolean-color: #569cd6;
-  --w-rjv-type-date-color: #d4d4d4;
-  --w-rjv-type-null-color: #569cd6;
-  --w-rjv-type-nan-color: #569cd6;
-  --w-rjv-type-undefined-color: #569cd6;
-  --w-rjv-type-symbol-color: #d4d4d4;
-  --w-rjv-type-function-color: #dcdcaa;
-  --w-rjv-key-color: #569cd6;
-  --w-rjv-edit-color: #d4d4d4;
-  --w-rjv-info-color: #d4d4d4;
-  --w-rjv-edit-background: #3c3c3c;
-  --w-rjv-edit-border: #6a6a6a;
-  --w-rjv-arrow-color: #d4d4d4;
-  --w-rjv-edit-border-radius: 4px;
-  --w-rjv-key-string: #20d2ff;
+audio::-webkit-media-controls-volume-slider {
+  accent-color: #facc15;
 }
 
-.vscode-json-theme .w-json-view {
-  background-color: var(--w-rjv-background-color) !important;
-  color: var(--w-rjv-curlybraces-color) !important;
+audio:hover {
+  box-shadow: 0 0 10px rgba(250, 204, 21, 0.4);
+  transition: box-shadow 0.3s ease;
 }
