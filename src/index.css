@@ -2,7 +2,29 @@
 @tailwind components;
 @tailwind utilities;
 
-/* --- Custom Audio Player Theme --- */
+/* ---------------------------------------------- */
+/* STORY MAGIC GLOBAL THEME - DARK DEFAULT */
+/* ---------------------------------------------- */
+
+html,
+body {
+  background-color: #0b0b0b;
+  color: #e5e5e5;
+  font-family: system-ui, sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: #ffffff;
+}
+
+button, a {
+  transition: all 0.2s ease;
+}
+
+/* ---------------------------------------------- */
+/* AUDIO PLAYER - DARK + GOLD THEME */
+/* ---------------------------------------------- */
+
 audio {
   width: 100%;
   border-radius: 0.75rem;
