@@ -13,7 +13,7 @@ export default function NewProject() {
   const [projectId, setProjectId] = useState<string | null>(null);
 
   const { createProject, isCreating, error: createError } = useNewProject();
-  const production = useSimpleProduction(projectId || '');
+  const production = useSimpleProduction(projectId || "");
 
   const handleProjectSubmit = async (data: ProjectFormData) => {
     if (!currentUser) {
@@ -58,44 +58,31 @@ export default function NewProject() {
       )}
 
       {/* Show success with audio player */}
-  {/* Show success with audio player */}
-{production.audioUrl && (
-  <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-    <h2 className="font-semibold text-green-900 mb-2">✅ Production Complete!</h2>
+      {production.audioUrl && (
+        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+          <h2 className="font-semibold text-green-900 mb-2">
+            ✅ Production Complete!
+          </h2>
 
-    <audio
-      controls
-      className="w-full mt-3 accent-yellow-500 bg-[#1b1b1b] rounded-xl p-1 shadow-sm border border-gray-700"
-    >
-      <source src={production.audioUrl} type="audio/mp4" />
-      Your browser does not support the audio element.
-    </audio>
+          <audio
+            controls
+            className="w-full mt-3 accent-yellow-500 bg-[#1b1b1b] rounded-xl p-1 shadow-sm border border-gray-700"
+          >
+            <source src={production.audioUrl} type="audio/mp4" />
+            Your browser does not support the audio element.
+          </audio>
 
-    <div className="mt-3 flex gap-3">
-      <a
-        href={production.audioUrl}
-        download
-        className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-      >
-       {/* Show error if failed */}
-{production.error && (
-  <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-    <h2 className="font-semibold text-red-900 mb-2">❌ Production Failed</h2>
-    <p className="text-red-700">{production.error}</p>
-    <button
-      onClick={() => window.location.reload()}
-      className="mt-3 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-    >
-      Try Again
-    </button>
-  </div>
-)}
+          <div className="mt-3 flex gap-3">
+            <a
+              href={production.audioUrl}
+              download
+              className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+            >
+              Download Audio
+            </a>
 
-{/* Project creation form */}
-<ProjectForm
-  onSubmit={handleProjectSubmit}
-  isSubmitting={isCreating || production.isProcessing}
-/>
-</div>
-);
-}
+            <button
+              onClick={() => navigate("/dashboard")}
+              className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
+            >
+              Go to Dashboa
