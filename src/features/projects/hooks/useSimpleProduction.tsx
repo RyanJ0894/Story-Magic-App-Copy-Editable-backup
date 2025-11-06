@@ -32,7 +32,7 @@ export const useSimpleProduction = () => {
         throw new Error('Not authenticated. Please log in.');
       }
 
-      // Step 2: Trigger RelevanceAI agent via Supabase Edge Function
+      // Step 2: Trigger RelevanceAI agent via Supabase Edge Function (
       const { data: triggerData, error: triggerError } = await supabase.functions.invoke('trigger-relevance', {
         body: { project_id: projectId, script_text: script },
       });
