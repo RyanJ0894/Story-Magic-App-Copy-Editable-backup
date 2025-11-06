@@ -26,11 +26,11 @@ export const useSimpleProduction = () => {
     });
 
     try {
-      // Step 1: Ensure authentication
+      // 1. Ensure authentication
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Not authenticated. Please log in.');
 
-      // Step 2: Trigger RelevanceAI
+      // 2. Trigger RelevanceAI
       const { data: triggerData, error: triggerError } = await supabase.functions.invoke('trigger-relevance', {
         body: { project_id: projectId, script_text: script },
       });
@@ -39,7 +39,7 @@ export const useSimpleProduction = () => {
 
       setState(prev => ({ ...prev, step: 'Waiting for AI Director to generate Director JSON...' }));
 
-      // Step 3: Poll Supabase for Director JSON
+      // 3. Poll for Director JSON
       let attempts = 0;
       const pollInterval = 5000;
       const maxAttempts = (20 * 60 * 1000) / pollInterval;
@@ -66,33 +66,18 @@ export const useSimpleProduction = () => {
 
       if (!directorJson) throw new Error('Timed out waiting for Director JSON with scenes.');
 
-      // Step 4: Generate audio via Railway orchestrator
+      // 4. Run orchestration
       setState(prev => ({ ...prev, step: 'Generating audio with Railway Orchestrator...' }));
-
       const result = await orchestrateAudio(directorJson);
       if (result.status === 'error') throw new Error(result.error || 'Railway orchestration failed');
 
-      // Step 5: Try to resolve final public URL
-      let publicUrl: string | null = null;
+      // 5. Construct final public URL
+      const publicUrl =
+        result.public_url ||
+        result.manifest?.public_url ||
+        `https://bcuhyyyerxwgkrkbrqbs.supabase.co/storage/v1/object/public/audio/${projectId}/episode.m4a`;
 
-      // Case 1: result already includes it
-      publicUrl = result.public_url || result.manifest?.public_url || null;
-
-      // Case 2: fetch manifest.json from Supabase
-      if (!publicUrl) {
-        const { data: manifestData } = await supabase.storage
-          .from('audio')
-          .download(`${projectId}/manifest.json`);
-        if (manifestData) {
-          const manifestText = await manifestData.text();
-          const manifestJson = JSON.parse(manifestText);
-          publicUrl = manifestJson.public_url || null;
-        }
-      }
-
-      if (!publicUrl) throw new Error('Audio file generated but no public URL found.');
-
-      // Step 6: Update UI state
+      // 6. Update UI
       setState({
         isProcessing: false,
         step: '✅ Complete',
@@ -100,7 +85,7 @@ export const useSimpleProduction = () => {
         error: null,
       });
 
-      console.log('🎵 Audio ready at:', publicUrl);
+      console.log('🎵 Final audio URL:', publicUrl);
       return { ...result, public_url: publicUrl };
 
     } catch (err) {
