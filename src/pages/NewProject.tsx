@@ -77,42 +77,25 @@ export default function NewProject() {
         download
         className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
       >
-        Download Audio
-      </a>
-
-      <button
-        onClick={() => navigate('/dashboard')}
-        className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
-      >
-        Go to Dashboard
-      </button>
-    </div>
+       {/* Show error if failed */}
+{production.error && (
+  <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+    <h2 className="font-semibold text-red-900 mb-2">❌ Production Failed</h2>
+    <p className="text-red-700">{production.error}</p>
+    <button
+      onClick={() => window.location.reload()}
+      className="mt-3 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+    >
+      Try Again
+    </button>
   </div>
 )}
 
-          </div>
-        </div>
-      )}
-
-      {/* Show error if failed */}
-      {production.error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-          <h2 className="font-semibold text-red-900 mb-2">❌ Production Failed</h2>
-          <p className="text-red-700">{production.error}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="mt-3 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-          >
-            Try Again
-          </button>
-        </div>
-      )}
-
-      {/* Project creation form */}
-      <ProjectForm
-        onSubmit={handleProjectSubmit}
-        isSubmitting={isCreating || production.isProcessing}
-      />
-    </div>
-  );
+{/* Project creation form */}
+<ProjectForm
+  onSubmit={handleProjectSubmit}
+  isSubmitting={isCreating || production.isProcessing}
+/>
+</div>
+);
 }
