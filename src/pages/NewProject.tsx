@@ -22,7 +22,6 @@ export default function NewProject() {
     }
 
     try {
-      // Step 1: Create project in database
       const project = await createProject({
         title: data.title,
         script: data.script,
@@ -30,8 +29,6 @@ export default function NewProject() {
       });
 
       setProjectId(project.id);
-
-      // Step 2: Start audio production
       await production.processProduction(data.script, project.id);
     } catch (error) {
       console.error("Failed to create project:", error);
@@ -43,7 +40,7 @@ export default function NewProject() {
     <div className="max-w-4xl mx-auto py-10">
       <h1 className="text-3xl font-bold mb-6">Create New Project</h1>
 
-      {/* Show production status */}
+      {/* Show processing status */}
       {production.isProcessing && (
         <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
           <h2 className="font-semibold text-blue-900 mb-2">Processing...</h2>
@@ -61,7 +58,8 @@ export default function NewProject() {
 
           <audio
             controls
-            className="w-full mt-3 rounded-xl shadow-sm border border-gray-300"
+            className="w-full mt-3 accent-yellow-500 bg-[#1b1b1b] rounded-xl p-1 shadow-sm border border-gray-700"
+            style={{ accentColor: "#facc15", backgroundColor: "#1b1b1b" }}
           >
             <source src={production.audioUrl} type="audio/mp4" />
             Your browser does not support the audio element.
@@ -81,3 +79,31 @@ export default function NewProject() {
             >
               Go to Dashboard
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Show error if failed */}
+      {production.error && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <h2 className="font-semibold text-red-900 mb-2">
+            ❌ Production Failed
+          </h2>
+          <p className="text-red-700">{production.error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-3 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+          >
+            Try Again
+          </button>
+        </div>
+      )}
+
+      {/* Project creation form */}
+      <ProjectForm
+        onSubmit={handleProjectSubmit}
+        isSubmitting={isCreating || production.isProcessing}
+      />
+    </div>
+  );
+}
