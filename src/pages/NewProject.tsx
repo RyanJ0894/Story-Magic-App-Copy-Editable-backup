@@ -61,7 +61,7 @@ export default function NewProject() {
 
           <audio
             controls
-            className="w-full mt-3 accent-yellow-500 bg-[#1b1b1b] rounded-xl p-1 shadow-sm border border-gray-700"
+            className="w-full mt-3 rounded-xl shadow-sm border border-gray-300"
           >
             <source src={production.audioUrl} type="audio/mp4" />
             Your browser does not support the audio element.
@@ -81,31 +81,3 @@ export default function NewProject() {
             >
               Go to Dashboard
             </button>
-          </div>
-        </div>
-      )}
-
-      {/* Show error if failed */}
-      {production.error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-          <h2 className="font-semibold text-red-900 mb-2">
-            ❌ Production Failed
-          </h2>
-          <p className="text-red-700">{production.error}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="mt-3 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-          >
-            Try Again
-          </button>
-        </div>
-      )}
-
-      {/* Project creation form */}
-      <ProjectForm
-        onSubmit={handleProjectSubmit}
-        isSubmitting={isCreating || production.isProcessing}
-      />
-    </div>
-  );
-}
