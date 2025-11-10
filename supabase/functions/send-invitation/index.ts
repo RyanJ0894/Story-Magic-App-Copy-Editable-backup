@@ -56,7 +56,7 @@ const serve_handler = async (req: Request): Promise<Response> => {
     const resend = new Resend(apiKey);
 
     const emailResponse = await resend.emails.send({
-      from: "Story Magic Team <onboarding@resend.dev>",
+      from: "Story Magic Team <noreply@yourdomain.com>", // TODO: Replace with your verified domain
       to: [email],
       subject: `You're invited to join our team as ${role}`,
       html: `
