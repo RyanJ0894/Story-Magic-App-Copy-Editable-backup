@@ -21,15 +21,22 @@ export default function Dashboard() {
     handleDeleteProject,
   } = useDashboard();
 
+  const handleRoleChange = () => {
+    // Force a reload of the page to update all components
+    window.location.reload();
+  };
+
   if (isLoading || planLoading) return <DashboardSkeleton />;
   if (error) return <div className="min-h-screen flex items-center justify-center text-destructive">{error.message}</div>;
 
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Role Debug Panel */}
-      <div className="mb-6">
-        <RoleDebugPanel />
-      </div>
+      {profile && (
+        <div className="mb-6">
+          <RoleDebugPanel profile={profile} onRoleChange={handleRoleChange} />
+        </div>
+      )}
 
       {/* Status Banners */}
       {profile?.account_status === 'trial' && (

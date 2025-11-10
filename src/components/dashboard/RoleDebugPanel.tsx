@@ -1,38 +1,49 @@
 import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useUserRole } from "@/hooks/useUserRole";
-import { type UserRole } from "@/types/roles";
-import { Shield, RefreshCw } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Shield } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
-export function RoleDebugPanel() {
-  const { profile, loading, updateRole, currentRole } = useUserRole();
+interface RoleDebugPanelProps {
+  profile: any;
+  onRoleChange: () => void;
+}
+
+export function RoleDebugPanel({ profile, onRoleChange }: RoleDebugPanelProps) {
   const { toast } = useToast();
   const [updating, setUpdating] = useState(false);
+  const currentRole = profile?.role || 'Staff';
 
-  const handleUpdateToMaster = async () => {
+  const handleRoleChange = async (newRole: string) => {
+    if (newRole === currentRole) return;
+    
     setUpdating(true);
     try {
-      const success = await updateRole('Master' as UserRole);
-      if (success) {
-        toast({
-          title: "Role Updated!",
-          description: "Your role has been updated to Master. Refreshing page...",
-        });
-        setTimeout(() => window.location.reload(), 1500);
-      }
-    } catch (error) {
-      console.error('Failed to update role:', error);
+      const { error } = await supabase
+        .from('profiles')
+        .update({ role: newRole })
+        .eq('user_id', profile.user_id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Role Updated",
+        description: `Your role has been updated to ${newRole}`,
+      });
+      
+      onRoleChange();
+    } catch (error: any) {
+      toast({
+        title: "Update Failed",
+        description: error.message,
+        variant: "destructive"
+      });
     } finally {
       setUpdating(false);
     }
   };
-
-  if (loading) {
-    return <div>Loading role information...</div>;
-  }
 
   if (!profile) {
     return <div>No profile found</div>;
@@ -52,32 +63,23 @@ export function RoleDebugPanel() {
                 <p className="text-xs text-muted-foreground">Current Role</p>
                 <Badge variant="outline" className="mt-1">{currentRole}</Badge>
               </div>
-              <div>
-                <p className="text-xs text-muted-foreground">User ID</p>
-                <p className="text-xs font-mono mt-1">{profile.user_id.slice(0, 8)}...</p>
-              </div>
             </div>
           </div>
 
-          {currentRole !== 'Master' && (
-            <Button 
-              onClick={handleUpdateToMaster}
-              disabled={updating}
-              size="sm"
-            >
-              {updating ? (
-                <>
-                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                  Updating...
-                </>
-              ) : (
-                <>
-                  <Shield className="h-4 w-4 mr-2" />
-                  Update to Master
-                </>
-              )}
-            </Button>
-          )}
+          <Select 
+            value={currentRole} 
+            onValueChange={handleRoleChange}
+            disabled={updating}
+          >
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Select role" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Master">Master</SelectItem>
+              <SelectItem value="Team Lead">Team Lead</SelectItem>
+              <SelectItem value="Staff">Staff</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </CardContent>
     </Card>
