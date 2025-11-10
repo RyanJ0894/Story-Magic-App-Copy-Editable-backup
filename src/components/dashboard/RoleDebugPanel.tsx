@@ -19,25 +19,53 @@ export function RoleDebugPanel({ profile, onRoleChange }: RoleDebugPanelProps) {
   const handleRoleChange = async (newRole: string) => {
     if (newRole === currentRole) return;
     
+    console.log("🔄 Role change initiated:", { from: currentRole, to: newRole });
     setUpdating(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("No user found");
+      
+      console.log("👤 User ID for update:", user.id);
 
-      const { error } = await supabase
+      // First, verify current profile state
+      const { data: beforeProfile, error: fetchError } = await supabase
         .from('profiles')
-        .update({ role: newRole })
-        .eq('user_id', user.id);
+        .select('user_id, role')
+        .eq('user_id', user.id)
+        .single();
+      
+      console.log("📋 Current profile before update:", beforeProfile);
+      if (fetchError) console.error("❌ Error fetching profile:", fetchError);
 
-      if (error) throw error;
+      // Perform the update
+      const { data: updateData, error: updateError } = await supabase
+        .from('profiles')
+        .update({ role: newRole, updated_at: new Date().toISOString() })
+        .eq('user_id', user.id)
+        .select();
+
+      console.log("✅ Update response:", { data: updateData, error: updateError });
+
+      if (updateError) throw updateError;
+
+      // Verify the update worked
+      const { data: afterProfile } = await supabase
+        .from('profiles')
+        .select('user_id, role')
+        .eq('user_id', user.id)
+        .single();
+      
+      console.log("📋 Profile after update:", afterProfile);
 
       toast({
         title: "Role Updated",
         description: `Your role has been updated to ${newRole}`,
       });
       
+      console.log("🔄 Triggering page reload...");
       onRoleChange();
     } catch (error: any) {
+      console.error("❌ Role update error:", error);
       toast({
         title: "Update Failed",
         description: error.message,
