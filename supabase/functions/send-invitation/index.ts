@@ -54,6 +54,9 @@ const serve_handler = async (req: Request): Promise<Response> => {
 
     // Send actual email using Resend
     const resend = new Resend(apiKey);
+    
+    console.log("Attempting to send email to:", email);
+    console.log("From address:", "Story Magic Team <noreply@storymagicapp.net>");
 
     const emailResponse = await resend.emails.send({
       from: "Story Magic Team <noreply@storymagicapp.net>",
@@ -92,12 +95,14 @@ const serve_handler = async (req: Request): Promise<Response> => {
       `,
     });
 
+    console.log("Email Response:", JSON.stringify(emailResponse, null, 2));
+    
     if (emailResponse.error) {
       console.error("Email sending failed:", emailResponse.error);
-      throw new Error(`Failed to send email: ${emailResponse.error.message}`);
+      throw new Error(`Failed to send email: ${JSON.stringify(emailResponse.error)}`);
     }
 
-    console.log("Email sent successfully:", emailResponse.data?.id);
+    console.log("Email sent successfully! ID:", emailResponse.data?.id);
 
     return new Response(
       JSON.stringify({
