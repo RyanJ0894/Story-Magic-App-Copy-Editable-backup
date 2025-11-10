@@ -15,13 +15,22 @@ interface InvitationRequest {
 }
 
 const serve_handler = async (req: Request): Promise<Response> => {
+  console.log("=== SEND INVITATION FUNCTION STARTED ===");
+  console.log("Request method:", req.method);
+  console.log("Request headers:", Object.fromEntries(req.headers.entries()));
+  
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
+    console.log("Handling OPTIONS request");
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { email, role, token, inviterName }: InvitationRequest = await req.json();
+    console.log("Parsing request body...");
+    const requestBody = await req.json();
+    console.log("Request body received:", requestBody);
+    
+    const { email, role, token, inviterName }: InvitationRequest = requestBody;
 
     const supabase = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "");
 
@@ -45,11 +54,20 @@ const serve_handler = async (req: Request): Promise<Response> => {
 
     // Debug environment variables
     const apiKey = Deno.env.get("RESEND_API_KEY");
+    console.log("=== CHECKING RESEND API KEY ===");
     console.log("RESEND_API_KEY available:", !!apiKey);
+    console.log("RESEND_API_KEY length:", apiKey?.length || 0);
+    console.log("RESEND_API_KEY starts with 're_':", apiKey?.startsWith('re_'));
     console.log("Available env vars:", Object.keys(Deno.env.toObject()));
 
     if (!apiKey) {
+      console.error("RESEND_API_KEY is missing!");
       throw new Error("RESEND_API_KEY environment variable not found");
+    }
+    
+    if (!apiKey.startsWith('re_')) {
+      console.error("RESEND_API_KEY format looks incorrect!");
+      throw new Error("RESEND_API_KEY appears to be invalid");
     }
 
     // Send actual email using Resend

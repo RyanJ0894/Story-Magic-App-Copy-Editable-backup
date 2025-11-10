@@ -21,10 +21,13 @@ export function RoleDebugPanel({ profile, onRoleChange }: RoleDebugPanelProps) {
     
     setUpdating(true);
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("No user found");
+
       const { error } = await supabase
         .from('profiles')
         .update({ role: newRole })
-        .eq('user_id', profile.user_id);
+        .eq('user_id', user.id);
 
       if (error) throw error;
 
