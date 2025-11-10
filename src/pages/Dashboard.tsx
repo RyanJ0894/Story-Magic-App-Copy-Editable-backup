@@ -3,6 +3,7 @@ import { usePlanProtection } from "@/hooks/usePlanProtection";
 import { DashboardTabs } from "@/components/dashboard/DashboardTabs";
 import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
 import { useDashboard } from "@/features/projects/hooks/useDashboard";
+import { RoleDebugPanel } from "@/components/dashboard/RoleDebugPanel";
 
 export default function Dashboard() {
   const {
@@ -25,6 +26,11 @@ export default function Dashboard() {
 
   return (
     <div className="container mx-auto px-4 py-8">
+      {/* Role Debug Panel */}
+      <div className="mb-6">
+        <RoleDebugPanel />
+      </div>
+
       {/* Status Banners */}
       {profile?.account_status === 'trial' && (
         <div className="mb-6 p-4 bg-cinema-gold/10 border border-cinema-gold/20 rounded-lg">
