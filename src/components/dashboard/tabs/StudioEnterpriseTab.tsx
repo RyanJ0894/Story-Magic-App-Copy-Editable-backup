@@ -20,6 +20,9 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { VoiceLibrary } from "@/components/feature/VoiceLibrary";
+import { TeamManagementTab } from "@/components/dashboard/tabs/TeamManagementTab";
+import { useUserRole } from "@/hooks/useUserRole";
+import { ROLE_PERMISSIONS } from "@/types/roles";
 
 interface StudioEnterpriseTabProps {
   projects: any[];
@@ -29,6 +32,8 @@ interface StudioEnterpriseTabProps {
 
 export function StudioEnterpriseTab({ projects, onDeleteProject, deletingId }: StudioEnterpriseTabProps) {
   const [activeTab, setActiveTab] = useState("overview");
+  const { currentRole } = useUserRole();
+  const permissions = currentRole ? ROLE_PERMISSIONS[currentRole] : ROLE_PERMISSIONS['Staff'];
 
   return (
     <div className="space-y-6">
@@ -255,85 +260,13 @@ export function StudioEnterpriseTab({ projects, onDeleteProject, deletingId }: S
         </TabsContent>
 
         <TabsContent value="team" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Enterprise Team Management</CardTitle>
-              <CardDescription>Advanced user hierarchies and department management for up to 75 users</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Department Structure */}
-              <div>
-                <h4 className="font-medium mb-3">Department Overview</h4>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-sm">Production Department</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-lg font-bold">15 users</div>
-                      <p className="text-xs text-muted-foreground">8 Editors, 5 Admins, 2 Viewers</p>
-                    </CardContent>
-                  </Card>
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-sm">Creative Department</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-lg font-bold">12 users</div>
-                      <p className="text-xs text-muted-foreground">10 Editors, 2 Admins</p>
-                    </CardContent>
-                  </Card>
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-sm">Client Services</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-lg font-bold">8 users</div>
-                      <p className="text-xs text-muted-foreground">5 Editors, 2 Admins, 1 Viewer</p>
-                    </CardContent>
-                  </Card>
-                </div>
-              </div>
-
-              {/* Advanced Team Features */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="p-4 border rounded-lg">
-                  <h4 className="font-medium mb-3">Multi-Level Administration</h4>
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-sm">Super Admins</span>
-                      <span className="font-medium">3</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm">Department Admins</span>
-                      <span className="font-medium">9</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm">Project Managers</span>
-                      <span className="font-medium">12</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="p-4 border rounded-lg">
-                  <h4 className="font-medium mb-3">Enterprise Features</h4>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex items-center gap-2">
-                      <Shield className="h-4 w-4 text-primary" />
-                      SSO Integration Active
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Users className="h-4 w-4 text-primary" />
-                      Advanced Permissions
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Settings className="h-4 w-4 text-primary" />
-                      Custom User Policies
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <TeamManagementTab 
+            userRole={currentRole || 'Staff'} 
+            permissions={permissions}
+            projects={projects}
+            onDeleteProject={onDeleteProject}
+            deletingId={deletingId}
+          />
         </TabsContent>
 
         <TabsContent value="projects" className="space-y-6">

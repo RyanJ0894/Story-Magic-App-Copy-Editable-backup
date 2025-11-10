@@ -20,6 +20,9 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { VoiceLibrary } from "@/components/feature/VoiceLibrary";
+import { TeamManagementTab } from "@/components/dashboard/tabs/TeamManagementTab";
+import { useUserRole } from "@/hooks/useUserRole";
+import { ROLE_PERMISSIONS } from "@/types/roles";
 
 interface ProfessionalEnterpriseTabProps {
   projects: any[];
@@ -29,6 +32,8 @@ interface ProfessionalEnterpriseTabProps {
 
 export function ProfessionalEnterpriseTab({ projects, onDeleteProject, deletingId }: ProfessionalEnterpriseTabProps) {
   const [activeTab, setActiveTab] = useState("overview");
+  const { currentRole } = useUserRole();
+  const permissions = currentRole ? ROLE_PERMISSIONS[currentRole] : ROLE_PERMISSIONS['Staff'];
 
   return (
     <div className="space-y-6">
@@ -191,54 +196,13 @@ export function ProfessionalEnterpriseTab({ projects, onDeleteProject, deletingI
         </TabsContent>
 
         <TabsContent value="team" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Advanced Team Management</CardTitle>
-              <CardDescription>Manage up to 30 users with department organization</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {/* Department Organization */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm">Marketing Department</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-lg font-bold">3 users</div>
-                    <p className="text-xs text-muted-foreground">2 Editors, 1 Admin</p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm">Sales Department</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-lg font-bold">2 users</div>
-                    <p className="text-xs text-muted-foreground">1 Editor, 1 Viewer</p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm">Training Department</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-lg font-bold">3 users</div>
-                    <p className="text-xs text-muted-foreground">2 Editors, 1 Viewer</p>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Bulk User Actions */}
-              <div className="p-4 border rounded-lg bg-muted/20">
-                <h4 className="font-medium mb-3">Bulk User Management</h4>
-                <div className="flex gap-3">
-                  <Button variant="outline">Import CSV</Button>
-                  <Button variant="outline">Export User List</Button>
-                  <Button variant="outline">Send Bulk Invites</Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <TeamManagementTab 
+            userRole={currentRole || 'Staff'} 
+            permissions={permissions}
+            projects={projects}
+            onDeleteProject={onDeleteProject}
+            deletingId={deletingId}
+          />
         </TabsContent>
 
         <TabsContent value="projects" className="space-y-6">

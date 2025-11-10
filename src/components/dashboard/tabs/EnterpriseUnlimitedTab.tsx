@@ -20,6 +20,9 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { VoiceLibrary } from "@/components/feature/VoiceLibrary";
+import { TeamManagementTab } from "@/components/dashboard/tabs/TeamManagementTab";
+import { useUserRole } from "@/hooks/useUserRole";
+import { ROLE_PERMISSIONS } from "@/types/roles";
 
 interface EnterpriseUnlimitedTabProps {
   projects: any[];
@@ -29,6 +32,8 @@ interface EnterpriseUnlimitedTabProps {
 
 export function EnterpriseUnlimitedTab({ projects, onDeleteProject, deletingId }: EnterpriseUnlimitedTabProps) {
   const [activeTab, setActiveTab] = useState("overview");
+  const { currentRole } = useUserRole();
+  const permissions = currentRole ? ROLE_PERMISSIONS[currentRole] : ROLE_PERMISSIONS['Staff'];
 
   return (
     <div className="space-y-6">
@@ -240,93 +245,13 @@ export function EnterpriseUnlimitedTab({ projects, onDeleteProject, deletingId }
         </TabsContent>
 
         <TabsContent value="organization" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Unlimited Scale Organization Management</CardTitle>
-              <CardDescription>Multiple admin hierarchies and department-level management for 200+ users</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Organizational Chart */}
-              <div>
-                <h4 className="font-medium mb-3">Organizational Structure</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-sm">North America Division</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-lg font-bold">127 users</div>
-                      <p className="text-xs text-muted-foreground">8 Departments</p>
-                    </CardContent>
-                  </Card>
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-sm">Europe Division</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-lg font-bold">89 users</div>
-                      <p className="text-xs text-muted-foreground">6 Departments</p>
-                    </CardContent>
-                  </Card>
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-sm">Asia-Pacific Division</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-lg font-bold">31 users</div>
-                      <p className="text-xs text-muted-foreground">3 Departments</p>
-                    </CardContent>
-                  </Card>
-                  <Card className="border-2 border-dashed">
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-sm">Add Division</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <Button variant="outline" size="sm" className="w-full">Create</Button>
-                    </CardContent>
-                  </Card>
-                </div>
-              </div>
-
-              {/* Advanced Usage Controls */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h4 className="font-medium mb-3">Budget Management</h4>
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center p-3 border rounded-lg">
-                      <span>North America Allocation</span>
-                      <span className="font-medium">$45,000/month</span>
-                    </div>
-                    <div className="flex justify-between items-center p-3 border rounded-lg">
-                      <span>Europe Allocation</span>
-                      <span className="font-medium">$32,000/month</span>
-                    </div>
-                    <div className="flex justify-between items-center p-3 border rounded-lg">
-                      <span>APAC Allocation</span>
-                      <span className="font-medium">$18,000/month</span>
-                    </div>
-                  </div>
-                </div>
-                <div>
-                  <h4 className="font-medium mb-3">Resource Allocation</h4>
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center p-3 border rounded-lg">
-                      <span>Processing Power</span>
-                      <span className="font-medium">Unlimited</span>
-                    </div>
-                    <div className="flex justify-between items-center p-3 border rounded-lg">
-                      <span>Storage</span>
-                      <span className="font-medium">10TB allocated</span>
-                    </div>
-                    <div className="flex justify-between items-center p-3 border rounded-lg">
-                      <span>API Calls</span>
-                      <span className="font-medium">No limits</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <TeamManagementTab 
+            userRole={currentRole || 'Staff'} 
+            permissions={permissions}
+            projects={projects}
+            onDeleteProject={onDeleteProject}
+            deletingId={deletingId}
+          />
         </TabsContent>
 
         <TabsContent value="projects" className="space-y-6">

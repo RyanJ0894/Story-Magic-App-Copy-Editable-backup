@@ -269,7 +269,7 @@ export function TeamManagementTab({ userRole, permissions }: TeamManagementTabPr
       </div>
 
       {/* Invite New Member */}
-      {permissions.canInvite.length > 0 && (
+      {permissions.canInvite.length > 0 ? (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -331,6 +331,19 @@ export function TeamManagementTab({ userRole, permissions }: TeamManagementTabPr
               </div>
             </div>
           </CardContent>
+        </Card>
+      ) : (
+        <Card className="border-muted">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-muted-foreground">
+              <UserX className="h-5 w-5" />
+              No Invitation Permissions
+            </CardTitle>
+            <CardDescription>
+              Your current role <Badge variant="outline" className={ROLE_COLORS[userRole]}>{userRole}</Badge> doesn't have permission to invite team members.
+              Contact a Master or Team Lead to invite new members.
+            </CardDescription>
+          </CardHeader>
         </Card>
       )}
 
