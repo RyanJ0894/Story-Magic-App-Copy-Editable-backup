@@ -27,43 +27,34 @@ export function RoleDebugPanel({ profile, onRoleChange }: RoleDebugPanelProps) {
       
       console.log("👤 User ID for update:", user.id);
 
-      // First, verify current profile state
-      const { data: beforeProfile, error: fetchError } = await supabase
-        .from('profiles')
-        .select('user_id, role')
-        .eq('user_id', user.id)
-        .single();
-      
-      console.log("📋 Current profile before update:", beforeProfile);
-      if (fetchError) console.error("❌ Error fetching profile:", fetchError);
-
-      // Perform the update
-      const { data: updateData, error: updateError } = await supabase
+      // Update role in profiles table
+      const { error } = await supabase
         .from('profiles')
         .update({ role: newRole, updated_at: new Date().toISOString() })
-        .eq('user_id', user.id)
-        .select();
+        .eq('user_id', user.id);
 
-      console.log("✅ Update response:", { data: updateData, error: updateError });
+      if (error) {
+        console.error("❌ Update error:", error);
+        
+        // Check if it's an RLS policy error
+        if (error.code === '42501' || error.message.includes('policy')) {
+          throw new Error(
+            "Role update blocked by security policy. Please run the setup script in supabase/setup-user-roles.sql to enable secure role management."
+          );
+        }
+        throw error;
+      }
 
-      if (updateError) throw updateError;
-
-      // Verify the update worked
-      const { data: afterProfile } = await supabase
-        .from('profiles')
-        .select('user_id, role')
-        .eq('user_id', user.id)
-        .single();
-      
-      console.log("📋 Profile after update:", afterProfile);
+      console.log("✅ Role updated successfully");
 
       toast({
         title: "Role Updated",
-        description: `Your role has been updated to ${newRole}`,
+        description: `Your role has been updated to ${newRole}. Refreshing...`,
       });
       
       console.log("🔄 Triggering page reload...");
-      onRoleChange();
+      // Small delay to show the toast before reload
+      setTimeout(() => onRoleChange(), 500);
     } catch (error: any) {
       console.error("❌ Role update error:", error);
       toast({

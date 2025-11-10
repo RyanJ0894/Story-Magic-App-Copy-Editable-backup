@@ -42,10 +42,10 @@ export function TeamManagementTab({ userRole, permissions }: TeamManagementTabPr
 
   const loadTeamData = async () => {
     try {
-      // Load team members based on hierarchy
+      // Load team members with roles
       const { data: members, error: membersError } = await supabase
         .from('profiles')
-        .select('*')
+        .select('user_id, role, created_at, invited_by')
         .order('created_at', { ascending: false });
 
       if (membersError) throw membersError;

@@ -44,7 +44,7 @@ export function usePlanProtection() {
 
         const { data: profileData, error } = await supabase
           .from('profiles')
-          .select('plan_type, account_status, available_packages, package_history, upgrade_date')
+          .select('user_id, role, plan_type, account_status, available_packages, package_history, upgrade_date')
           .eq('user_id', user.id)
           .single();
 
@@ -89,7 +89,13 @@ export function usePlanProtection() {
         } else {
           // No error, set the profile data
           if (mounted) {
-            setProfile(profileData as UserProfile);
+            setProfile({
+              plan_type: profileData.plan_type as PlanTier,
+              account_status: profileData.account_status,
+              available_packages: (profileData.available_packages as any) || ['individual'],
+              package_history: (profileData.package_history as any) || [],
+              upgrade_date: profileData.upgrade_date
+            });
           }
         }
       } catch (error) {
@@ -160,7 +166,13 @@ export function usePlanProtection() {
         .single();
 
       if (updatedProfile) {
-        setProfile(updatedProfile as UserProfile);
+        setProfile({
+          plan_type: updatedProfile.plan_type as PlanTier,
+          account_status: updatedProfile.account_status,
+          available_packages: (updatedProfile.available_packages as any) || ['individual'],
+          package_history: (updatedProfile.package_history as any) || [],
+          upgrade_date: updatedProfile.upgrade_date
+        });
       }
 
       return true;
@@ -178,6 +190,7 @@ export function usePlanProtection() {
     availablePackages: profile?.available_packages || ['individual'],
     packageHistory: profile?.package_history || [],
     isTrialActive: profile?.account_status === 'trial',
-    isPending: profile?.account_status?.includes('pending') || false
+    isPending: profile?.account_status?.includes('pending') || false,
+    userRole: (profile as any)?.role || 'Staff'
   };
 }
