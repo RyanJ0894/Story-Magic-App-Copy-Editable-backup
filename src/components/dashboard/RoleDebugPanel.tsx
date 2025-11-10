@@ -40,37 +40,30 @@ export function RoleDebugPanel() {
 
   return (
     <Card className="border-cinema-gold/20">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Shield className="h-5 w-5" />
-          Role Debug Information
-        </CardTitle>
-        <CardDescription>
-          Current role status and quick fix
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <p className="text-sm text-muted-foreground">Current Role</p>
-            <Badge variant="outline" className="mt-1">{currentRole}</Badge>
+      <CardContent className="py-4">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2">
+              <Shield className="h-5 w-5 text-cinema-gold" />
+              <h3 className="text-lg font-semibold">Change Role</h3>
+            </div>
+            <div className="flex items-center gap-4">
+              <div>
+                <p className="text-xs text-muted-foreground">Current Role</p>
+                <Badge variant="outline" className="mt-1">{currentRole}</Badge>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">User ID</p>
+                <p className="text-xs font-mono mt-1">{profile.user_id.slice(0, 8)}...</p>
+              </div>
+            </div>
           </div>
-          <div>
-            <p className="text-sm text-muted-foreground">User ID</p>
-            <p className="text-xs font-mono mt-1">{profile.user_id.slice(0, 8)}...</p>
-          </div>
-        </div>
 
-        {currentRole !== 'Master' && (
-          <div className="pt-4 border-t">
-            <p className="text-sm text-muted-foreground mb-3">
-              Your role is currently set to <strong>{currentRole}</strong>. 
-              Click below to update it to Master:
-            </p>
+          {currentRole !== 'Master' && (
             <Button 
               onClick={handleUpdateToMaster}
               disabled={updating}
-              className="w-full"
+              size="sm"
             >
               {updating ? (
                 <>
@@ -80,12 +73,12 @@ export function RoleDebugPanel() {
               ) : (
                 <>
                   <Shield className="h-4 w-4 mr-2" />
-                  Update Role to Master
+                  Update to Master
                 </>
               )}
             </Button>
-          </div>
-        )}
+          )}
+        </div>
       </CardContent>
     </Card>
   );
