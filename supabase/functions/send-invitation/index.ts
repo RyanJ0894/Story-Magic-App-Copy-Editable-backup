@@ -74,10 +74,10 @@ const serve_handler = async (req: Request): Promise<Response> => {
     const resend = new Resend(apiKey);
     
     console.log("Attempting to send email to:", email);
-    console.log("From address:", "Story Magic Team <noreply@storymagicapp.net>");
+    console.log("From address:", "Story Magic Team <onboarding@resend.dev>");
 
     const emailResponse = await resend.emails.send({
-      from: "Story Magic Team <noreply@storymagicapp.net>",
+      from: "Story Magic Team <onboarding@resend.dev>",
       to: [email],
       subject: `You're invited to join our team as ${role}`,
       html: `
