@@ -125,8 +125,10 @@ const serve_handler = async (req: Request): Promise<Response> => {
     return new Response(
       JSON.stringify({
         success: true,
-        message: "Invitation prepared successfully",
-        invitationUrl, // Return URL for testing
+        message: "Invitation email sent successfully",
+        invitationUrl,
+        emailId: emailResponse.data?.id,
+        resendResponse: emailResponse.data,
       }),
       {
         status: 200,

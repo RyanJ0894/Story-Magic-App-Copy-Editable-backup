@@ -164,9 +164,10 @@ export function TeamManagementTab({ userRole, permissions }: TeamManagementTabPr
           }
         }
 
+        const resendInfo = emailResult?.emailId ? ` (Resend ID: ${emailResult.emailId})` : '';
         toast({
           title: "Invitation Sent Successfully!",
-          description: `Email invitation sent to ${inviteEmail} as ${inviteRole}`,
+          description: `Email sent to ${inviteEmail} as ${inviteRole}${resendInfo}. Check spam folder if not received. Verify your domain at resend.com/domains`,
         });
 
       } catch (emailError: any) {
