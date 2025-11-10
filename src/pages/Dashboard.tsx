@@ -44,9 +44,6 @@ export default function Dashboard() {
             profile={{ ...(profile as any), role: currentRole }} 
             onRoleChange={handleRoleChange} 
           />
-          <div className="mt-2 p-3 bg-muted/50 rounded text-sm font-mono">
-            Debug: useUserRole={currentRole} | profileRole={(profile as any)?.role || 'N/A'}
-          </div>
         </div>
       )}
 
