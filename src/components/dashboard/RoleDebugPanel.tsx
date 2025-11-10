@@ -17,50 +17,92 @@ export function RoleDebugPanel({ profile, onRoleChange }: RoleDebugPanelProps) {
   const currentRole = profile?.role || 'Staff';
 
   const handleRoleChange = async (newRole: string) => {
-    if (newRole === currentRole) return;
+    if (newRole === currentRole) {
+      console.log("⚠️ Role unchanged:", newRole);
+      return;
+    }
     
     console.log("🔄 Role change initiated:", { from: currentRole, to: newRole });
     setUpdating(true);
+    
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("No user found");
+      if (!user) {
+        console.error("❌ No authenticated user");
+        throw new Error("No user found");
+      }
       
       console.log("👤 User ID for update:", user.id);
 
-      // Update role in profiles table
-      const { error } = await supabase
+      // First check current state
+      const { data: beforeData, error: fetchError } = await supabase
+        .from('profiles')
+        .select('role, user_id')
+        .eq('user_id', user.id)
+        .single();
+      
+      console.log("📊 Current profile state:", { beforeData, fetchError });
+
+      // Attempt the update
+      const { data: updateResult, error: updateError } = await supabase
         .from('profiles')
         .update({ role: newRole, updated_at: new Date().toISOString() })
-        .eq('user_id', user.id);
+        .eq('user_id', user.id)
+        .select();
 
-      if (error) {
-        console.error("❌ Update error:", error);
+      console.log("📝 Update attempt result:", { 
+        updateResult, 
+        updateError,
+        errorCode: updateError?.code,
+        errorMessage: updateError?.message,
+        errorDetails: updateError?.details,
+        errorHint: updateError?.hint
+      });
+
+      if (updateError) {
+        // Log the full error for debugging
+        console.error("❌ Full update error object:", JSON.stringify(updateError, null, 2));
         
         // Check if it's an RLS policy error
-        if (error.code === '42501' || error.message.includes('policy')) {
+        if (updateError.code === '42501' || 
+            updateError.message?.includes('policy') ||
+            updateError.message?.includes('permission')) {
           throw new Error(
-            "Role update blocked by security policy. Please run the setup script in supabase/setup-user-roles.sql to enable secure role management."
+            "🔒 Role update blocked by Row Level Security. This is a security feature. To change roles, you need to run the SQL setup script first. See supabase/SETUP_INSTRUCTIONS.md"
           );
         }
-        throw error;
+        throw updateError;
       }
 
-      console.log("✅ Role updated successfully");
+      // Verify the update
+      const { data: afterData } = await supabase
+        .from('profiles')
+        .select('role, user_id')
+        .eq('user_id', user.id)
+        .single();
+      
+      console.log("✅ After update state:", afterData);
+
+      if (afterData?.role !== newRole) {
+        console.error("❌ Role didn't change in database!", { expected: newRole, actual: afterData?.role });
+        throw new Error("Role update failed - changes not persisted");
+      }
 
       toast({
-        title: "Role Updated",
-        description: `Your role has been updated to ${newRole}. Refreshing...`,
+        title: "Role Updated Successfully",
+        description: `Your role has been changed from ${currentRole} to ${newRole}. Refreshing page...`,
       });
       
-      console.log("🔄 Triggering page reload...");
-      // Small delay to show the toast before reload
-      setTimeout(() => onRoleChange(), 500);
+      console.log("🔄 Role verified. Triggering page reload in 1 second...");
+      setTimeout(() => onRoleChange(), 1000);
+      
     } catch (error: any) {
-      console.error("❌ Role update error:", error);
+      console.error("❌ Role update failed:", error);
       toast({
-        title: "Update Failed",
-        description: error.message,
-        variant: "destructive"
+        title: "Role Update Failed",
+        description: error.message || "Unknown error occurred",
+        variant: "destructive",
+        duration: 10000, // Show for 10 seconds
       });
     } finally {
       setUpdating(false);
