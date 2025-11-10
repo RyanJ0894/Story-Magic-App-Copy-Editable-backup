@@ -29,6 +29,12 @@ export function useUserRole() {
           .eq('user_id', session.user.id)
           .single();
 
+        console.log('👤 useUserRole: Fetched profile data:', { 
+          userId: session.user.id, 
+          role: data?.role,
+          error: profileError 
+        });
+
         if (profileError) {
           console.error('Profile fetch error:', profileError);
           // If profile doesn't exist, create one with Master role for first user

@@ -4,6 +4,7 @@ import { DashboardTabs } from "@/components/dashboard/DashboardTabs";
 import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
 import { useDashboard } from "@/features/projects/hooks/useDashboard";
 import { RoleDebugPanel } from "@/components/dashboard/RoleDebugPanel";
+import { useUserRole } from "@/hooks/useUserRole";
 
 export default function Dashboard() {
   const {
@@ -12,6 +13,11 @@ export default function Dashboard() {
     profile,
     loading: planLoading
   } = usePlanProtection();
+  
+  const { currentRole, loading: roleLoading } = useUserRole();
+  
+  console.log("🎯 Dashboard: Current role from useUserRole:", currentRole);
+  console.log("🎯 Dashboard: Profile role from usePlanProtection:", (profile as any)?.role);
 
   const {
     projects,
@@ -26,15 +32,21 @@ export default function Dashboard() {
     window.location.reload();
   };
 
-  if (isLoading || planLoading) return <DashboardSkeleton />;
+  if (isLoading || planLoading || roleLoading) return <DashboardSkeleton />;
   if (error) return <div className="min-h-screen flex items-center justify-center text-destructive">{error.message}</div>;
 
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Role Debug Panel */}
-      {profile && (
+      {currentRole && (
         <div className="mb-6">
-          <RoleDebugPanel profile={profile} onRoleChange={handleRoleChange} />
+          <RoleDebugPanel 
+            profile={{ ...(profile as any), role: currentRole }} 
+            onRoleChange={handleRoleChange} 
+          />
+          <div className="mt-2 p-3 bg-muted/50 rounded text-sm font-mono">
+            Debug: useUserRole={currentRole} | profileRole={(profile as any)?.role || 'N/A'}
+          </div>
         </div>
       )}
 
