@@ -85,13 +85,14 @@ export const useSimpleProduction = () => {
 
       setState(prev => ({ ...prev, step: 'Waiting for AI Director to generate Director JSON...' }));
 
-      // 3. Poll for Director JSON with 5-minute timeout
+      // 3. Poll for Director JSON with 2-minute timeout (fail fast if misconfigured)
       let attempts = 0;
       const pollInterval = 5000;
-      const maxAttempts = 60; // 5 minutes (60 attempts * 5 seconds)
+      const maxAttempts = 24; // 2 minutes (24 attempts * 5 seconds)
       let directorJson: any = null;
 
       console.log(`⏳ Starting to poll for director_json (max ${maxAttempts} attempts = ${(maxAttempts * pollInterval) / 1000}s)`);
+      console.log(`🔍 Looking for director_json from job:`, triggerData?.job_id || 'no job_id returned');
 
       while (attempts < maxAttempts && !directorJson) {
         console.log(`📊 Polling attempt ${attempts + 1}/${maxAttempts} for project ${projectId}`);
@@ -125,18 +126,25 @@ export const useSimpleProduction = () => {
       }
 
       if (!directorJson) {
-        console.error('❌ Timeout: No director JSON found after', attempts, 'attempts (5 minutes)');
+        console.error('❌ Timeout: No director JSON found after', attempts, 'attempts (2 minutes)');
+        const jobInfo = triggerData?.job_id ? `\nJob ID: ${triggerData.job_id}` : '\n⚠️  No job ID was returned by RelevanceAI';
         throw new Error(
-          `⏱️ Timeout after 5 minutes waiting for AI Director.\n\n` +
-          `The RelevanceAI agent was triggered successfully but never called back.\n\n` +
-          `Please check in your RelevanceAI dashboard:\n` +
-          `1. Go to https://relevance.ai and check your agent runs\n` +
-          `2. Verify the agent actually executed (not just queued)\n` +
-          `3. Check if there are any errors in the agent execution logs\n` +
-          `4. Verify the callback webhook URL is set to:\n` +
-          `   https://bcuhyyyerxwgkrkbrqbs.supabase.co/functions/v1/ai-director-callback\n\n` +
-          `Also check Supabase Edge Function logs:\n` +
-          `https://supabase.com/dashboard/project/bcuhyyyerxwgkrkbrqbs/logs/edge-functions`
+          `⏱️ Timeout after 2 minutes waiting for AI Director.${jobInfo}\n\n` +
+          `DIAGNOSIS: RelevanceAI agent accepted the trigger but never executed or called back.\n\n` +
+          `REQUIRED FIXES in RelevanceAI dashboard (https://relevance.ai):\n\n` +
+          `1. CHECK AGENT DEPLOYMENT\n` +
+          `   - Agent MUST be deployed (not in draft mode)\n` +
+          `   - Look for "Deploy" button and click it\n\n` +
+          `2. ENABLE API TRIGGER\n` +
+          `   - Go to agent settings → API & Tools\n` +
+          `   - Enable "API Trigger" option\n\n` +
+          `3. SET CALLBACK WEBHOOK\n` +
+          `   - In agent configuration, set callback URL to:\n` +
+          `     https://bcuhyyyerxwgkrkbrqbs.supabase.co/functions/v1/ai-director-callback\n\n` +
+          `4. TEST THE AGENT\n` +
+          `   - Run the agent manually first to verify it works\n` +
+          `   - Check execution logs for errors\n\n` +
+          `After fixing the above, try creating the project again.`
         );
       }
 
