@@ -3,8 +3,8 @@
 // then forwards to ai-director-callback (no auth assumptions; callback will accept).
 // deno-lint-ignore-file no-explicit-any
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
-const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const CATALOG_BUCKET = Deno.env.get("CATALOG_BUCKET") ?? "story-magic-assets";
 const CATALOG_PATH = Deno.env.get("CATALOG_PATH") ?? "ai_director_catalogs.v2.json";
 const CALLBACK_URL = Deno.env.get("CALLBACK_URL") ?? ""; // if empty -> no forward
@@ -27,11 +27,11 @@ async function loadCatalogs() {
   }
   return json.catalogs;
 }
-function makeIdSets(cats) {
+function makeIdSets(cats: any) {
   return {
-    music: new Set(cats.music.map((x)=>x.id)),
-    ambience: new Set(cats.ambience.map((x)=>x.id)),
-    sfx: new Set(cats.sfx.map((x)=>x.id))
+    music: new Set(cats.music.map((x: any)=>x.id)),
+    ambience: new Set(cats.ambience.map((x: any)=>x.id)),
+    sfx: new Set(cats.sfx.map((x: any)=>x.id))
   };
 }
 const TIME_RE = /^\d{2}:\d{2}:\d{2}\.\d{3}$/;
@@ -41,8 +41,8 @@ const WHEN = new Set([
   "duck",
   "out"
 ]);
-function validate(body, ids) {
-  const errs = [];
+function validate(body: any, ids: any) {
+  const errs: string[] = [];
   if (!body || typeof body !== "object") errs.push("Body must be a JSON object.");
   if (!Array.isArray(body.lines)) errs.push("Missing or invalid 'lines' (must be an array).");
   if (!body.director_json || typeof body.director_json !== "object") errs.push("Missing or invalid 'director_json'.");
@@ -60,7 +60,7 @@ function validate(body, ids) {
     }
   }
   const dj = body.director_json ?? {};
-  const checkArr = (arr, label)=>{
+  const checkArr = (arr: any, label: string)=>{
     if (!Array.isArray(arr)) return;
     for (const [i, it] of arr.entries()){
       if (!it || typeof it !== "object") {
@@ -85,7 +85,7 @@ function validate(body, ids) {
   }
   return errs;
 }
-async function maybeForward(project_id, payload) {
+async function maybeForward(project_id: string, payload: any) {
   if (!CALLBACK_URL) return {
     forwarded: false
   };

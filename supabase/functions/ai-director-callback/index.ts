@@ -8,8 +8,8 @@ const corsHeaders = {
 };
 
 // Initialize Supabase client
-const supabaseUrl = Deno.env.get('SUPABASE_URL');
-const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 serve(async (req) => {
@@ -60,7 +60,7 @@ serve(async (req) => {
       return new Response(JSON.stringify({
         success: false,
         error: 'Invalid JSON in request body',
-        details: parseError.message
+        details: parseError instanceof Error ? parseError.message : 'Unknown error'
       }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -152,7 +152,7 @@ serve(async (req) => {
     return new Response(JSON.stringify({
       success: false,
       error: 'Internal server error',
-      details: error.message
+      details: error instanceof Error ? error.message : 'Unknown error'
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }

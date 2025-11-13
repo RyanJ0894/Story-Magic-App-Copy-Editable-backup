@@ -8,7 +8,7 @@ const baseHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS"
 };
-function json(data, status = 200) {
+function json(data: any, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
     headers: {

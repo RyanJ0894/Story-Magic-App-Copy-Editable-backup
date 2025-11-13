@@ -115,6 +115,20 @@ serve(async (req) => {
       responseData = { raw: responseText };
     }
 
+    // CRITICAL: Detect if RelevanceAI is just echoing input instead of triggering
+    if (responseData.project_id && responseData.script) {
+      console.error('⚠️ RelevanceAI returned input data instead of job info - agent may not be configured properly');
+      return new Response(JSON.stringify({ 
+        success: false,
+        error: 'Agent trigger failed - RelevanceAI accepted request but did not start agent',
+        details: 'The response indicates the agent is not properly configured. Check: 1) Agent is deployed (not draft), 2) API trigger is enabled, 3) Callback webhook URL is set correctly.',
+        response: responseData
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     console.log('✅ RelevanceAI agent triggered successfully');
     
     return new Response(JSON.stringify({ 

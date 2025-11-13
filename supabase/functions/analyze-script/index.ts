@@ -17,8 +17,8 @@ serve(async (req)=>{
       throw new Error('Missing project_id or script');
     }
     // Initialize Supabase client
-    const supabaseUrl = Deno.env.get('SUPABASE_URL');
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     // System prompt to keep the script as one cohesive scene
     const systemPrompt = `You are an AI Film Director. Analyze the script and return ONLY a valid JSON array. For any script provided, create exactly ONE scene that contains the complete narrative:
@@ -157,8 +157,8 @@ CRITICAL RULES:
   } catch (error) {
     console.error('Error in analyze-script function:', error);
     return new Response(JSON.stringify({
-      error: error.message || 'An unexpected error occurred',
-      details: error.toString()
+      error: error instanceof Error ? error.message : 'An unexpected error occurred',
+      details: error instanceof Error ? error.toString() : 'Unknown error'
     }), {
       status: 500,
       headers: {

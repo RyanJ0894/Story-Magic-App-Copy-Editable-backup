@@ -146,12 +146,12 @@ serve(async (req)=>{
       "00y4m1PbCBtjIPrwiynB": "Older Male"
     };
     // Filter to ONLY include the user's specified voices
-    const userVoices = voicesData.voices.filter((voice)=>userVoiceMapping.hasOwnProperty(voice.voice_id));
+    const userVoices = voicesData.voices.filter((voice: any)=>userVoiceMapping.hasOwnProperty(voice.voice_id));
     // Transform the voice data and assign the correct user categories
-    const voices = userVoices.map((voice)=>({
+    const voices = userVoices.map((voice: any)=>({
         voice_id: voice.voice_id,
         name: voice.name,
-        category: userVoiceMapping[voice.voice_id],
+        category: (userVoiceMapping as any)[voice.voice_id],
         description: voice.description,
         preview_url: voice.preview_url,
         available_for_tiers: voice.available_for_tiers,
@@ -172,7 +172,7 @@ serve(async (req)=>{
   } catch (error) {
     console.error('Error fetching ElevenLabs voices:', error);
     return new Response(JSON.stringify({
-      error: error.message || 'Failed to fetch voices',
+      error: error instanceof Error ? error.message : 'Failed to fetch voices',
       voices: [],
       count: 0
     }), {

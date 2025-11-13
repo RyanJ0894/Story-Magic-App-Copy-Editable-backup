@@ -30,22 +30,56 @@ export const useSimpleProduction = () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Not authenticated. Please log in.');
 
-      // 2. Trigger RelevanceAI
+      // 2. Trigger RelevanceAI with retry logic
       console.log('🎬 Triggering RelevanceAI agent for project:', projectId);
-      const { data: triggerData, error: triggerError } = await supabase.functions.invoke('trigger-relevance', {
-        body: { project_id: projectId, script_text: script },
-      });
       
-      console.log('📥 Trigger response:', triggerData);
+      let triggerAttempts = 0;
+      const maxTriggerAttempts = 3;
+      let triggerData: any = null;
+      let triggerError: any = null;
+
+      while (triggerAttempts < maxTriggerAttempts) {
+        triggerAttempts++;
+        console.log(`🔄 Trigger attempt ${triggerAttempts}/${maxTriggerAttempts}`);
+        
+        const result = await supabase.functions.invoke('trigger-relevance', {
+          body: { project_id: projectId, script_text: script },
+        });
+        
+        triggerData = result.data;
+        triggerError = result.error;
+        
+        console.log('📥 Trigger response:', triggerData);
+        
+        if (!triggerError && triggerData?.success) {
+          console.log('✅ RelevanceAI agent triggered successfully on attempt', triggerAttempts);
+          break;
+        }
+        
+        console.warn(`⚠️ Trigger attempt ${triggerAttempts} failed, retrying...`);
+        if (triggerAttempts < maxTriggerAttempts) {
+          await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2s between retries
+        }
+      }
+
       if (triggerError) {
-        console.error('❌ Trigger error:', triggerError);
-        throw new Error(`RelevanceAI trigger failed: ${triggerError.message}`);
+        console.error('❌ Trigger error after retries:', triggerError);
+        throw new Error(`RelevanceAI trigger failed after ${maxTriggerAttempts} attempts: ${triggerError.message}`);
       }
       if (!triggerData?.success) {
-        console.error('❌ Trigger failed:', triggerData);
-        throw new Error(`RelevanceAI trigger unsuccessful: ${JSON.stringify(triggerData)}`);
+        console.error('❌ Trigger failed after retries:', triggerData);
+        const errorMsg = triggerData?.error || 'Unknown error';
+        const details = triggerData?.details || '';
+        throw new Error(
+          `RelevanceAI agent trigger failed after ${maxTriggerAttempts} attempts.\n\n` +
+          `Error: ${errorMsg}\n` +
+          (details ? `\nDetails: ${details}\n` : '') +
+          '\nPlease check RelevanceAI agent configuration:\n' +
+          '1. Agent must be deployed (not in draft mode)\n' +
+          '2. API trigger must be enabled\n' +
+          '3. Callback webhook URL must be set correctly'
+        );
       }
-      console.log('✅ RelevanceAI agent triggered successfully');
 
       setState(prev => ({ ...prev, step: 'Waiting for AI Director to generate Director JSON...' }));
 
