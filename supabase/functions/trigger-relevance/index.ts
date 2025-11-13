@@ -143,12 +143,31 @@ serve(async (req) => {
       });
     }
 
-    console.log('✅ RelevanceAI agent triggered successfully');
+    // Check if we got a proper job/execution ID back
+    const hasJobId = responseData.job_id || responseData.execution_id || responseData.studio_id;
+    if (!hasJobId) {
+      console.warn('⚠️  RelevanceAI response lacks job_id/execution_id - agent may not have started');
+      console.warn('Response keys:', Object.keys(responseData));
+      
+      return new Response(JSON.stringify({ 
+        success: false,
+        error: 'NO_JOB_ID_RETURNED',
+        message: 'RelevanceAI accepted the request but did not return a job ID',
+        details: 'The agent appears to accept triggers but is not properly configured. Please verify:\n1. Agent is DEPLOYED (not draft)\n2. API trigger is ENABLED in agent settings\n3. Callback webhook is configured to call your ai-director-callback function',
+        responseReceived: responseData
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    
+    console.log('✅ RelevanceAI agent triggered successfully with job ID:', hasJobId);
     
     return new Response(JSON.stringify({ 
       success: true,
       agent_id: NEW_AGENT_ID,
       project_id: project_id,
+      job_id: hasJobId,
       response: responseData
     }), {
       status: 200,
