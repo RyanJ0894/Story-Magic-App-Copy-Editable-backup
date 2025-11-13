@@ -94,6 +94,7 @@ serve(async (req) => {
     const responseText = await response.text();
     console.log('📥 RelevanceAI response status:', response.status);
     console.log('📥 RelevanceAI response body:', responseText);
+    console.log('📥 Response body length:', responseText.length);
 
     if (!response.ok) {
       console.error('❌ RelevanceAI trigger failed:', response.status, responseText);
@@ -111,21 +112,33 @@ serve(async (req) => {
     let responseData;
     try {
       responseData = JSON.parse(responseText);
-    } catch {
+      console.log('📊 Parsed response data:', JSON.stringify(responseData, null, 2));
+    } catch (parseError) {
+      console.error('❌ Failed to parse response as JSON:', parseError);
       responseData = { raw: responseText };
     }
 
     // CRITICAL: Detect if RelevanceAI is just echoing input instead of triggering
     // Check for both 'script' and 'script_text' since RelevanceAI might echo either
+    console.log('🔍 Checking for echo - project_id:', !!responseData.project_id, 
+                'script:', !!responseData.script, 'script_text:', !!responseData.script_text);
+    
     if (responseData.project_id && (responseData.script || responseData.script_text)) {
-      console.error('⚠️ RelevanceAI returned input data instead of job info - agent may not be configured properly');
-      return new Response(JSON.stringify({ 
+      console.error('🚨🚨🚨 ECHO DETECTED! RelevanceAI returned input data instead of job info');
+      console.error('Response data:', responseData);
+      
+      const errorResponse = { 
         success: false,
-        error: 'Agent trigger failed - RelevanceAI accepted request but did not start agent',
-        details: 'The response indicates the agent is not properly configured. Check: 1) Agent is deployed (not draft), 2) API trigger is enabled, 3) Callback webhook URL is set correctly.',
-        response: responseData
-      }), {
-        status: 500,
+        error: 'AGENT_NOT_TRIGGERED',
+        message: 'RelevanceAI agent did not start - it just echoed your input back',
+        details: 'The agent appears to be misconfigured. Please verify in RelevanceAI dashboard: 1) Agent is DEPLOYED (not draft), 2) API trigger is ENABLED, 3) Callback webhook URL is set to your ai-director-callback function',
+        responseReceived: responseData
+      };
+      
+      console.log('📤 Returning error response:', errorResponse);
+      
+      return new Response(JSON.stringify(errorResponse), {
+        status: 400, // Changed to 400 so it's clearly a client config error
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
