@@ -97,6 +97,7 @@ export const useSimpleProduction = () => {
       while (attempts < maxAttempts && !directorJson) {
         console.log(`📊 Polling attempt ${attempts + 1}/${maxAttempts} for project ${projectId}`);
         
+        // Check director_json table (where callback webhook saves)
         const { data, error: pollError } = await supabase
           .from('director_json')
           .select('json_data')
@@ -106,19 +107,42 @@ export const useSimpleProduction = () => {
           .maybeSingle();
 
         if (pollError) {
-          console.error('❌ Polling error:', pollError);
+          console.error('❌ Polling error from director_json table:', pollError);
         }
 
         const json = data?.json_data as Record<string, any> | null;
         if (json?.scenes?.length) {
-          console.log('✅ Found director JSON:', { 
+          console.log('✅ Found director JSON in director_json table:', { 
             hasScenes: true,
             sceneCount: json.scenes.length 
           });
           directorJson = json;
           break;
         } else if (json) {
-          console.log('⚠️  Found director JSON but no scenes:', Object.keys(json));
+          console.log('⚠️  Found director JSON in director_json table but no scenes:', Object.keys(json));
+        }
+
+        // Also check user_projects table (where direct Supabase action might save)
+        const { data: projectData, error: projectError } = await supabase
+          .from('user_projects')
+          .select('ai_director_json')
+          .eq('id', projectId)
+          .maybeSingle();
+
+        if (projectError) {
+          console.error('❌ Polling error from user_projects table:', projectError);
+        }
+
+        const projectJson = projectData?.ai_director_json as Record<string, any> | null;
+        if (projectJson?.scenes?.length) {
+          console.log('✅ Found director JSON in user_projects table:', { 
+            hasScenes: true,
+            sceneCount: projectJson.scenes.length 
+          });
+          directorJson = projectJson;
+          break;
+        } else if (projectJson) {
+          console.log('⚠️  Found director JSON in user_projects table but no scenes:', Object.keys(projectJson));
         }
 
         attempts++;
