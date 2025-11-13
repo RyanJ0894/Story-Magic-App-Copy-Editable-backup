@@ -6,13 +6,13 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS"
 };
-const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 /**
  * Minimal shape check. We assume you've already validated upstream,
  * but this keeps obvious junk out of the queue.
- */ function pullDirectorJson(raw) {
+ */ function pullDirectorJson(raw: any): any {
   if (!raw || typeof raw !== "object") return null;
   // allow body to be: { director_json: {...} } OR the director_json itself
   // @ts-ignore

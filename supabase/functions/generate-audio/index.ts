@@ -5,9 +5,9 @@ const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type"
 };
-const supabaseUrl = Deno.env.get("SUPABASE_URL");
-const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-const elevenlabsApiKey = Deno.env.get("ELEVENLABS_API_KEY");
+const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const elevenlabsApiKey = Deno.env.get("ELEVENLABS_API_KEY")!;
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 async function ensureAudioBucket() {
   const { data: buckets, error: listError } = await supabase.storage.listBuckets();
@@ -32,7 +32,7 @@ serve(async (req)=>{
       throw new Error("Missing required parameters: project_id and director.lines");
     }
     await ensureAudioBucket();
-    const inputs = director.lines.filter((l)=>l.text && l.voice_key).map((l)=>({
+    const inputs = director.lines.filter((l: any)=>l.text && l.voice_key).map((l: any)=>({
         text: l.text,
         voice_id: l.voice_key
       }));
@@ -87,7 +87,7 @@ serve(async (req)=>{
   } catch (error) {
     return new Response(JSON.stringify({
       success: false,
-      error: error.message,
+      error: error instanceof Error ? error.message : 'Unknown error',
       details: "Audio generation failed"
     }), {
       status: 500,
