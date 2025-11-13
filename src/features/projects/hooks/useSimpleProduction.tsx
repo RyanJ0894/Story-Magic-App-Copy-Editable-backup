@@ -49,7 +49,9 @@ export const useSimpleProduction = () => {
         triggerData = result.data;
         triggerError = result.error;
         
-        console.log('📥 Trigger response:', triggerData);
+        console.log('📥 Full trigger result:', { data: triggerData, error: triggerError });
+        console.log('📥 Trigger data type:', typeof triggerData);
+        console.log('📥 Trigger data keys:', triggerData ? Object.keys(triggerData) : 'null');
         
         if (!triggerError && triggerData?.success) {
           console.log('✅ RelevanceAI agent triggered successfully on attempt', triggerAttempts);
