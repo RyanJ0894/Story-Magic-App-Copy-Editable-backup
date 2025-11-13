@@ -116,7 +116,8 @@ serve(async (req) => {
     }
 
     // CRITICAL: Detect if RelevanceAI is just echoing input instead of triggering
-    if (responseData.project_id && responseData.script) {
+    // Check for both 'script' and 'script_text' since RelevanceAI might echo either
+    if (responseData.project_id && (responseData.script || responseData.script_text)) {
       console.error('⚠️ RelevanceAI returned input data instead of job info - agent may not be configured properly');
       return new Response(JSON.stringify({ 
         success: false,
