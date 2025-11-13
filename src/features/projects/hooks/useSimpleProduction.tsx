@@ -85,11 +85,13 @@ export const useSimpleProduction = () => {
 
       setState(prev => ({ ...prev, step: 'Waiting for AI Director to generate Director JSON...' }));
 
-      // 3. Poll for Director JSON
+      // 3. Poll for Director JSON with 5-minute timeout
       let attempts = 0;
       const pollInterval = 5000;
-      const maxAttempts = (20 * 60 * 1000) / pollInterval;
+      const maxAttempts = 60; // 5 minutes (60 attempts * 5 seconds)
       let directorJson: any = null;
+
+      console.log(`⏳ Starting to poll for director_json (max ${maxAttempts} attempts = ${(maxAttempts * pollInterval) / 1000}s)`);
 
       while (attempts < maxAttempts && !directorJson) {
         console.log(`📊 Polling attempt ${attempts + 1}/${maxAttempts} for project ${projectId}`);
@@ -123,10 +125,18 @@ export const useSimpleProduction = () => {
       }
 
       if (!directorJson) {
-        console.error('❌ Timeout: No director JSON found after', attempts, 'attempts');
+        console.error('❌ Timeout: No director JSON found after', attempts, 'attempts (5 minutes)');
         throw new Error(
-          'Timed out waiting for Director JSON with scenes. ' +
-          'Check Supabase logs: https://supabase.com/dashboard/project/bcuhyyyerxwgkrkbrqbs/logs/edge-functions'
+          `⏱️ Timeout after 5 minutes waiting for AI Director.\n\n` +
+          `The RelevanceAI agent was triggered successfully but never called back.\n\n` +
+          `Please check in your RelevanceAI dashboard:\n` +
+          `1. Go to https://relevance.ai and check your agent runs\n` +
+          `2. Verify the agent actually executed (not just queued)\n` +
+          `3. Check if there are any errors in the agent execution logs\n` +
+          `4. Verify the callback webhook URL is set to:\n` +
+          `   https://bcuhyyyerxwgkrkbrqbs.supabase.co/functions/v1/ai-director-callback\n\n` +
+          `Also check Supabase Edge Function logs:\n` +
+          `https://supabase.com/dashboard/project/bcuhyyyerxwgkrkbrqbs/logs/edge-functions`
         );
       }
 
