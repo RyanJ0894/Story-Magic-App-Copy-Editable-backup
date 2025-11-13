@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.0";
-import { Resend } from "npm:resend@4.0.0";
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -70,17 +70,21 @@ const serve_handler = async (req: Request): Promise<Response> => {
       throw new Error("RESEND_API_KEY appears to be invalid");
     }
 
-    // Send actual email using Resend
-    const resend = new Resend(apiKey);
-    
+    // Send actual email using Resend API directly
     console.log("Attempting to send email to:", email);
     console.log("From address:", "Story Magic Team <onboarding@resend.dev>");
 
-    const emailResponse = await resend.emails.send({
-      from: "Story Magic Team <onboarding@resend.dev>",
-      to: [email],
-      subject: `You're invited to join our team as ${role}`,
-      html: `
+    const emailApiResponse = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${apiKey}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        from: "Story Magic Team <onboarding@resend.dev>",
+        to: [email],
+        subject: `You're invited to join our team as ${role}`,
+        html: `
         <!DOCTYPE html>
         <html>
         <head>
@@ -110,25 +114,27 @@ const serve_handler = async (req: Request): Promise<Response> => {
           </div>
         </body>
         </html>
-      `,
+        `
+      })
     });
 
+    const emailResponse = await emailApiResponse.json();
     console.log("Email Response:", JSON.stringify(emailResponse, null, 2));
     
-    if (emailResponse.error) {
-      console.error("Email sending failed:", emailResponse.error);
-      throw new Error(`Failed to send email: ${JSON.stringify(emailResponse.error)}`);
+    if (!emailApiResponse.ok || emailResponse.error) {
+      console.error("Email sending failed:", emailResponse.error || emailApiResponse.statusText);
+      throw new Error(`Failed to send email: ${JSON.stringify(emailResponse.error || emailApiResponse.statusText)}`);
     }
 
-    console.log("Email sent successfully! ID:", emailResponse.data?.id);
+    console.log("Email sent successfully! ID:", emailResponse.id);
 
     return new Response(
       JSON.stringify({
         success: true,
         message: "Invitation email sent successfully",
         invitationUrl,
-        emailId: emailResponse.data?.id,
-        resendResponse: emailResponse.data,
+        emailId: emailResponse.id,
+        resendResponse: emailResponse,
       }),
       {
         status: 200,
