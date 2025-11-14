@@ -119,11 +119,16 @@ serve(async (req) => {
     }
 
     // CRITICAL: Detect if RelevanceAI is just echoing input instead of triggering
-    // Check for both 'script' and 'script_text' since RelevanceAI might echo either
-    console.log('🔍 Checking for echo - project_id:', !!responseData.project_id, 
-                'script:', !!responseData.script, 'script_text:', !!responseData.script_text);
+    // Check multiple response structures: top-level, nested in received_payload, nested in relevance_response
+    const hasTopLevelEcho = responseData.project_id && (responseData.script || responseData.script_text);
+    const hasNestedEcho = responseData.received_payload?.project_id || responseData.relevance_response?.inputs?.project_id;
     
-    if (responseData.project_id && (responseData.script || responseData.script_text)) {
+    console.log('🔍 Checking for echo:', {
+      topLevel: { project_id: !!responseData.project_id, script: !!responseData.script, script_text: !!responseData.script_text },
+      nested: { received_payload: !!responseData.received_payload, relevance_response: !!responseData.relevance_response }
+    });
+    
+    if (hasTopLevelEcho || hasNestedEcho) {
       console.error('🚨🚨🚨 ECHO DETECTED! RelevanceAI returned input data instead of job info');
       console.error('Response data:', responseData);
       
@@ -131,14 +136,14 @@ serve(async (req) => {
         success: false,
         error: 'AGENT_NOT_TRIGGERED',
         message: 'RelevanceAI agent did not start - it just echoed your input back',
-        details: 'The agent appears to be misconfigured. Please verify in RelevanceAI dashboard: 1) Agent is DEPLOYED (not draft), 2) API trigger is ENABLED, 3) Callback webhook URL is set to your ai-director-callback function',
+        details: 'The agent is misconfigured. You are using a WEBHOOK URL instead of the API TRIGGER.\n\nIn RelevanceAI dashboard:\n1. Go to Settings → API & Tools\n2. Enable "API Trigger" (not webhook)\n3. Use the API trigger endpoint, not the webhook endpoint\n4. The callback URL should point to: https://bcuhyyyerxwgkrkbrqbs.supabase.co/functions/v1/ai-director-callback',
         responseReceived: responseData
       };
       
       console.log('📤 Returning error response:', errorResponse);
       
       return new Response(JSON.stringify(errorResponse), {
-        status: 400, // Changed to 400 so it's clearly a client config error
+        status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
