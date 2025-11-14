@@ -1,5 +1,4 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -15,10 +14,17 @@ serve(async (req) => {
     const { project_id, script_text } = await req.json();
     
     if (!project_id || !script_text) {
-      throw new Error('Missing project_id or script_text');
+      console.error('❌ Missing required fields:', { has_project_id: !!project_id, has_script_text: !!script_text });
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'Missing project_id or script_text'
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400
+      });
     }
     
-    console.log('🎬 Triggering RelevanceAI for project:', project_id);
+    console.log('🎬 [v2] Triggering RelevanceAI for project:', project_id, '| script length:', script_text.length);
     
     // Hardcoded working webhook URL (verified via direct testing)
     const webhookUrl = 'https://api-bcbe5a.stack.tryrelevance.com/latest/agents/hooks/custom-trigger/234084c7-e850-4e25-8a73-103f803cfd41/c79e2bc6-9126-455d-9623-a50b703605e1';
@@ -39,20 +45,28 @@ serve(async (req) => {
     
     const responseText = await relevanceResponse.text();
     console.log('📥 RelevanceAI status:', relevanceResponse.status);
-    console.log('📥 RelevanceAI response:', responseText);
+    console.log('📥 RelevanceAI raw response:', responseText);
     
     if (!relevanceResponse.ok) {
-      throw new Error(`RelevanceAI returned ${relevanceResponse.status}: ${responseText}`);
+      console.error('❌ RelevanceAI error response:', { status: relevanceResponse.status, body: responseText });
+      return new Response(JSON.stringify({
+        success: false,
+        error: `RelevanceAI returned ${relevanceResponse.status}: ${responseText}`
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 500
+      });
     }
     
-    console.log('✅ RelevanceAI triggered successfully');
+    console.log('✅ [v2] RelevanceAI triggered successfully');
     
+    // CRITICAL: Return success=true so frontend knows it worked
     return new Response(JSON.stringify({
       success: true,
-      message: 'RelevanceAI webhook triggered successfully',
-      project_id,
+      message: 'RelevanceAI webhook triggered successfully [v2]',
+      project_id: project_id,
       relevance_status: relevanceResponse.status,
-      data: responseText
+      relevance_response: responseText
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200
