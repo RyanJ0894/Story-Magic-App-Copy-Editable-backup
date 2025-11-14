@@ -53,17 +53,6 @@ serve(async (req) => {
       });
     }
 
-    // Validate API key format (should be agent_id:secret_key)
-    if (!DIRECTOR_API_KEY.includes(':')) {
-      console.error('❌ DIRECTOR_API_KEY has invalid format. Expected: {agent_id}:{secret_key}');
-      return new Response(JSON.stringify({ 
-        error: 'Server misconfiguration: DIRECTOR_API_KEY must be in format {agent_id}:{secret_key}' 
-      }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
     // Format payload for RelevanceAI agent
     const payload = {
       message: {
@@ -79,7 +68,6 @@ serve(async (req) => {
     console.log('🎯 Triggering RelevanceAI agent:', NEW_AGENT_ID);
     console.log('📤 Full request URL:', DIRECTOR_TRIGGER_URL);
     console.log('📤 Payload:', JSON.stringify(payload, null, 2));
-    console.log('📤 Using API key format:', DIRECTOR_API_KEY.split(':')[0] + ':***');
 
     // Call RelevanceAI trigger API
     const response = await fetch(DIRECTOR_TRIGGER_URL, {
