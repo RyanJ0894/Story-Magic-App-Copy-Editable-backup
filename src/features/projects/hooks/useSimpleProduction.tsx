@@ -33,65 +33,44 @@ export const useSimpleProduction = () => {
       // 2. Trigger RelevanceAI with retry logic
       console.log('🎬 Triggering RelevanceAI agent for project:', projectId);
       
-      let triggerAttempts = 0;
-      const maxTriggerAttempts = 3;
-      let triggerData: any = null;
-      let triggerError: any = null;
-
-      while (triggerAttempts < maxTriggerAttempts) {
-        triggerAttempts++;
-        console.log(`🔄 Trigger attempt ${triggerAttempts}/${maxTriggerAttempts}`);
-        console.log('📤 Calling trigger-relevance with:', { project_id: projectId, script_length: script.length });
-        
-        const result = await supabase.functions.invoke('trigger-relevance', {
-          body: { project_id: projectId, script_text: script },
-        });
-        
-        triggerData = result.data;
-        triggerError = result.error;
-        
-        console.log('📥 Raw invoke result:', JSON.stringify({ 
-          hasData: !!triggerData, 
-          hasError: !!triggerError,
-          dataKeys: triggerData ? Object.keys(triggerData) : [],
-          errorKeys: triggerError ? Object.keys(triggerError) : []
-        }, null, 2));
-        console.log('📥 Full data:', JSON.stringify(triggerData, null, 2));
-        console.log('📥 Full error:', JSON.stringify(triggerError, null, 2));
-        
-        if (!triggerError && triggerData?.success) {
-          console.log('✅ RelevanceAI agent triggered successfully on attempt', triggerAttempts);
-          break;
-        }
-        
-        console.warn(`⚠️ Trigger attempt ${triggerAttempts} failed, retrying...`);
-        if (triggerAttempts < maxTriggerAttempts) {
-          await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2s between retries
-        }
-      }
+      // Single attempt - edge function should work immediately
+      console.log('📤 Calling trigger-relevance with:', { project_id: projectId, script_length: script.length });
+      
+      const triggerResult = await supabase.functions.invoke('trigger-relevance', {
+        body: { project_id: projectId, script_text: script },
+      });
+      
+      const triggerData = triggerResult.data;
+      const triggerError = triggerResult.error;
+      
+      console.log('📥 Raw invoke result:', JSON.stringify({ 
+        hasData: !!triggerData, 
+        hasError: !!triggerError,
+        dataKeys: triggerData ? Object.keys(triggerData) : [],
+        errorKeys: triggerError ? Object.keys(triggerError) : [],
+        fullData: triggerData,
+        fullError: triggerError
+      }, null, 2));
 
       if (triggerError) {
-        console.error('❌ Trigger error after retries:', JSON.stringify(triggerError, null, 2));
-        // Extract error message from various possible locations
+        console.error('❌ Edge function error:', JSON.stringify(triggerError, null, 2));
         const errorMsg = triggerError.message || 
                         triggerError.error?.message || 
                         (typeof triggerError === 'string' ? triggerError : JSON.stringify(triggerError));
         throw new Error(`Edge function error: ${errorMsg}`);
       }
+      
       if (!triggerData?.success) {
-        console.error('❌ Trigger failed after retries:', JSON.stringify(triggerData, null, 2));
-        // Extract error from response data
+        console.error('❌ RelevanceAI did not return success:', JSON.stringify(triggerData, null, 2));
         const errorMsg = triggerData?.error || 'No error details provided';
-        const details = triggerData?.details || '';
-        const responseData = triggerData?.data || '';
         throw new Error(
-          `RelevanceAI webhook call failed after ${maxTriggerAttempts} attempts.\n\n` +
+          `RelevanceAI webhook call failed.\n\n` +
           `Error: ${errorMsg}\n` +
-          (details ? `Details: ${details}\n` : '') +
-          (responseData ? `Response: ${responseData}\n` : '') +
           '\nCheck edge function logs in Supabase dashboard for more details.'
         );
       }
+
+      console.log('✅ RelevanceAI agent triggered successfully!');
 
       setState(prev => ({ ...prev, step: 'Waiting for AI Director to generate Director JSON...' }));
 
