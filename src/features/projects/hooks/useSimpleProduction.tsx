@@ -95,13 +95,14 @@ export const useSimpleProduction = () => {
 
       setState(prev => ({ ...prev, step: 'Waiting for AI Director to generate Director JSON...' }));
 
-      // 3. Poll for Director JSON with 2-minute timeout (fail fast if misconfigured)
+      // 3. Poll for Director JSON with 5-minute timeout
       let attempts = 0;
-      const pollInterval = 5000;
-      const maxAttempts = 24; // 2 minutes (24 attempts * 5 seconds)
+      const pollInterval = 5000; // Check every 5 seconds
+      const maxAttempts = 60; // Try for 5 minutes (60 * 5 seconds = 300 seconds)
       let directorJson: any = null;
 
-      console.log(`⏳ Starting to poll for director_json (max ${maxAttempts} attempts = ${(maxAttempts * pollInterval) / 1000}s)`);
+      console.log('📊 Starting to poll for Director JSON...');
+      console.log(`⏱️ Will check every ${pollInterval/1000}s for up to ${maxAttempts * pollInterval/1000}s`);
       console.log(`🔍 Looking for director_json from job:`, triggerData?.job_id || 'no job_id returned');
 
       while (attempts < maxAttempts && !directorJson) {
@@ -130,6 +131,8 @@ export const useSimpleProduction = () => {
           break;
         } else if (json) {
           console.log('⚠️  Found director JSON in director_json table but no scenes:', Object.keys(json));
+        } else {
+          console.log('⏳ No data yet in director_json table');
         }
 
         // Also check user_projects table (where direct Supabase action might save)
@@ -156,31 +159,35 @@ export const useSimpleProduction = () => {
         }
 
         attempts++;
-        await new Promise(r => setTimeout(r, pollInterval));
+        
+        if (attempts < maxAttempts) {
+          setState(prev => ({ ...prev, step: `Waiting for AI Director (${attempts}/${maxAttempts})...` }));
+          await new Promise(r => setTimeout(r, pollInterval));
+        }
       }
 
       if (!directorJson) {
-        console.error('❌ Timeout: No director JSON found after', attempts, 'attempts (2 minutes)');
+        console.error('❌ Timeout: No director JSON found after', attempts, 'attempts (5 minutes)');
         const jobInfo = triggerData?.job_id ? `\nJob ID: ${triggerData.job_id}` : '\n⚠️  No job ID was returned by RelevanceAI';
         throw new Error(
-          `⏱️ Timeout after 2 minutes waiting for AI Director.${jobInfo}\n\n` +
-          `DIAGNOSIS: RelevanceAI agent accepted the trigger but never executed or called back.\n\n` +
-          `REQUIRED FIXES in RelevanceAI dashboard (https://relevance.ai):\n\n` +
-          `1. CHECK AGENT DEPLOYMENT\n` +
-          `   - Agent MUST be deployed (not in draft mode)\n` +
-          `   - Look for "Deploy" button and click it\n\n` +
-          `2. ENABLE API TRIGGER\n` +
-          `   - Go to agent settings → API & Tools\n` +
-          `   - Enable "API Trigger" option\n\n` +
-          `3. SET CALLBACK WEBHOOK\n` +
-          `   - In agent configuration, set callback URL to:\n` +
-          `     https://bcuhyyyerxwgkrkbrqbs.supabase.co/functions/v1/ai-director-callback\n\n` +
-          `4. TEST THE AGENT\n` +
-          `   - Run the agent manually first to verify it works\n` +
-          `   - Check execution logs for errors\n\n` +
-          `After fixing the above, try creating the project again.`
+          `⏱️ Timeout after 5 minutes waiting for AI Director.${jobInfo}\n\n` +
+          `DIAGNOSIS: RelevanceAI webhook was triggered successfully, but no Director JSON was returned.\n\n` +
+          `Project ID: ${projectId}\n\n` +
+          `POSSIBLE CAUSES:\n\n` +
+          `1. RelevanceAI agent is still processing (may take longer than 5 minutes)\n` +
+          `   - Check RelevanceAI dashboard for job status\n` +
+          `   - Check the 'director_json' table in Supabase for project_id: ${projectId}\n\n` +
+          `2. Callback webhook not configured\n` +
+          `   - Agent must call back to: https://bcuhyyyerxwgkrkbrqbs.supabase.co/functions/v1/ai-director-callback\n` +
+          `   - Check RelevanceAI agent configuration\n\n` +
+          `3. Agent execution error\n` +
+          `   - Check RelevanceAI execution logs for errors\n` +
+          `   - Verify agent is deployed (not in draft mode)\n\n` +
+          `To manually check: Open Supabase dashboard → Table Editor → 'director_json' → Search for project_id`
         );
       }
+
+      console.log('✅ Director JSON retrieved successfully');
 
       // 4. Run orchestration
       setState(prev => ({ ...prev, step: 'Generating audio with Railway Orchestrator...' }));
