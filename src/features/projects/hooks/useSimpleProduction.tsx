@@ -33,24 +33,43 @@ export const useSimpleProduction = () => {
       // 2. Trigger RelevanceAI with retry logic
       console.log('🎬 Triggering RelevanceAI agent for project:', projectId);
       
-      // Single attempt - edge function should work immediately
-      console.log('📤 Calling trigger-relevance with:', { project_id: projectId, script_length: script.length });
-      
-      const triggerResult = await supabase.functions.invoke('trigger-relevance', {
-        body: { project_id: projectId, script_text: script },
-      });
-      
-      const triggerData = triggerResult.data;
-      const triggerError = triggerResult.error;
-      
-      console.log('📥 Raw invoke result:', JSON.stringify({ 
-        hasData: !!triggerData, 
-        hasError: !!triggerError,
-        dataKeys: triggerData ? Object.keys(triggerData) : [],
-        errorKeys: triggerError ? Object.keys(triggerError) : [],
-        fullData: triggerData,
-        fullError: triggerError
-      }, null, 2));
+      // Retry up to 25 attempts with 5-second delays (125 seconds total)
+      let triggerAttempts = 0;
+      const maxTriggerAttempts = 25;
+      let triggerData: any = null;
+      let triggerError: any = null;
+
+      while (triggerAttempts < maxTriggerAttempts) {
+        triggerAttempts++;
+        console.log(`🔄 Trigger attempt ${triggerAttempts}/${maxTriggerAttempts}`);
+        console.log('📤 Calling trigger-relevance with:', { project_id: projectId, script_length: script.length });
+        
+        const triggerResult = await supabase.functions.invoke('trigger-relevance', {
+          body: { project_id: projectId, script_text: script },
+        });
+        
+        triggerData = triggerResult.data;
+        triggerError = triggerResult.error;
+        
+        console.log('📥 Raw invoke result:', JSON.stringify({ 
+          hasData: !!triggerData, 
+          hasError: !!triggerError,
+          dataKeys: triggerData ? Object.keys(triggerData) : [],
+          errorKeys: triggerError ? Object.keys(triggerError) : [],
+          fullData: triggerData,
+          fullError: triggerError
+        }, null, 2));
+        
+        if (!triggerError && triggerData?.success) {
+          console.log('✅ RelevanceAI agent triggered successfully on attempt', triggerAttempts);
+          break;
+        }
+        
+        console.warn(`⚠️ Trigger attempt ${triggerAttempts} failed, retrying...`);
+        if (triggerAttempts < maxTriggerAttempts) {
+          await new Promise(resolve => setTimeout(resolve, 5000)); // Wait 5s between retries
+        }
+      }
 
       if (triggerError) {
         console.error('❌ Edge function error:', JSON.stringify(triggerError, null, 2));
@@ -64,7 +83,7 @@ export const useSimpleProduction = () => {
         console.error('❌ RelevanceAI did not return success:', JSON.stringify(triggerData, null, 2));
         const errorMsg = triggerData?.error || 'No error details provided';
         throw new Error(
-          `RelevanceAI webhook call failed.\n\n` +
+          `RelevanceAI webhook call failed after ${maxTriggerAttempts} attempts.\n\n` +
           `Error: ${errorMsg}\n` +
           '\nCheck edge function logs in Supabase dashboard for more details.'
         );
