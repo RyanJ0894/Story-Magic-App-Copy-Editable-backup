@@ -41,6 +41,7 @@ export const useSimpleProduction = () => {
       while (triggerAttempts < maxTriggerAttempts) {
         triggerAttempts++;
         console.log(`🔄 Trigger attempt ${triggerAttempts}/${maxTriggerAttempts}`);
+        console.log('📤 Calling trigger-relevance with:', { project_id: projectId, script_length: script.length });
         
         const result = await supabase.functions.invoke('trigger-relevance', {
           body: { project_id: projectId, script_text: script },
@@ -49,9 +50,14 @@ export const useSimpleProduction = () => {
         triggerData = result.data;
         triggerError = result.error;
         
-        console.log('📥 Full trigger result:', { data: triggerData, error: triggerError });
-        console.log('📥 Trigger data type:', typeof triggerData);
-        console.log('📥 Trigger data keys:', triggerData ? Object.keys(triggerData) : 'null');
+        console.log('📥 Raw invoke result:', JSON.stringify({ 
+          hasData: !!triggerData, 
+          hasError: !!triggerError,
+          dataKeys: triggerData ? Object.keys(triggerData) : [],
+          errorKeys: triggerError ? Object.keys(triggerError) : []
+        }, null, 2));
+        console.log('📥 Full data:', JSON.stringify(triggerData, null, 2));
+        console.log('📥 Full error:', JSON.stringify(triggerError, null, 2));
         
         if (!triggerError && triggerData?.success) {
           console.log('✅ RelevanceAI agent triggered successfully on attempt', triggerAttempts);
@@ -65,21 +71,25 @@ export const useSimpleProduction = () => {
       }
 
       if (triggerError) {
-        console.error('❌ Trigger error after retries:', triggerError);
-        throw new Error(`RelevanceAI trigger failed after ${maxTriggerAttempts} attempts: ${triggerError.message}`);
+        console.error('❌ Trigger error after retries:', JSON.stringify(triggerError, null, 2));
+        // Extract error message from various possible locations
+        const errorMsg = triggerError.message || 
+                        triggerError.error?.message || 
+                        (typeof triggerError === 'string' ? triggerError : JSON.stringify(triggerError));
+        throw new Error(`Edge function error: ${errorMsg}`);
       }
       if (!triggerData?.success) {
-        console.error('❌ Trigger failed after retries:', triggerData);
-        const errorMsg = triggerData?.error || 'Unknown error';
+        console.error('❌ Trigger failed after retries:', JSON.stringify(triggerData, null, 2));
+        // Extract error from response data
+        const errorMsg = triggerData?.error || 'No error details provided';
         const details = triggerData?.details || '';
+        const responseData = triggerData?.data || '';
         throw new Error(
-          `RelevanceAI agent trigger failed after ${maxTriggerAttempts} attempts.\n\n` +
+          `RelevanceAI webhook call failed after ${maxTriggerAttempts} attempts.\n\n` +
           `Error: ${errorMsg}\n` +
-          (details ? `\nDetails: ${details}\n` : '') +
-          '\nPlease check RelevanceAI agent configuration:\n' +
-          '1. Agent must be deployed (not in draft mode)\n' +
-          '2. API trigger must be enabled\n' +
-          '3. Callback webhook URL must be set correctly'
+          (details ? `Details: ${details}\n` : '') +
+          (responseData ? `Response: ${responseData}\n` : '') +
+          '\nCheck edge function logs in Supabase dashboard for more details.'
         );
       }
 
