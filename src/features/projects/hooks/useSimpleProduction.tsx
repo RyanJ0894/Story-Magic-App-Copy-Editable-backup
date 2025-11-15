@@ -60,7 +60,7 @@ export const useSimpleProduction = () => {
           fullError: triggerError
         }, null, 2));
         
-        if (!triggerError && (triggerData?.success || triggerData?.message === "Webhook executed successfully")) {
+        if (!triggerError && triggerData?.success === true) {
           console.log('✅ RelevanceAI agent triggered successfully on attempt', triggerAttempts);
           break;
         }
@@ -79,7 +79,7 @@ export const useSimpleProduction = () => {
         throw new Error(`Edge function error: ${errorMsg}`);
       }
       
-      if (!triggerData?.success && triggerData?.message !== "Webhook executed successfully") {
+      if (triggerData?.success !== true) {
         console.error('❌ RelevanceAI did not return success:', JSON.stringify(triggerData, null, 2));
         const errorMsg = triggerData?.error || 'No error details provided';
         throw new Error(
