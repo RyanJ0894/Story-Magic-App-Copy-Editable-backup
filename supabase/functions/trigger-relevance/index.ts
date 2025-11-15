@@ -31,6 +31,10 @@ serve(async (req) => {
     
     console.log('📡 Calling RelevanceAI webhook...');
     
+    // Callback URL where RelevanceAI should send results
+    const callbackUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/ai-director-callback`;
+    console.log('🔔 Callback URL:', callbackUrl);
+    
     // Call RelevanceAI - webhook URL is self-authenticating, NO auth headers needed
     const relevanceResponse = await fetch(webhookUrl, {
       method: 'POST',
@@ -39,7 +43,8 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         project_id: project_id,
-        script_text: script_text
+        script_text: script_text,
+        callback_url: callbackUrl
       })
     });
     

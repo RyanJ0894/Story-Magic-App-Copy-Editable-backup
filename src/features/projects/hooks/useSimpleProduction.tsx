@@ -93,10 +93,10 @@ export const useSimpleProduction = () => {
 
       setState(prev => ({ ...prev, step: 'Waiting for AI Director to generate Director JSON...' }));
 
-      // 3. Poll for Director JSON with 10-minute timeout
+      // 3. Poll for Director JSON with 5-minute timeout
       let attempts = 0;
       const pollInterval = 5000; // Check every 5 seconds
-      const maxAttempts = 120; // Try for 10 minutes (120 * 5 seconds = 600 seconds)
+      const maxAttempts = 60; // Try for 5 minutes (60 * 5 seconds = 300 seconds)
       let directorJson: any = null;
 
       console.log('📊 Starting to poll for Director JSON...');
@@ -165,14 +165,14 @@ export const useSimpleProduction = () => {
       }
 
       if (!directorJson) {
-        console.error('❌ Timeout: No director JSON found after', attempts, 'attempts (10 minutes)');
+        console.error('❌ Timeout: No director JSON found after', attempts, 'attempts (5 minutes)');
         const jobInfo = triggerData?.job_id ? `\nJob ID: ${triggerData.job_id}` : '\n⚠️  No job ID was returned by RelevanceAI';
         throw new Error(
-          `⏱️ Timeout after 10 minutes waiting for AI Director.${jobInfo}\n\n` +
+          `⏱️ Timeout after 5 minutes waiting for AI Director.${jobInfo}\n\n` +
           `DIAGNOSIS: RelevanceAI webhook was triggered successfully, but no Director JSON was returned.\n\n` +
           `Project ID: ${projectId}\n\n` +
           `POSSIBLE CAUSES:\n\n` +
-          `1. RelevanceAI agent is still processing (may take longer than 10 minutes)\n` +
+          `1. RelevanceAI agent is still processing (may take longer than 5 minutes)\n` +
           `   - Check RelevanceAI dashboard for job status\n` +
           `   - Check the 'director_json' table in Supabase for project_id: ${projectId}\n\n` +
           `2. Callback webhook not configured\n` +
