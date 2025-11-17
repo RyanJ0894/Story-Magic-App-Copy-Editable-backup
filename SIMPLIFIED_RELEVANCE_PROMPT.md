@@ -77,10 +77,20 @@ PROCESSING:
 6. Query knowledge base for ambience (ambience_catalog_enriched_json) that matches location
 7. Query knowledge base for SFX (sfx_catalog_enriched_json) if scene needs sound effects
 8. Repeat until END OF SCRIPT
-9. Call "Save to Supabase" tool with complete JSON
+9. After generating complete JSON, CALL "Save to Supabase" tool
+
+SAVE TO SUPABASE TOOL - REQUIRED:
+After generating the complete Director JSON, you MUST call the "Save to Supabase" tool with these parameters:
+- project_id: Use the project_id from the input JSON
+- director_json: Paste the COMPLETE Director JSON you generated (all scenes)
+
+CRITICAL: Do NOT use variables like {{body}} or {{director_json}} in the tool call.
+You must paste the actual generated JSON content as the parameter value.
+If the tool call fails, retry up to 2 times before giving up.
 
 NEVER stop processing early. ALWAYS complete entire script.
 NEVER invent voice IDs or track names. ONLY use knowledge base files.
+ALWAYS call "Save to Supabase" tool after generating JSON.
 ```
 
 ---
