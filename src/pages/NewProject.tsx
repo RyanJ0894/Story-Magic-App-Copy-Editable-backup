@@ -4,6 +4,7 @@ import { useNewProject } from "@/features/projects/hooks/useNewProject";
 import { useSimpleProduction } from "@/features/projects/hooks/useSimpleProduction";
 import { ProjectForm } from "@/features/projects/components/ProjectForm";
 import { ProjectFormData } from "@/features/projects/components/ProjectForm/schema";
+import { ScriptPlaybackView } from "@/features/projects/components/ScriptPlaybackView";
 import { useAuth } from "@/features/auth/auth";
 import { toast } from "sonner";
 
@@ -11,6 +12,8 @@ export default function NewProject() {
   const navigate = useNavigate();
   const { data: currentUser, isLoading: authLoading } = useAuth();
   const [projectId, setProjectId] = useState<string | null>(null);
+  const [submittedScript, setSubmittedScript] = useState<string>("");
+  const [showPlaybackView, setShowPlaybackView] = useState(false);
 
   const { createProject, isCreating } = useNewProject();
   const production = useSimpleProduction();
@@ -32,6 +35,9 @@ export default function NewProject() {
     }
 
     try {
+      // Save the script for playback view
+      setSubmittedScript(data.script);
+      
       // Step 1: Create project in database
       const project = await createProject({
         title: data.title,
@@ -48,6 +54,17 @@ export default function NewProject() {
       toast.error("Failed to create project");
     }
   };
+
+  // Show playback view if audio is ready
+  if (production.audioUrl && submittedScript && showPlaybackView) {
+    return (
+      <ScriptPlaybackView
+        script={submittedScript}
+        audioUrl={production.audioUrl}
+        onBack={() => setShowPlaybackView(false)}
+      />
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto py-10">
@@ -75,40 +92,44 @@ export default function NewProject() {
 
       {/* Show production status */}
       {production.isProcessing && (
-        <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-          <h2 className="font-semibold text-blue-900 mb-2">Processing...</h2>
-          <p className="text-blue-700">{production.step}</p>
-          <div className="mt-3 animate-pulse bg-blue-200 h-2 rounded"></div>
+        <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg">
+          <h2 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">Processing...</h2>
+          <p className="text-blue-700 dark:text-blue-300">{production.step}</p>
+          <div className="mt-3 animate-pulse bg-blue-200 dark:bg-blue-700 h-2 rounded"></div>
         </div>
       )}
 
-      {/* Show success with audio player */}
+      {/* Show success with playback button */}
       {production.audioUrl && (
-        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-          <h2 className="font-semibold text-green-900 mb-2">
+        <div className="mb-6 p-6 bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg">
+          <h2 className="font-semibold text-green-900 dark:text-green-100 mb-4 text-xl">
             ✅ Production Complete!
           </h2>
 
-          <audio
-            controls
-            className="w-full mt-3 accent-yellow-500 bg-[#1b1b1b] rounded-xl p-1 shadow-sm border border-gray-700"
-            style={{ accentColor: "#facc15", backgroundColor: "#1b1b1b" }}
-          >
-            <source src={production.audioUrl} type="audio/mp4" />
-            Your browser does not support the audio element.
-          </audio>
+          <p className="text-green-700 dark:text-green-300 mb-4">
+            Your audio has been generated successfully. Click below to view the script with synchronized playback.
+          </p>
 
-          <div className="mt-3 flex gap-3">
+          <div className="flex gap-3 flex-wrap">
+            <button
+              onClick={() => setShowPlaybackView(true)}
+              className="px-6 py-3 bg-primary text-primary-foreground rounded-md hover-elevate active-elevate-2 font-medium"
+              data-testid="button-view-playback"
+            >
+              🎬 View Script Playback
+            </button>
             <a
               href={production.audioUrl}
               download
-              className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+              className="px-6 py-3 bg-secondary text-secondary-foreground rounded-md hover-elevate active-elevate-2 font-medium inline-block"
+              data-testid="link-download-audio"
             >
               Download Audio
             </a>
             <button
               onClick={() => navigate("/dashboard")}
-              className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
+              className="px-6 py-3 bg-muted text-muted-foreground rounded-md hover-elevate active-elevate-2 font-medium"
+              data-testid="button-dashboard"
             >
               Go to Dashboard
             </button>
@@ -118,14 +139,15 @@ export default function NewProject() {
 
       {/* Show error if failed */}
       {production.error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-          <h2 className="font-semibold text-red-900 mb-2">
+        <div className="mb-6 p-4 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg">
+          <h2 className="font-semibold text-red-900 dark:text-red-100 mb-2">
             ❌ Production Failed
           </h2>
-          <p className="text-red-700">{production.error}</p>
+          <p className="text-red-700 dark:text-red-300">{production.error}</p>
           <button
             onClick={() => window.location.reload()}
             className="mt-3 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+            data-testid="button-retry"
           >
             Try Again
           </button>
