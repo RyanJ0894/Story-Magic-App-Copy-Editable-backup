@@ -50,19 +50,25 @@ export interface DirectorJSON {
       line_id: string;
       character: string;
       text: string;
-      voice_key?: string;
+      voice?: string;  // Railway expects 'voice', not 'voice_key'
     }>;
     music?: Array<{
       cue_id: string;
-      intensity?: number;
+      volume?: number;  // Railway expects 'volume', not 'intensity'
       enter?: { at: number; fade: number };
       exit?: { at: number; fade: number };
     }>;
     ambience?: {
       cue_id: string;
+      volume?: number;  // Railway needs 'volume' for ambience too
       enter?: { at: number; fade: number };
       exit?: { at: number; fade: number };
     };
+    sfx?: Array<{
+      cue_id: string;
+      at: number;
+      volume?: number;
+    }>;
   }>;
 }
 
@@ -77,24 +83,41 @@ function transformToRailwaySchema(relevanceJSON: RelevanceAIDirectorJSON): Direc
     scenes: relevanceJSON.scenes.map((scene, index) => {
       console.log(`  📝 Transforming scene ${index + 1}: ${scene.scene_id}`);
       
-      // Transform music array
+      // Transform music array - keep 'volume', don't rename to 'intensity'
       const music = scene.music?.map((m, i) => ({
         cue_id: m.track_id || `music_${i + 1}`,
-        intensity: m.volume || 0.25,
+        volume: m.volume || 0.25,  // Railway expects 'volume', not 'intensity'
         enter: { at: 0, fade: m.fade_in || 2 },
         exit: { at: -1, fade: m.fade_out || 2 }  // -1 means "at end of scene"
       }));
       
-      // Transform ambience object (Railway expects single object, not array)
+      // Transform ambience object - include 'volume'
       const ambience = scene.ambience ? {
         cue_id: scene.ambience.track_id || `ambience_1`,
+        volume: scene.ambience.volume || 0.28,  // Railway needs 'volume' for ambience
         enter: { at: 0, fade: scene.ambience.fade_in || 1.5 },
         exit: { at: -1, fade: scene.ambience.fade_out || 1.5 }
       } : undefined;
       
+      // Transform SFX array - pass through
+      const sfx = scene.sfx?.map(s => ({
+        cue_id: s.cue_id,
+        at: s.at,
+        volume: s.volume || 0.5
+      }));
+      
+      // Transform dialogue - map 'voice_key' to 'voice'
+      const dialogue = scene.dialogue.map(d => ({
+        line_id: d.line_id,
+        character: d.character,
+        text: d.text,
+        voice: d.voice_key  // Railway expects 'voice', not 'voice_key'
+      }));
+      
       console.log(`    ✅ Transformed music cues: ${music?.length || 0}`);
       console.log(`    ✅ Transformed ambience: ${ambience ? 'yes' : 'no'}`);
-      console.log(`    ✅ Dialogue lines: ${scene.dialogue?.length || 0}`);
+      console.log(`    ✅ Transformed SFX cues: ${sfx?.length || 0}`);
+      console.log(`    ✅ Dialogue lines: ${dialogue?.length || 0}`);
       
       return {
         scene_id: scene.scene_id,
