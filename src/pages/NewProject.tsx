@@ -5,6 +5,8 @@ import { useSimpleProduction } from "@/features/projects/hooks/useSimpleProducti
 import { ProjectForm } from "@/features/projects/components/ProjectForm";
 import { ProjectFormData } from "@/features/projects/components/ProjectForm/schema";
 import { ScriptPlaybackView } from "@/features/projects/components/ScriptPlaybackView";
+import { PdfPlaybackViewer } from "@/features/projects/components/PdfPlaybackViewer";
+import { uploadPdfFile } from "@/features/projects/utils/pdfStorage";
 import { useAuth } from "@/features/auth/auth";
 import { toast } from "sonner";
 
@@ -13,6 +15,7 @@ export default function NewProject() {
   const { data: currentUser, isLoading: authLoading } = useAuth();
   const [projectId, setProjectId] = useState<string | null>(null);
   const [submittedScript, setSubmittedScript] = useState<string>("");
+  const [pdfUrl, setPdfUrl] = useState<string>("");
   const [showPlaybackView, setShowPlaybackView] = useState(false);
 
   const { createProject, isCreating } = useNewProject();
@@ -28,7 +31,7 @@ export default function NewProject() {
     });
   }, [currentUser, authLoading, isCreating, production.isProcessing]);
 
-  const handleProjectSubmit = async (data: ProjectFormData) => {
+  const handleProjectSubmit = async (data: ProjectFormData & { pdfFile?: File }) => {
     if (!currentUser) {
       toast.error("User must be authenticated to create a project");
       return;
@@ -47,7 +50,20 @@ export default function NewProject() {
 
       setProjectId(project.id);
 
-      // Step 2: Start audio production
+      // Step 2: Upload PDF if provided
+      if (data.pdfFile) {
+        try {
+          toast.info("Uploading PDF...");
+          const result = await uploadPdfFile(data.pdfFile, project.id);
+          setPdfUrl(result.signedUrl);
+          console.log("PDF uploaded:", result);
+        } catch (pdfError) {
+          console.error("PDF upload failed:", pdfError);
+          toast.error("Failed to upload PDF, but project was created");
+        }
+      }
+
+      // Step 3: Start audio production
       await production.processProduction(data.script, project.id);
     } catch (error) {
       console.error("Failed to create project:", error);
@@ -56,14 +72,25 @@ export default function NewProject() {
   };
 
   // Show playback view if audio is ready
-  if (production.audioUrl && submittedScript && showPlaybackView) {
-    return (
-      <ScriptPlaybackView
-        script={submittedScript}
-        audioUrl={production.audioUrl}
-        onBack={() => setShowPlaybackView(false)}
-      />
-    );
+  if (production.audioUrl && showPlaybackView) {
+    // If PDF is available, use PDF viewer; otherwise use text viewer
+    if (pdfUrl) {
+      return (
+        <PdfPlaybackViewer
+          pdfUrl={pdfUrl}
+          audioUrl={production.audioUrl}
+          onBack={() => setShowPlaybackView(false)}
+        />
+      );
+    } else if (submittedScript) {
+      return (
+        <ScriptPlaybackView
+          script={submittedScript}
+          audioUrl={production.audioUrl}
+          onBack={() => setShowPlaybackView(false)}
+        />
+      );
+    }
   }
 
   return (

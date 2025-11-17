@@ -13,9 +13,10 @@ GlobalWorkerOptions.workerSrc = new URL(
 
 type Props = {
   onText: (txt: string, mode?: "replace" | "append") => void;
+  onPdfFile?: (file: File) => void; // New: pass the actual PDF file
 };
 
-export default function PdfToText({ onText }: Props) {
+export default function PdfToText({ onText, onPdfFile }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [mode, setMode] = useState<"replace" | "append">("replace");
   const [busy, setBusy] = useState(false);
@@ -25,6 +26,11 @@ export default function PdfToText({ onText }: Props) {
     setErr("");
     setBusy(true);
     try {
+      // Pass the original PDF file to parent if callback provided
+      if (onPdfFile) {
+        onPdfFile(file);
+      }
+
       const buffer = await file.arrayBuffer();
       const pdf = await getDocument({ data: buffer }).promise;
 
