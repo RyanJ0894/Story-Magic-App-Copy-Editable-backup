@@ -93,10 +93,10 @@ export const useSimpleProduction = () => {
 
       setState(prev => ({ ...prev, step: 'Waiting for AI Director to generate Director JSON...' }));
 
-      // 3. Poll for Director JSON with 5-minute timeout
+      // 3. Poll for Director JSON with 10-minute timeout
       let attempts = 0;
       const pollInterval = 5000; // Check every 5 seconds
-      const maxAttempts = 60; // Try for 5 minutes (60 * 5 seconds = 300 seconds)
+      const maxAttempts = 120; // Try for 10 minutes (120 * 5 seconds = 600 seconds)
       let directorJson: any = null;
 
       console.log('📊 Starting to poll for Director JSON...');
