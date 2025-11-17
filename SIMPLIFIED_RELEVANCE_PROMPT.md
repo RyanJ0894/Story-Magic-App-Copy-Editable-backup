@@ -31,6 +31,12 @@ You MUST ONLY use voice IDs, music tracks, ambience tracks, and SFX from these k
 DO NOT invent or make up any voice IDs, track names, or file paths. 
 ONLY use exact IDs and file paths found in the knowledge base files listed above.
 
+CRITICAL FIELD NAMES:
+- For SFX timing: Use "at" (not "start" or "time")
+- For SFX ID: Use "cue_id" (required, use format "cue_001", "cue_002", etc.)
+- For dialogue ID: Use "line_id" (required, use format "line_001", "line_002", etc.)
+- For scene ID: Use "scene_id" (required, use format "scene_001", "scene_002", etc.)
+
 SCENE STRUCTURE:
 {
   "scene_id": "scene_001",
@@ -61,9 +67,10 @@ SCENE STRUCTURE:
   },
   "sfx": [
     {
+      "cue_id": "cue_001",
       "track_id": "sfx/track_from_sfx_catalog_enriched_json.wav",
       "volume": 0.6,
-      "start": 10.5
+      "at": 10.5
     }
   ]
 }
