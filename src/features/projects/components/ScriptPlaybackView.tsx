@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Play, Pause, Download } from "lucide-react";
+import { parseScreenplayLines, type ScreenplayBlock } from "../utils/screenplayParser";
 
 interface ScriptPlaybackViewProps {
   script: string;
@@ -17,21 +18,22 @@ export function ScriptPlaybackView({ script, audioUrl, onBack }: ScriptPlaybackV
   const [duration, setDuration] = useState(0);
   const [highlightedLineIndex, setHighlightedLineIndex] = useState(0);
   
-  // Split script into lines - KEEP blank lines for proper screenplay spacing
-  const scriptLines = script.split('\n');
+  // Parse script into screenplay blocks
+  const screenplayBlocks = parseScreenplayLines(script);
+  const totalLines = script.split('\n').length;
   
   // Calculate which line should be highlighted based on current time
   useEffect(() => {
     if (duration > 0) {
       // Rough estimate: distribute lines evenly across the audio duration
-      const timePerLine = duration / scriptLines.length;
+      const timePerLine = duration / totalLines;
       const currentLineIndex = Math.min(
         Math.floor(currentTime / timePerLine),
-        scriptLines.length - 1
+        totalLines - 1
       );
       setHighlightedLineIndex(currentLineIndex);
     }
-  }, [currentTime, duration, scriptLines.length]);
+  }, [currentTime, duration, totalLines]);
 
   // Auto-scroll to highlighted line
   useEffect(() => {
@@ -81,31 +83,6 @@ export function ScriptPlaybackView({ script, audioUrl, onBack }: ScriptPlaybackV
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
     return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
-
-  // Determine if a line is a scene heading (all caps)
-  const isSceneHeading = (line: string) => {
-    return line === line.toUpperCase() && line.trim().length > 0 && /^[A-Z\s\.\-]+$/.test(line.trim());
-  };
-
-  // Determine if a line is a character name (indented and all caps before dialogue)
-  const isCharacterName = (line: string, index: number) => {
-    const trimmed = line.trim();
-    const isAllCaps = trimmed === trimmed.toUpperCase() && /^[A-Z\s\(\)]+$/.test(trimmed);
-    const isShort = trimmed.length < 40;
-    
-    // Check if next line exists and is likely dialogue
-    const nextLine = scriptLines[index + 1];
-    const hasDialogueAfter = nextLine && nextLine.trim().length > 0 && !isSceneHeading(nextLine);
-    
-    return isAllCaps && isShort && hasDialogueAfter;
-  };
-
-  // Determine if a line is an action/description (not heading, not character, not dialogue after character)
-  const isAction = (line: string, index: number) => {
-    if (index === 0) return false;
-    const prevLine = scriptLines[index - 1];
-    return !isSceneHeading(line) && !isCharacterName(prevLine, index - 1);
   };
 
   return (
@@ -187,44 +164,72 @@ export function ScriptPlaybackView({ script, audioUrl, onBack }: ScriptPlaybackV
         className="flex-1 overflow-y-auto"
         data-testid="script-container"
       >
-        <div className="max-w-4xl mx-auto px-4 py-8">
-          <div className="font-mono text-sm leading-relaxed">
-            {scriptLines.map((line, index) => {
-              const isHighlighted = index === highlightedLineIndex && line.trim();
-              const isHeading = isSceneHeading(line);
-              const isChar = isCharacterName(line, index);
-              const isActionLine = isAction(line, index);
-              const isBlank = !line.trim();
+        {/* Fixed-width screenplay container (60 characters wide, standard screenplay width) */}
+        <div className="w-full max-w-[60ch] mx-auto px-4 py-8">
+          <div className="font-mono text-sm leading-6 w-[60ch]">
+            {screenplayBlocks.map((block, blockIndex) => {
+              const isHighlighted = block.lineIndex === highlightedLineIndex && block.text.trim();
 
-              let lineClasses = "transition-all duration-300 px-3 py-1.5 rounded min-h-[1.5rem] ";
+              // Base classes for all blocks
+              let blockClasses = "transition-all duration-300 min-h-[1.5rem] ";
               
               if (isHighlighted) {
-                lineClasses += "bg-orange-500/20 text-orange-300 font-medium scale-[1.02] ";
+                blockClasses += "bg-orange-500/20 text-orange-300 font-medium ";
               } else {
-                lineClasses += "text-white ";
+                blockClasses += "text-white ";
               }
 
-              // Screenplay formatting
-              let textClasses = "";
-              if (isHeading) {
-                textClasses = "font-bold tracking-wide uppercase";
-              } else if (isChar) {
-                textClasses = "ml-32 font-semibold uppercase";
-              } else if (isActionLine) {
-                textClasses = "";
-              } else if (!isBlank) {
-                textClasses = "ml-20 mr-20";
+              // Type-specific formatting per industry standard (using character positions)
+              let contentClasses = "";
+              
+              switch (block.type) {
+                case 'scene_heading':
+                  // Scene headings: left-aligned, bold, uppercase
+                  contentClasses = "font-bold uppercase";
+                  break;
+                  
+                case 'character':
+                  // Character names: centered at ~3.7" from left (37 chars in 60-char page)
+                  // Using flex with margin-left to position, then center the text
+                  contentClasses = "ml-[22ch] text-left uppercase font-semibold";
+                  break;
+                  
+                case 'parenthetical':
+                  // Parentheticals: indented ~3.1" from left (31 chars in 60-char page)
+                  contentClasses = "ml-[18ch]";
+                  break;
+                  
+                case 'dialogue':
+                  // Dialogue: indented ~2.5" from left, width ~3.5" (25 to 60 chars in 60-char page)
+                  // Left margin of 15ch, right margin creates ~35ch column width
+                  contentClasses = "ml-[15ch] mr-[10ch]";
+                  break;
+                  
+                case 'transition':
+                  // Transitions: right-aligned across full 60ch width
+                  contentClasses = "text-right uppercase font-semibold";
+                  break;
+                  
+                case 'action':
+                  // Action: left-aligned, full width
+                  contentClasses = "";
+                  break;
+                  
+                case 'blank':
+                  // Blank lines: preserve spacing
+                  contentClasses = "";
+                  break;
               }
 
               return (
                 <div
-                  key={index}
-                  data-line-index={index}
-                  className={lineClasses}
-                  data-testid={`script-line-${index}`}
+                  key={blockIndex}
+                  data-line-index={block.lineIndex}
+                  className={blockClasses}
+                  data-testid={`script-line-${block.lineIndex}`}
                 >
-                  <div className={textClasses}>
-                    {line || '\u00A0'}
+                  <div className={contentClasses}>
+                    {block.text || '\u00A0'}
                   </div>
                 </div>
               );
