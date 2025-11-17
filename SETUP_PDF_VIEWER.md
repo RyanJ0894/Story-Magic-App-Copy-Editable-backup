@@ -8,7 +8,22 @@ The application now supports uploading screenplay PDF files and displaying them 
 
 ## Required Supabase Setup
 
-### 1. Create Storage Bucket
+**IMPORTANT**: You must complete BOTH steps below for the PDF viewer to work!
+
+### 1. Add Database Columns
+
+First, add PDF storage columns to the `projects` table. See **SETUP_PDF_DATABASE.md** for detailed instructions.
+
+Quick version:
+1. Go to https://supabase.com/dashboard/project/bcuhyyyerxwgkrkbrqbs/sql/new
+2. Run this SQL:
+```sql
+ALTER TABLE projects 
+ADD COLUMN IF NOT EXISTS pdf_storage_path text,
+ADD COLUMN IF NOT EXISTS pdf_filename text;
+```
+
+### 2. Create Storage Bucket
 
 You need to create a **private** storage bucket for screenplay PDFs:
 

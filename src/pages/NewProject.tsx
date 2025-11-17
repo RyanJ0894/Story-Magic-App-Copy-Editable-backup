@@ -6,7 +6,7 @@ import { ProjectForm } from "@/features/projects/components/ProjectForm";
 import { ProjectFormData } from "@/features/projects/components/ProjectForm/schema";
 import { ScriptPlaybackView } from "@/features/projects/components/ScriptPlaybackView";
 import { PdfPlaybackViewer } from "@/features/projects/components/PdfPlaybackViewer";
-import { uploadPdfFile } from "@/features/projects/utils/pdfStorage";
+import { uploadPdfFile, getProjectPdfUrl } from "@/features/projects/utils/pdfStorage";
 import { useAuth } from "@/features/auth/auth";
 import { toast } from "sonner";
 
@@ -71,10 +71,30 @@ export default function NewProject() {
     }
   };
 
+  // Fetch PDF URL from database when showing playback
+  useEffect(() => {
+    if (production.audioUrl && showPlaybackView && projectId && !pdfUrl) {
+      console.log("🔍 Fetching PDF URL from database for project:", projectId);
+      getProjectPdfUrl(projectId)
+        .then((url) => {
+          if (url) {
+            console.log("✅ PDF URL fetched from database");
+            setPdfUrl(url);
+          } else {
+            console.log("ℹ️ No PDF found for this project");
+          }
+        })
+        .catch((err) => {
+          console.error("Failed to fetch PDF URL:", err);
+        });
+    }
+  }, [production.audioUrl, showPlaybackView, projectId, pdfUrl]);
+
   // Show playback view if audio is ready
   if (production.audioUrl && showPlaybackView) {
     // If PDF is available, use PDF viewer; otherwise use text viewer
     if (pdfUrl) {
+      console.log("🎬 Rendering PDF playback viewer");
       return (
         <PdfPlaybackViewer
           pdfUrl={pdfUrl}
@@ -83,6 +103,7 @@ export default function NewProject() {
         />
       );
     } else if (submittedScript) {
+      console.log("📝 Rendering text-based playback viewer");
       return (
         <ScriptPlaybackView
           script={submittedScript}
