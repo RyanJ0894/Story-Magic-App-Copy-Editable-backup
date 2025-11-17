@@ -187,6 +187,41 @@ export const useSimpleProduction = () => {
 
       console.log('✅ Director JSON retrieved successfully');
 
+      // === COMPREHENSIVE DEBUG LOGGING ===
+      console.log('🎬 Director JSON retrieved from database:', {
+        project_id: directorJson.project_id || projectId,
+        scene_count: directorJson.scenes?.length || 0,
+        total_dialogue_lines: directorJson.scenes?.reduce((sum: number, scene: any) => sum + (scene.dialogue?.length || 0), 0),
+        has_music: directorJson.scenes?.some((scene: any) => scene.music?.length > 0),
+        has_ambience: directorJson.scenes?.some((scene: any) => scene.ambience?.length > 0),
+        has_sfx: directorJson.scenes?.some((scene: any) => scene.sfx?.length > 0),
+        first_scene_summary: directorJson.scenes?.[0]?.summary || 'N/A',
+        last_scene_summary: directorJson.scenes?.[directorJson.scenes?.length - 1]?.summary || 'N/A'
+      });
+
+      // Log each scene's details
+      directorJson.scenes?.forEach((scene: any, index: number) => {
+        console.log(`📋 Scene ${index + 1} Details:`, {
+          scene_id: scene.scene_id,
+          summary: scene.summary,
+          mood: scene.mood,
+          intensity: scene.intensity,
+          dialogue_count: scene.dialogue?.length || 0,
+          music_cues: scene.music?.length || 0,
+          ambience_cues: scene.ambience?.length || 0,
+          sfx_cues: scene.sfx?.length || 0,
+          first_dialogue: scene.dialogue?.[0]?.text || 'N/A',
+          last_dialogue: scene.dialogue?.[scene.dialogue?.length - 1]?.text || 'N/A'
+        });
+      });
+
+      console.log('📤 Sending to Railway orchestrator:', {
+        url: 'https://web-production-7c7a9.up.railway.app/orchestrate',
+        payload_size: JSON.stringify(directorJson).length,
+        scenes_being_sent: directorJson.scenes?.length,
+        complete_json_structure: directorJson
+      });
+
       // 4. Run orchestration
       setState(prev => ({ ...prev, step: 'Generating audio with Railway Orchestrator...' }));
       console.log('🎵 Starting audio orchestration...');

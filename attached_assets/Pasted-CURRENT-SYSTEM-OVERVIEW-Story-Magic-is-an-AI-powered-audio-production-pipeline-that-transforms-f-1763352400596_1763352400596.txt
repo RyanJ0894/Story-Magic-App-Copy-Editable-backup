@@ -1,0 +1,179 @@
+CURRENT SYSTEM OVERVIEW:
+
+Story Magic is an AI-powered audio production pipeline that transforms film screenplays into professional cinematic audio with:
+- AI-generated dialogue (ElevenLabs voices)
+- Context-aware background music
+- Scene-appropriate ambience
+- Sound effects (SFX)
+- Professional mixing with adaptive ducking
+- EBU R128 loudness normalization
+
+SYSTEM ARCHITECTURE:
+
+1. User uploads screenplay PDF → Frontend (www.storymagicapp.net)
+2. Frontend sends script to Supabase Edge Function: trigger-relevance
+3. Edge function triggers RelevanceAI agent: "Ace, the AI Director"
+4. RelevanceAI analyzes entire script and generates Director JSON with:
+   - Scene-by-scene breakdown
+   - Character dialogue with voice assignments
+   - Music cues (track selection, timing, fade in/out)
+   - Ambience cues (environment sounds, timing)
+   - SFX cues (specific sound effects at timestamps)
+5. RelevanceAI saves Director JSON to Supabase via: ai-director-callback edge function
+6. Frontend polls Supabase for Director JSON
+7. Once found, frontend calls Railway orchestrator: https://web-production-7c7a9.up.railway.app/orchestrate
+8. Railway processes ENTIRE Director JSON:
+   - Generates TTS for ALL dialogue lines
+   - Selects music/ambience from catalog based on mood/intensity
+   - Builds timeline with ALL audio events
+   - Mixes with adaptive ducking (music lowers when dialogue plays)
+   - Normalizes loudness to -16 LUFS
+   - Concatenates ALL scenes with crossfades
+   - Uploads final episode.m4a to Supabase Storage
+9. Frontend receives public URL and plays complete audio
+
+WHAT IT'S SUPPOSED TO DO:
+
+For a 3-page screenplay with multiple scenes:
+- Generate 5-10 minutes of complete audio
+- Include ALL dialogue from ALL scenes
+- Play background music throughout (selected based on scene mood: tense, romantic, action, etc.)
+- Layer ambience under dialogue (medical tent sounds, forest ambience, city street noise, etc.)
+- Insert SFX at specific moments (door slam, gunshot, phone ring, etc.)
+- Professional mixing where music automatically ducks (lowers volume) when characters speak
+- Smooth transitions between scenes
+
+THE PROBLEM - WHAT'S ACTUALLY HAPPENING:
+
+Current behavior shows:
+1. ✅ RelevanceAI successfully triggers and saves Director JSON to Supabase
+2. ✅ Frontend finds the Director JSON
+3. ✅ Railway orchestrator receives the Director JSON
+4. ❌ Generated audio is ONLY 2-5 seconds long (only first line of dialogue)
+5. ❌ NO background music in the mix
+6. ❌ NO ambience sounds in the mix
+7. ❌ NO sound effects in the mix
+8. ❌ Only processing first scene instead of all scenes
+
+DIAGNOSIS - ROOT CAUSES:
+
+Possible Issue #1: Director JSON is incomplete
+- RelevanceAI agent may only be generating JSON for first scene
+- Music/ambience/SFX arrays may be empty
+- Need to verify Director JSON structure in Supabase
+
+Possible Issue #2: Railway orchestrator not processing complete JSON
+- May be stopping after first scene
+- May be ignoring music/ambience/SFX cues
+- Timeline builder may not be assembling all events
+
+Possible Issue #3: Frontend passing incomplete data
+- useSimpleProduction.tsx may be truncating the script before sending
+- May only be sending partial Director JSON to Railway
+
+WHAT NEEDS TO BE FIXED:
+
+1. VERIFY DIRECTOR JSON IN DATABASE:
+   - Check Supabase → Table Editor → director_json table
+   - Find most recent entry by project_id
+   - Verify json_data contains:
+     * Multiple scenes (not just one)
+     * Complete dialogue arrays for each scene
+     * Populated music arrays with cues
+     * Populated ambience arrays with cues
+     * Populated sfx arrays (if applicable)
+   - Log the complete Director JSON structure to console
+
+2. IF DIRECTOR JSON IS INCOMPLETE:
+   - Problem is in RelevanceAI agent configuration
+   - Agent is not processing the ENTIRE script
+   - Agent is not selecting music/ambience/SFX from catalog
+   - Need to check RelevanceAI agent prompt and tool configuration
+
+3. IF DIRECTOR JSON IS COMPLETE BUT AUDIO IS SHORT:
+   - Problem is in Railway orchestrator or frontend
+   - Check src/features/projects/hooks/useSimpleProduction.tsx:
+     * Line ~70 where it calls orchestrateAudio(directorJson)
+     * Verify COMPLETE directorJson is being passed
+     * Log the directorJson being sent to Railway
+   - Railway may be receiving complete JSON but only processing first scene
+
+4. DEBUGGING STEPS:
+
+Add comprehensive logging in useSimpleProduction.tsx around line 70:
+```typescript
+console.log('🎬 Director JSON retrieved from database:', {
+  project_id: directorJson.project_id,
+  scene_count: directorJson.scenes?.length,
+  total_dialogue_lines: directorJson.scenes?.reduce((sum, scene) => sum + (scene.dialogue?.length || 0), 0),
+  has_music: directorJson.scenes?.some(scene => scene.music?.length > 0),
+  has_ambience: directorJson.scenes?.some(scene => scene.ambience?.length > 0),
+  has_sfx: directorJson.scenes?.some(scene => scene.sfx?.length > 0),
+  first_scene_summary: directorJson.scenes?.[0]?.summary,
+  last_scene_summary: directorJson.scenes?.[directorJson.scenes.length - 1]?.summary
+});
+
+console.log('📤 Sending to Railway orchestrator:', {
+  url: 'https://web-production-7c7a9.up.railway.app/orchestrate',
+  payload_size: JSON.stringify(directorJson).length,
+  scenes_being_sent: directorJson.scenes?.length
+});
+```
+
+5. EXPECTED DIRECTOR JSON STRUCTURE:
+
+For a proper 3-page script, the Director JSON should look like:
+```json
+{
+  "project_id": "uuid-string",
+  "scenes": [
+    {
+      "scene_id": "scene_001",
+      "summary": "INT. MEDICAL TENT - NIGHT",
+      "mood": "tense",
+      "intensity": 0.8,
+      "dialogue": [
+        { "line_id": "line_001", "character": "Medic", "text": "Hold still..." },
+        { "line_id": "line_002", "character": "Soldier", "text": "Pipe down..." }
+      ],
+      "music": [
+        {
+          "cue_id": "music/m_strings_orchestra_tense_01.mp3",
+          "intensity": 0.7,
+          "enter": { "at": 2, "fade": 1 },
+          "exit": { "at": 18, "fade": 2 }
+        }
+      ],
+      "ambience": [
+        {
+          "cue_id": "ambience/a_medical_tent_bustling.wav",
+          "enter": { "at": 0, "fade": 1.5 },
+          "exit": { "at": 20, "fade": 1.5 }
+        }
+      ]
+    },
+    {
+      "scene_id": "scene_002",
+      "summary": "EXT. BATTLEFIELD - DAY",
+      // ... more dialogue, music, ambience
+    }
+    // ... more scenes
+  ]
+}
+```
+
+IMMEDIATE ACTION REQUIRED:
+
+1. Add the logging code above to useSimpleProduction.tsx
+2. Create a test project with a 2-3 page script
+3. Check browser console for the logged Director JSON
+4. Report back:
+   - How many scenes are in the Director JSON?
+   - How many total dialogue lines?
+   - Are music/ambience arrays populated?
+   - What is being sent to Railway?
+
+This will tell us if the problem is:
+A) RelevanceAI not generating complete JSON (need to fix agent)
+B) Frontend not passing complete JSON (need to fix useSimpleProduction.tsx)
+C) Railway not processing complete JSON (need to check Railway logs)

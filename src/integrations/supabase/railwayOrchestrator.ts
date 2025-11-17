@@ -54,6 +54,37 @@ export async function orchestrateAudio(directorJSON: DirectorJSON): Promise<Orch
   try {
     console.log('🚀 Sending Director JSON to Railway Orchestrator:', directorJSON.project_id);
     
+    // === RAILWAY ORCHESTRATOR DEBUG LOGGING ===
+    console.log('🎯 Railway Request Details:', {
+      url: `${RAILWAY_ORCHESTRATOR_URL}/orchestrate`,
+      method: 'POST',
+      project_id: directorJSON.project_id,
+      scene_count: directorJSON.scenes?.length || 0,
+      total_dialogue_lines: directorJSON.scenes?.reduce((sum, scene) => sum + (scene.dialogue?.length || 0), 0),
+      has_music_cues: directorJSON.scenes?.some(scene => scene.music && scene.music.length > 0),
+      has_ambience_cues: directorJSON.scenes?.some(scene => scene.ambience && scene.ambience.length > 0),
+      payload_size_bytes: JSON.stringify(directorJSON).length,
+      payload_size_kb: (JSON.stringify(directorJSON).length / 1024).toFixed(2)
+    });
+
+    // Log sample of what's being sent
+    console.log('📦 First scene being sent to Railway:', {
+      scene_id: directorJSON.scenes?.[0]?.scene_id,
+      dialogue_count: directorJSON.scenes?.[0]?.dialogue?.length,
+      music_count: directorJSON.scenes?.[0]?.music?.length,
+      ambience_count: directorJSON.scenes?.[0]?.ambience?.length,
+      first_dialogue: directorJSON.scenes?.[0]?.dialogue?.[0]?.text
+    });
+
+    if (directorJSON.scenes && directorJSON.scenes.length > 1) {
+      console.log('📦 Last scene being sent to Railway:', {
+        scene_id: directorJSON.scenes[directorJSON.scenes.length - 1]?.scene_id,
+        dialogue_count: directorJSON.scenes[directorJSON.scenes.length - 1]?.dialogue?.length,
+        music_count: directorJSON.scenes[directorJSON.scenes.length - 1]?.music?.length,
+        ambience_count: directorJSON.scenes[directorJSON.scenes.length - 1]?.ambience?.length
+      });
+    }
+    
     const response = await fetch(`${RAILWAY_ORCHESTRATOR_URL}/orchestrate`, {
       method: 'POST',
       headers: {
@@ -62,13 +93,29 @@ export async function orchestrateAudio(directorJSON: DirectorJSON): Promise<Orch
       body: JSON.stringify(directorJSON),
     });
 
+    console.log('📥 Railway Response Status:', {
+      status: response.status,
+      statusText: response.statusText,
+      ok: response.ok,
+      headers: Object.fromEntries(response.headers.entries())
+    });
+
     if (!response.ok) {
       const errorText = await response.text();
+      console.error('❌ Railway returned error response:', errorText);
       throw new Error(`Railway orchestrator returned ${response.status}: ${errorText}`);
     }
 
     const result = await response.json();
     console.log('✅ Railway orchestration complete:', result);
+    console.log('🎵 Generated audio details:', {
+      status: result.status,
+      has_public_url: !!result.public_url,
+      has_manifest: !!result.manifest,
+      manifest_total_duration: result.manifest?.total,
+      manifest_scene_count: result.manifest?.order?.length,
+      public_url: result.public_url || result.manifest?.public_url
+    });
 
     return {
       status: 'success',
