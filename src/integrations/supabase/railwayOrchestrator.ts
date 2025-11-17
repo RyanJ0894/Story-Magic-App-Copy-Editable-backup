@@ -180,10 +180,17 @@ export async function orchestrateAudio(rawJSON: any): Promise<OrchestrationResul
       dialogue_count: directorJSON.scenes?.[0]?.dialogue?.length,
       music_count: directorJSON.scenes?.[0]?.music?.length,
       has_ambience: !!directorJSON.scenes?.[0]?.ambience,
+      sfx_count: directorJSON.scenes?.[0]?.sfx?.length,
       first_music_cue: directorJSON.scenes?.[0]?.music?.[0],
       ambience_cue: directorJSON.scenes?.[0]?.ambience,
-      first_dialogue: directorJSON.scenes?.[0]?.dialogue?.[0]?.text
+      first_sfx: directorJSON.scenes?.[0]?.sfx?.[0],
+      first_dialogue: directorJSON.scenes?.[0]?.dialogue?.[0]?.text,
+      first_dialogue_full: directorJSON.scenes?.[0]?.dialogue?.[0]
     });
+    
+    // Log the complete transformed payload
+    console.log('🔍 COMPLETE TRANSFORMED PAYLOAD BEING SENT TO RAILWAY:');
+    console.log(JSON.stringify(directorJSON, null, 2));
 
     if (directorJSON.scenes && directorJSON.scenes.length > 1) {
       console.log('📦 Last scene being sent to Railway:', {
