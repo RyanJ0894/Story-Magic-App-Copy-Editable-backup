@@ -58,11 +58,11 @@ export interface DirectorJSON {
       enter?: { at: number; fade: number };
       exit?: { at: number; fade: number };
     }>;
-    ambience?: Array<{
+    ambience?: {
       cue_id: string;
       enter?: { at: number; fade: number };
       exit?: { at: number; fade: number };
-    }>;
+    };
   }>;
 }
 
@@ -85,15 +85,15 @@ function transformToRailwaySchema(relevanceJSON: RelevanceAIDirectorJSON): Direc
         exit: { at: -1, fade: m.fade_out || 2 }  // -1 means "at end of scene"
       }));
       
-      // Transform ambience object to array
-      const ambience = scene.ambience ? [{
+      // Transform ambience object (Railway expects single object, not array)
+      const ambience = scene.ambience ? {
         cue_id: scene.ambience.track_id || `ambience_1`,
         enter: { at: 0, fade: scene.ambience.fade_in || 1.5 },
         exit: { at: -1, fade: scene.ambience.fade_out || 1.5 }
-      }] : undefined;
+      } : undefined;
       
       console.log(`    ✅ Transformed music cues: ${music?.length || 0}`);
-      console.log(`    ✅ Transformed ambience cues: ${ambience?.length || 0}`);
+      console.log(`    ✅ Transformed ambience: ${ambience ? 'yes' : 'no'}`);
       console.log(`    ✅ Dialogue lines: ${scene.dialogue?.length || 0}`);
       
       return {
@@ -145,7 +145,7 @@ export async function orchestrateAudio(rawJSON: any): Promise<OrchestrationResul
       scene_count: directorJSON.scenes?.length || 0,
       total_dialogue_lines: directorJSON.scenes?.reduce((sum, scene) => sum + (scene.dialogue?.length || 0), 0),
       has_music_cues: directorJSON.scenes?.some(scene => scene.music && scene.music.length > 0),
-      has_ambience_cues: directorJSON.scenes?.some(scene => scene.ambience && scene.ambience.length > 0),
+      has_ambience_cues: directorJSON.scenes?.some(scene => !!scene.ambience),
       payload_size_bytes: JSON.stringify(directorJSON).length,
       payload_size_kb: (JSON.stringify(directorJSON).length / 1024).toFixed(2)
     });
@@ -155,9 +155,9 @@ export async function orchestrateAudio(rawJSON: any): Promise<OrchestrationResul
       scene_id: directorJSON.scenes?.[0]?.scene_id,
       dialogue_count: directorJSON.scenes?.[0]?.dialogue?.length,
       music_count: directorJSON.scenes?.[0]?.music?.length,
-      ambience_count: directorJSON.scenes?.[0]?.ambience?.length,
+      has_ambience: !!directorJSON.scenes?.[0]?.ambience,
       first_music_cue: directorJSON.scenes?.[0]?.music?.[0],
-      first_ambience_cue: directorJSON.scenes?.[0]?.ambience?.[0],
+      ambience_cue: directorJSON.scenes?.[0]?.ambience,
       first_dialogue: directorJSON.scenes?.[0]?.dialogue?.[0]?.text
     });
 
@@ -166,7 +166,7 @@ export async function orchestrateAudio(rawJSON: any): Promise<OrchestrationResul
         scene_id: directorJSON.scenes[directorJSON.scenes.length - 1]?.scene_id,
         dialogue_count: directorJSON.scenes[directorJSON.scenes.length - 1]?.dialogue?.length,
         music_count: directorJSON.scenes[directorJSON.scenes.length - 1]?.music?.length,
-        ambience_count: directorJSON.scenes[directorJSON.scenes.length - 1]?.ambience?.length
+        has_ambience: !!directorJSON.scenes[directorJSON.scenes.length - 1]?.ambience
       });
     }
     
