@@ -124,9 +124,10 @@ function transformToRailwaySchema(relevanceJSON: RelevanceAIDirectorJSON): Direc
         summary: scene.summary,
         mood: scene.mood,
         intensity: scene.intensity,
-        dialogue: scene.dialogue,
+        dialogue: dialogue,  // ✅ Use transformed dialogue with 'voice' field
         music,
-        ambience
+        ambience,
+        sfx  // ✅ Include SFX in output
       };
     })
   };
