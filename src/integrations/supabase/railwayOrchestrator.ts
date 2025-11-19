@@ -83,36 +83,58 @@ function transformToRailwaySchema(relevanceJSON: RelevanceAIDirectorJSON): Direc
     scenes: relevanceJSON.scenes.map((scene, index) => {
       console.log(`  📝 Transforming scene ${index + 1}: ${scene.scene_id}`);
       
+      // Helper function to strip folder prefix from track_id
+      // RelevanceAI sends "music/m_piano_strings_playful_01.mp3"
+      // But catalog files are just "m_piano_strings_playful_01.mp3"
+      const stripPrefix = (trackId: string) => {
+        return trackId.replace(/^(music|ambience|sfx)\//, '');
+      };
+      
       // Transform music array - keep 'volume', don't rename to 'intensity'
-      const music = scene.music?.map((m, i) => ({
-        cue_id: m.track_id || `music_${i + 1}`,
-        volume: m.volume || 0.25,  // Railway expects 'volume', not 'intensity'
-        enter: { at: 0, fade: m.fade_in || 2 },
-        exit: { at: -1, fade: m.fade_out || 2 }  // -1 means "at end of scene"
-      }));
+      const music = scene.music?.map((m, i) => {
+        const cleanTrackId = stripPrefix(m.track_id || `music_${i + 1}`);
+        console.log(`    🎵 Music track ${i + 1}: "${m.track_id}" → "${cleanTrackId}"`);
+        return {
+          cue_id: cleanTrackId,
+          volume: m.volume || 0.25,  // Railway expects 'volume', not 'intensity'
+          enter: { at: 0, fade: m.fade_in || 2 },
+          exit: { at: -1, fade: m.fade_out || 2 }  // -1 means "at end of scene"
+        };
+      });
       
       // Transform ambience object - include 'volume'
       const ambience = scene.ambience ? {
-        cue_id: scene.ambience.track_id || `ambience_1`,
+        cue_id: stripPrefix(scene.ambience.track_id || `ambience_1`),
         volume: scene.ambience.volume || 0.28,  // Railway needs 'volume' for ambience
         enter: { at: 0, fade: scene.ambience.fade_in || 1.5 },
         exit: { at: -1, fade: scene.ambience.fade_out || 1.5 }
       } : undefined;
       
+      if (ambience) {
+        console.log(`    🌊 Ambience track: "${scene.ambience?.track_id}" → "${ambience.cue_id}"`);
+      }
+      
       // Transform SFX array - pass through
-      const sfx = scene.sfx?.map(s => ({
-        cue_id: s.cue_id,
-        at: s.at,
-        volume: s.volume || 0.5
-      }));
+      const sfx = scene.sfx?.map((s, i) => {
+        const cleanCueId = stripPrefix(s.cue_id);
+        console.log(`    💥 SFX ${i + 1}: "${s.cue_id}" → "${cleanCueId}"`);
+        return {
+          cue_id: cleanCueId,
+          at: s.at,
+          volume: s.volume || 0.5
+        };
+      });
       
       // Transform dialogue - map 'voice_key' to 'voice'
-      const dialogue = scene.dialogue.map(d => ({
-        line_id: d.line_id,
-        character: d.character,
-        text: d.text,
-        voice: d.voice_key  // Railway expects 'voice', not 'voice_key'
-      }));
+      const dialogue = scene.dialogue.map((d, i) => {
+        console.log(`    🎤 Line ${i + 1} - Character: "${d.character}", Voice: "${d.voice_key || 'MISSING'}", Text: "${d.text.substring(0, 50)}..."`);
+        return {
+          line_id: d.line_id,
+          character: d.character,
+          text: d.text,
+          voice: d.voice_key  // Railway expects 'voice', not 'voice_key'
+        };
+      });
       
       console.log(`    ✅ Transformed music cues: ${music?.length || 0}`);
       console.log(`    ✅ Transformed ambience: ${ambience ? 'yes' : 'no'}`);
