@@ -4,9 +4,6 @@ import { useNewProject } from "@/features/projects/hooks/useNewProject";
 import { useSimpleProduction } from "@/features/projects/hooks/useSimpleProduction";
 import { ProjectForm } from "@/features/projects/components/ProjectForm";
 import { ProjectFormData } from "@/features/projects/components/ProjectForm/schema";
-import { ScriptPlaybackView } from "@/features/projects/components/ScriptPlaybackView";
-import { PdfPlaybackViewer } from "@/features/projects/components/PdfPlaybackViewer";
-import { uploadPdfFile, getProjectPdfUrl } from "@/features/projects/utils/pdfStorage";
 import { useAuth } from "@/features/auth/auth";
 import { toast } from "sonner";
 
@@ -14,9 +11,6 @@ export default function NewProject() {
   const navigate = useNavigate();
   const { data: currentUser, isLoading: authLoading } = useAuth();
   const [projectId, setProjectId] = useState<string | null>(null);
-  const [submittedScript, setSubmittedScript] = useState<string>("");
-  const [pdfUrl, setPdfUrl] = useState<string>("");
-  const [showPlaybackView, setShowPlaybackView] = useState(false);
 
   const { createProject, isCreating } = useNewProject();
   const production = useSimpleProduction();
@@ -31,16 +25,13 @@ export default function NewProject() {
     });
   }, [currentUser, authLoading, isCreating, production.isProcessing]);
 
-  const handleProjectSubmit = async (data: ProjectFormData & { pdfFile?: File }) => {
+  const handleProjectSubmit = async (data: ProjectFormData) => {
     if (!currentUser) {
       toast.error("User must be authenticated to create a project");
       return;
     }
 
     try {
-      // Save the script for playback view
-      setSubmittedScript(data.script);
-      
       // Step 1: Create project in database
       const project = await createProject({
         title: data.title,
@@ -50,69 +41,13 @@ export default function NewProject() {
 
       setProjectId(project.id);
 
-      // Step 2: Upload PDF if provided
-      if (data.pdfFile) {
-        try {
-          toast.info("Uploading PDF...");
-          const result = await uploadPdfFile(data.pdfFile, project.id);
-          setPdfUrl(result.signedUrl);
-          console.log("PDF uploaded:", result);
-        } catch (pdfError) {
-          console.error("PDF upload failed:", pdfError);
-          toast.error("Failed to upload PDF, but project was created");
-        }
-      }
-
-      // Step 3: Start audio production
+      // Step 2: Start audio production
       await production.processProduction(data.script, project.id);
     } catch (error) {
       console.error("Failed to create project:", error);
       toast.error("Failed to create project");
     }
   };
-
-  // Fetch PDF URL from database when showing playback
-  useEffect(() => {
-    if (production.audioUrl && showPlaybackView && projectId && !pdfUrl) {
-      console.log("🔍 Fetching PDF URL from database for project:", projectId);
-      getProjectPdfUrl(projectId)
-        .then((url) => {
-          if (url) {
-            console.log("✅ PDF URL fetched from database");
-            setPdfUrl(url);
-          } else {
-            console.log("ℹ️ No PDF found for this project");
-          }
-        })
-        .catch((err) => {
-          console.error("Failed to fetch PDF URL:", err);
-        });
-    }
-  }, [production.audioUrl, showPlaybackView, projectId, pdfUrl]);
-
-  // Show playback view if audio is ready
-  if (production.audioUrl && showPlaybackView) {
-    // If PDF is available, use PDF viewer; otherwise use text viewer
-    if (pdfUrl) {
-      console.log("🎬 Rendering PDF playback viewer");
-      return (
-        <PdfPlaybackViewer
-          pdfUrl={pdfUrl}
-          audioUrl={production.audioUrl}
-          onBack={() => setShowPlaybackView(false)}
-        />
-      );
-    } else if (submittedScript) {
-      console.log("📝 Rendering text-based playback viewer");
-      return (
-        <ScriptPlaybackView
-          script={submittedScript}
-          audioUrl={production.audioUrl}
-          onBack={() => setShowPlaybackView(false)}
-        />
-      );
-    }
-  }
 
   return (
     <div className="max-w-4xl mx-auto py-10">
@@ -140,44 +75,40 @@ export default function NewProject() {
 
       {/* Show production status */}
       {production.isProcessing && (
-        <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg">
-          <h2 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">Processing...</h2>
-          <p className="text-blue-700 dark:text-blue-300">{production.step}</p>
-          <div className="mt-3 animate-pulse bg-blue-200 dark:bg-blue-700 h-2 rounded"></div>
+        <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <h2 className="font-semibold text-blue-900 mb-2">Processing...</h2>
+          <p className="text-blue-700">{production.step}</p>
+          <div className="mt-3 animate-pulse bg-blue-200 h-2 rounded"></div>
         </div>
       )}
 
-      {/* Show success with playback button */}
+      {/* Show success with audio player */}
       {production.audioUrl && (
-        <div className="mb-6 p-6 bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg">
-          <h2 className="font-semibold text-green-900 dark:text-green-100 mb-4 text-xl">
+        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+          <h2 className="font-semibold text-green-900 mb-2">
             ✅ Production Complete!
           </h2>
 
-          <p className="text-green-700 dark:text-green-300 mb-4">
-            Your audio has been generated successfully. Click below to view the script with synchronized playback.
-          </p>
+          <audio
+            controls
+            className="w-full mt-3 accent-yellow-500 bg-[#1b1b1b] rounded-xl p-1 shadow-sm border border-gray-700"
+            style={{ accentColor: "#facc15", backgroundColor: "#1b1b1b" }}
+          >
+            <source src={production.audioUrl} type="audio/mp4" />
+            Your browser does not support the audio element.
+          </audio>
 
-          <div className="flex gap-3 flex-wrap">
-            <button
-              onClick={() => setShowPlaybackView(true)}
-              className="px-6 py-3 bg-primary text-primary-foreground rounded-md hover-elevate active-elevate-2 font-medium"
-              data-testid="button-view-playback"
-            >
-              🎬 View Script Playback
-            </button>
+          <div className="mt-3 flex gap-3">
             <a
               href={production.audioUrl}
               download
-              className="px-6 py-3 bg-secondary text-secondary-foreground rounded-md hover-elevate active-elevate-2 font-medium inline-block"
-              data-testid="link-download-audio"
+              className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
             >
               Download Audio
             </a>
             <button
               onClick={() => navigate("/dashboard")}
-              className="px-6 py-3 bg-muted text-muted-foreground rounded-md hover-elevate active-elevate-2 font-medium"
-              data-testid="button-dashboard"
+              className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
             >
               Go to Dashboard
             </button>
@@ -187,15 +118,14 @@ export default function NewProject() {
 
       {/* Show error if failed */}
       {production.error && (
-        <div className="mb-6 p-4 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg">
-          <h2 className="font-semibold text-red-900 dark:text-red-100 mb-2">
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <h2 className="font-semibold text-red-900 mb-2">
             ❌ Production Failed
           </h2>
-          <p className="text-red-700 dark:text-red-300">{production.error}</p>
+          <p className="text-red-700">{production.error}</p>
           <button
             onClick={() => window.location.reload()}
             className="mt-3 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-            data-testid="button-retry"
           >
             Try Again
           </button>

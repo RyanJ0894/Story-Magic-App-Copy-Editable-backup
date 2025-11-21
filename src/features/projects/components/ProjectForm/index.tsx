@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -10,12 +9,11 @@ import PdfToText from "@/components/feature/PdfToText";
 import { projectFormSchema, ProjectFormData } from "./schema";
 
 interface ProjectFormProps {
-  onSubmit: (data: ProjectFormData & { pdfFile?: File }) => void;
+  onSubmit: (data: ProjectFormData) => void;
   isSubmitting?: boolean;
 }
 
 export const ProjectForm = ({ onSubmit, isSubmitting = false }: ProjectFormProps) => {
-  const [pdfFile, setPdfFile] = useState<File | undefined>();
   const form = useForm<ProjectFormData>({
     resolver: zodResolver(projectFormSchema),
     defaultValues: {
@@ -30,7 +28,7 @@ JOHN: Yeah, let's keep moving.`,
   });
 
   const handleSubmit = (data: ProjectFormData) => {
-    onSubmit({ ...data, pdfFile });
+    onSubmit(data);
   };
 
   const handlePdfText = (text: string, mode: "replace" | "append" = "replace") => {
@@ -40,10 +38,6 @@ JOHN: Yeah, let's keep moving.`,
       const currentScript = form.getValues("script");
       form.setValue("script", currentScript + "\n" + text);
     }
-  };
-
-  const handlePdfFile = (file: File) => {
-    setPdfFile(file);
   };
 
   return (
@@ -65,12 +59,7 @@ JOHN: Yeah, let's keep moving.`,
 
         {/* PDF upload helper */}
         <div className="mb-2">
-          <PdfToText onText={handlePdfText} onPdfFile={handlePdfFile} />
-          {pdfFile && (
-            <p className="text-sm text-muted-foreground mt-2">
-              PDF loaded: {pdfFile.name}
-            </p>
-          )}
+          <PdfToText onText={handlePdfText} />
         </div>
 
         <FormField

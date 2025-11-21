@@ -3,8 +3,7 @@
 
 const RAILWAY_ORCHESTRATOR_URL = import.meta.env.VITE_RAILWAY_ORCHESTRATOR_URL || 'https://web-production-7c7a9.up.railway.app';
 
-// RelevanceAI schema (what we receive)
-export interface RelevanceAIDirectorJSON {
+export interface DirectorJSON {
   project_id: string;
   scenes: Array<{
     scene_id: string;
@@ -18,119 +17,17 @@ export interface RelevanceAIDirectorJSON {
       voice_key?: string;
     }>;
     music?: Array<{
-      track_id: string;
-      volume?: number;
-      fade_in?: number;
-      fade_out?: number;
-    }>;
-    ambience?: {
-      track_id: string;
-      volume?: number;
-      fade_in?: number;
-      fade_out?: number;
-    };
-    sfx?: Array<{
       cue_id: string;
-      track_id: string;
-      at: number;
-      volume?: number;
-    }>;
-  }>;
-}
-
-// Railway schema (what Railway expects)
-export interface DirectorJSON {
-  project_id: string;
-  scenes: Array<{
-    scene_id: string;
-    summary?: string;
-    mood?: string;
-    intensity?: number;
-    dialogue: Array<{
-      line_id: string;
-      character: string;
-      text: string;
-      voice?: string;  // Railway expects 'voice', not 'voice_key'
-    }>;
-    music?: Array<{
-      cue_id: string;
-      volume?: number;  // Railway expects 'volume', not 'intensity'
+      intensity?: number;
       enter?: { at: number; fade: number };
       exit?: { at: number; fade: number };
     }>;
-    ambience?: {
+    ambience?: Array<{
       cue_id: string;
-      volume?: number;  // Railway needs 'volume' for ambience too
       enter?: { at: number; fade: number };
       exit?: { at: number; fade: number };
-    };
-    sfx?: Array<{
-      cue_id: string;
-      at: number;
-      volume?: number;
     }>;
   }>;
-}
-
-/**
- * Transform RelevanceAI schema to Railway schema
- */
-function transformToRailwaySchema(relevanceJSON: RelevanceAIDirectorJSON): DirectorJSON {
-  console.log('🔄 Transforming RelevanceAI schema to Railway schema...');
-  
-  return {
-    project_id: relevanceJSON.project_id,
-    scenes: relevanceJSON.scenes.map((scene, index) => {
-      console.log(`  📝 Transforming scene ${index + 1}: ${scene.scene_id}`);
-      
-      // Transform music array - keep 'volume', don't rename to 'intensity'
-      const music = scene.music?.map((m, i) => ({
-        cue_id: m.track_id || `music_${i + 1}`,
-        volume: m.volume || 0.25,  // Railway expects 'volume', not 'intensity'
-        enter: { at: 0, fade: m.fade_in || 2 },
-        exit: { at: -1, fade: m.fade_out || 2 }  // -1 means "at end of scene"
-      }));
-      
-      // Transform ambience object - include 'volume'
-      const ambience = scene.ambience ? {
-        cue_id: scene.ambience.track_id || `ambience_1`,
-        volume: scene.ambience.volume || 0.28,  // Railway needs 'volume' for ambience
-        enter: { at: 0, fade: scene.ambience.fade_in || 1.5 },
-        exit: { at: -1, fade: scene.ambience.fade_out || 1.5 }
-      } : undefined;
-      
-      // Transform SFX array - pass through
-      const sfx = scene.sfx?.map(s => ({
-        cue_id: s.cue_id,
-        at: s.at,
-        volume: s.volume || 0.5
-      }));
-      
-      // Transform dialogue - map 'voice_key' to 'voice'
-      const dialogue = scene.dialogue.map(d => ({
-        line_id: d.line_id,
-        character: d.character,
-        text: d.text,
-        voice: d.voice_key  // Railway expects 'voice', not 'voice_key'
-      }));
-      
-      console.log(`    ✅ Transformed music cues: ${music?.length || 0}`);
-      console.log(`    ✅ Transformed ambience: ${ambience ? 'yes' : 'no'}`);
-      console.log(`    ✅ Transformed SFX cues: ${sfx?.length || 0}`);
-      console.log(`    ✅ Dialogue lines: ${dialogue?.length || 0}`);
-      
-      return {
-        scene_id: scene.scene_id,
-        summary: scene.summary,
-        mood: scene.mood,
-        intensity: scene.intensity,
-        dialogue: dialogue,  // ✅ Use transformed dialogue with 'voice' field
-        music,
-        ambience,
-        sfx  // ✅ Include SFX in output
-      };
-    })
-  };
 }
 
 export interface OrchestrationResult {
@@ -153,53 +50,9 @@ export interface OrchestrationResult {
 /**
  * Send Director JSON to Railway Orchestrator for audio generation
  */
-export async function orchestrateAudio(rawJSON: any): Promise<OrchestrationResult> {
+export async function orchestrateAudio(directorJSON: DirectorJSON): Promise<OrchestrationResult> {
   try {
-    console.log('🚀 Received Director JSON for Railway Orchestrator:', rawJSON.project_id);
-    
-    // Transform RelevanceAI schema to Railway schema
-    const directorJSON = transformToRailwaySchema(rawJSON as RelevanceAIDirectorJSON);
-    console.log('✅ Schema transformation complete');
-    
-    // === RAILWAY ORCHESTRATOR DEBUG LOGGING ===
-    console.log('🎯 Railway Request Details:', {
-      url: `${RAILWAY_ORCHESTRATOR_URL}/orchestrate`,
-      method: 'POST',
-      project_id: directorJSON.project_id,
-      scene_count: directorJSON.scenes?.length || 0,
-      total_dialogue_lines: directorJSON.scenes?.reduce((sum, scene) => sum + (scene.dialogue?.length || 0), 0),
-      has_music_cues: directorJSON.scenes?.some(scene => scene.music && scene.music.length > 0),
-      has_ambience_cues: directorJSON.scenes?.some(scene => !!scene.ambience),
-      payload_size_bytes: JSON.stringify(directorJSON).length,
-      payload_size_kb: (JSON.stringify(directorJSON).length / 1024).toFixed(2)
-    });
-
-    // Log sample of what's being sent
-    console.log('📦 First scene being sent to Railway:', {
-      scene_id: directorJSON.scenes?.[0]?.scene_id,
-      dialogue_count: directorJSON.scenes?.[0]?.dialogue?.length,
-      music_count: directorJSON.scenes?.[0]?.music?.length,
-      has_ambience: !!directorJSON.scenes?.[0]?.ambience,
-      sfx_count: directorJSON.scenes?.[0]?.sfx?.length,
-      first_music_cue: directorJSON.scenes?.[0]?.music?.[0],
-      ambience_cue: directorJSON.scenes?.[0]?.ambience,
-      first_sfx: directorJSON.scenes?.[0]?.sfx?.[0],
-      first_dialogue: directorJSON.scenes?.[0]?.dialogue?.[0]?.text,
-      first_dialogue_full: directorJSON.scenes?.[0]?.dialogue?.[0]
-    });
-    
-    // Log the complete transformed payload
-    console.log('🔍 COMPLETE TRANSFORMED PAYLOAD BEING SENT TO RAILWAY:');
-    console.log(JSON.stringify(directorJSON, null, 2));
-
-    if (directorJSON.scenes && directorJSON.scenes.length > 1) {
-      console.log('📦 Last scene being sent to Railway:', {
-        scene_id: directorJSON.scenes[directorJSON.scenes.length - 1]?.scene_id,
-        dialogue_count: directorJSON.scenes[directorJSON.scenes.length - 1]?.dialogue?.length,
-        music_count: directorJSON.scenes[directorJSON.scenes.length - 1]?.music?.length,
-        has_ambience: !!directorJSON.scenes[directorJSON.scenes.length - 1]?.ambience
-      });
-    }
+    console.log('🚀 Sending Director JSON to Railway Orchestrator:', directorJSON.project_id);
     
     const response = await fetch(`${RAILWAY_ORCHESTRATOR_URL}/orchestrate`, {
       method: 'POST',
@@ -209,29 +62,13 @@ export async function orchestrateAudio(rawJSON: any): Promise<OrchestrationResul
       body: JSON.stringify(directorJSON),
     });
 
-    console.log('📥 Railway Response Status:', {
-      status: response.status,
-      statusText: response.statusText,
-      ok: response.ok,
-      headers: Object.fromEntries(response.headers.entries())
-    });
-
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('❌ Railway returned error response:', errorText);
       throw new Error(`Railway orchestrator returned ${response.status}: ${errorText}`);
     }
 
     const result = await response.json();
     console.log('✅ Railway orchestration complete:', result);
-    console.log('🎵 Generated audio details:', {
-      status: result.status,
-      has_public_url: !!result.public_url,
-      has_manifest: !!result.manifest,
-      manifest_total_duration: result.manifest?.total,
-      manifest_scene_count: result.manifest?.order?.length,
-      public_url: result.public_url || result.manifest?.public_url
-    });
 
     return {
       status: 'success',
@@ -242,7 +79,7 @@ export async function orchestrateAudio(rawJSON: any): Promise<OrchestrationResul
     console.error('❌ Railway orchestration failed:', error);
     return {
       status: 'error',
-      project_id: rawJSON.project_id,
+      project_id: directorJSON.project_id,
       error: error instanceof Error ? error.message : 'Unknown error',
     };
   }
