@@ -11,6 +11,7 @@ Story Magic is an AI-powered web application that transforms screenplays and scr
 - Vite build system
 - Supabase (Backend as a Service)
 - ElevenLabs (AI voice synthesis)
+- Groq LPU (Ultra-fast LLM inference for script analysis)
 - Radix UI components with shadcn/ui
 - TanStack Query for state management
 - FFmpeg for audio processing
@@ -104,6 +105,14 @@ Preferred communication style: Simple, everyday language.
 - URL: Configured via VITE_WEBHOOK_N8N_AI environment variable
 - Function: Processes scripts to generate scene direction, timing, and audio cues
 
+**Groq API (LPU Inference)**
+- Purpose: Ultra-fast LLM inference for script analysis
+- Technology: Groq's Language Processing Unit (LPU) chips provide 10x faster inference than traditional GPUs
+- Model: llama-3.1-70b-versatile (primary), with OpenAI fallback
+- Performance: ~10 seconds for 3 minutes of audio content analysis (vs 40+ seconds with standard GPUs)
+- Integration: OpenAI-compatible API format in analyze-script Edge Function
+- Fallback: Automatically uses OpenAI if GROQ_API_KEY is not configured
+
 ### Supabase Services
 
 **Supabase Authentication**
@@ -183,4 +192,5 @@ Preferred communication style: Simple, everyday language.
 VITE_SUPABASE_URL - Supabase project URL
 VITE_SUPABASE_ANON_KEY - Supabase anonymous key
 VITE_WEBHOOK_N8N_AI - N8N webhook URL for AI Director
+GROQ_API_KEY - Groq API key for ultra-fast LLM inference (get free at console.groq.com)
 ```

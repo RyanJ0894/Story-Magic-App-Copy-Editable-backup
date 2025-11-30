@@ -1,26 +1,28 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type'
 };
-serve(async (req)=>{
-  // Handle CORS preflight requests
+
+serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, {
       headers: corsHeaders
     });
   }
+
   try {
     const { project_id, script } = await req.json();
     if (!project_id || !script) {
       throw new Error('Missing project_id or script');
     }
-    // Initialize Supabase client
+
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
-    // System prompt to keep the script as one cohesive scene
+
     const systemPrompt = `You are an AI Film Director. Analyze the script and return ONLY a valid JSON array. For any script provided, create exactly ONE scene that contains the complete narrative:
 
 [
@@ -48,47 +50,92 @@ CRITICAL RULES:
 - Use NARRATOR as the character for everything
 - Include all character dialogue and actions in the narrative
 - Choose appropriate voice_style, mood, background_ambiance, and background_music`;
-    // Call OpenAI API
-    const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          {
-            role: 'system',
-            content: systemPrompt
-          },
-          {
-            role: 'user',
-            content: `Analyze this script excerpt and return the JSON array:\n\n${script}`
-          }
-        ],
-        temperature: 0.3,
-        max_tokens: 4000
-      })
-    });
-    if (!openAIResponse.ok) {
-      const errorText = await openAIResponse.text();
-      console.error('OpenAI API error:', errorText);
-      throw new Error(`OpenAI API error: ${openAIResponse.status} - ${errorText}`);
+
+    const startTime = Date.now();
+    
+    const groqApiKey = Deno.env.get('GROQ_API_KEY');
+    const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
+    
+    let apiResponse;
+    let providerUsed = '';
+    
+    if (groqApiKey) {
+      console.log('Using Groq API for ultra-fast inference...');
+      providerUsed = 'groq';
+      
+      apiResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${groqApiKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: 'llama-3.1-70b-versatile',
+          messages: [
+            {
+              role: 'system',
+              content: systemPrompt
+            },
+            {
+              role: 'user',
+              content: `Analyze this script excerpt and return the JSON array:\n\n${script}`
+            }
+          ],
+          temperature: 0.3,
+          max_tokens: 4000
+        })
+      });
+    } else if (openaiApiKey) {
+      console.log('Groq API key not found, falling back to OpenAI...');
+      providerUsed = 'openai';
+      
+      apiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${openaiApiKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          messages: [
+            {
+              role: 'system',
+              content: systemPrompt
+            },
+            {
+              role: 'user',
+              content: `Analyze this script excerpt and return the JSON array:\n\n${script}`
+            }
+          ],
+          temperature: 0.3,
+          max_tokens: 4000
+        })
+      });
+    } else {
+      throw new Error('No API key found. Please set either GROQ_API_KEY or OPENAI_API_KEY');
     }
-    const aiResult = await openAIResponse.json();
+
+    const processingTime = Date.now() - startTime;
+    console.log(`${providerUsed.toUpperCase()} API response received in ${processingTime}ms`);
+
+    if (!apiResponse.ok) {
+      const errorText = await apiResponse.text();
+      console.error(`${providerUsed} API error:`, errorText);
+      throw new Error(`${providerUsed} API error: ${apiResponse.status} - ${errorText}`);
+    }
+
+    const aiResult = await apiResponse.json();
     let aiDirectorContent = aiResult.choices[0].message.content;
     console.log('Raw AI response:', aiDirectorContent);
-    // Clean up the response - remove any markdown formatting
+
     aiDirectorContent = aiDirectorContent.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-    // Parse and validate JSON
+
     let directorJson;
     try {
       directorJson = JSON.parse(aiDirectorContent);
     } catch (parseError) {
       console.error('Failed to parse AI response as JSON:', parseError);
       console.error('AI response content:', aiDirectorContent);
-      // Create a fallback simple structure
       directorJson = [
         {
           scene_id: 1,
@@ -107,7 +154,7 @@ CRITICAL RULES:
         }
       ];
     }
-    // Validate structure
+
     if (!Array.isArray(directorJson)) {
       console.error('AI response is not an array, creating fallback');
       directorJson = [
@@ -128,26 +175,31 @@ CRITICAL RULES:
         }
       ];
     }
-    // Add status to each scene segment
-    const scenesWithStatus = directorJson.map((scene, index)=>({
-        ...scene,
-        scene_id: scene.scene_id || index + 1,
-        status: 'pending'
-      }));
-    // Update project with AI director JSON
+
+    const scenesWithStatus = directorJson.map((scene: any, index: number) => ({
+      ...scene,
+      scene_id: scene.scene_id || index + 1,
+      status: 'pending'
+    }));
+
     const { error: updateError } = await supabase.from('user_projects').update({
       ai_director_json: scenesWithStatus,
       script: script
     }).eq('id', project_id);
+
     if (updateError) {
       console.error('Database update error:', updateError);
       throw new Error(`Database update error: ${updateError.message}`);
     }
-    console.log(`Successfully analyzed script for project ${project_id}`);
+
+    console.log(`Successfully analyzed script for project ${project_id} using ${providerUsed} in ${processingTime}ms`);
+
     return new Response(JSON.stringify({
       success: true,
       scene_count: scenesWithStatus.length,
-      director_json: scenesWithStatus
+      director_json: scenesWithStatus,
+      provider: providerUsed,
+      processing_time_ms: processingTime
     }), {
       headers: {
         ...corsHeaders,
