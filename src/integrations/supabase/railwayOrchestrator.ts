@@ -19,15 +19,45 @@ export interface DirectorJSON {
     music?: Array<{
       cue_id: string;
       intensity?: number;
+      volume?: number;
       enter?: { at: number; fade: number };
       exit?: { at: number; fade: number };
     }>;
     ambience?: Array<{
       cue_id: string;
+      volume?: number;
+      enter?: { at: number; fade: number };
+      exit?: { at: number; fade: number };
+    }>;
+    sfx?: Array<{
+      cue_id: string;
+      volume?: number;
       enter?: { at: number; fade: number };
       exit?: { at: number; fade: number };
     }>;
   }>;
+}
+
+function sanitizeDirectorJSON(directorJSON: DirectorJSON): DirectorJSON {
+  return {
+    ...directorJSON,
+    scenes: directorJSON.scenes.map(scene => ({
+      ...scene,
+      music: scene.music?.map(m => ({
+        ...m,
+        volume: m.volume !== undefined ? Math.max(0, m.volume) : undefined,
+        intensity: m.intensity !== undefined ? Math.max(0, Math.min(1, m.intensity)) : undefined,
+      })),
+      ambience: scene.ambience?.map(a => ({
+        ...a,
+        volume: a.volume !== undefined ? Math.max(0, a.volume) : undefined,
+      })),
+      sfx: scene.sfx?.map(s => ({
+        ...s,
+        volume: s.volume !== undefined ? Math.max(0, s.volume) : undefined,
+      })),
+    })),
+  };
 }
 
 export interface OrchestrationResult {
@@ -54,12 +84,15 @@ export async function orchestrateAudio(directorJSON: DirectorJSON): Promise<Orch
   try {
     console.log('🚀 Sending Director JSON to Railway Orchestrator:', directorJSON.project_id);
     
+    const sanitizedJSON = sanitizeDirectorJSON(directorJSON);
+    console.log('🧹 Sanitized Director JSON (fixed any negative volumes)');
+    
     const response = await fetch(`${RAILWAY_ORCHESTRATOR_URL}/orchestrate`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(directorJSON),
+      body: JSON.stringify(sanitizedJSON),
     });
 
     if (!response.ok) {
