@@ -41,9 +41,17 @@ Preferred communication style: Simple, everyday language.
 
 ### Backend Architecture
 
-**Backend Platform:** Supabase (PostgreSQL database, Authentication, Edge Functions, Storage)
+**Backend Platform:** Supabase (PostgreSQL database, Authentication, Edge Functions, Storage) + Express API Server
 
-**Rationale:** Supabase provides a complete backend solution with real-time subscriptions, row-level security, and serverless functions, eliminating the need for custom backend infrastructure.
+**Rationale:** Supabase provides a complete backend solution with real-time subscriptions, row-level security, and serverless functions. An Express server handles integrations requiring Replit connector credentials (like Resend for emails).
+
+**Express API Server (server/index.ts)**
+- Runs on port 3001 in development
+- Vite proxies /api requests to this server
+- Handles team invitation emails via Replit's Resend integration
+- Endpoints:
+  - POST /api/send-invitation - Sends team invitation emails
+  - GET /api/health - Health check endpoint
 
 **Authentication:** Supabase Auth handles user registration, login, password reset, and session management with JWT tokens stored in localStorage.
 
