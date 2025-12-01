@@ -98,22 +98,22 @@ export default function NewProject() {
 
       {production.audioUrl && (
         <div className="mb-6 space-y-4">
-          <div className="p-4 bg-green-900/20 border border-green-700 rounded-lg">
-            <h2 className="font-semibold text-green-300 mb-2">
+          <div className="p-4 bg-sky-900/20 border border-sky-700 rounded-lg">
+            <h2 className="font-semibold text-sky-300 mb-2">
               Production Complete!
             </h2>
             <div className="flex gap-3 flex-wrap">
               <a
                 href={production.audioUrl}
                 download
-                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                className="px-4 py-2 bg-sky-600 text-white rounded hover:bg-sky-700"
                 data-testid="link-download-audio"
               >
                 Download Audio
               </a>
               <button
                 onClick={() => navigate("/dashboard")}
-                className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
+                className="px-4 py-2 bg-slate-600 text-white rounded hover:bg-slate-700"
                 data-testid="button-go-dashboard"
               >
                 Go to Dashboard
@@ -160,10 +160,12 @@ export default function NewProject() {
         </div>
       )}
 
-      <ProjectForm
-        onSubmit={handleProjectSubmit}
-        isSubmitting={authLoading || isCreating || production.isProcessing}
-      />
+      {!production.audioUrl && (
+        <ProjectForm
+          onSubmit={handleProjectSubmit}
+          isSubmitting={authLoading || isCreating || production.isProcessing}
+        />
+      )}
     </div>
   );
 }
