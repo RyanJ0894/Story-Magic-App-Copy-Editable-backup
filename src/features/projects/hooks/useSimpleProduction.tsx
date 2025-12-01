@@ -9,6 +9,7 @@ interface ProductionState {
   audioUrl: string | null;
   error: string | null;
   chunks: ChunkProgressData[];
+  originalScript: string;
 }
 
 export const useSimpleProduction = () => {
@@ -18,6 +19,7 @@ export const useSimpleProduction = () => {
     audioUrl: null,
     error: null,
     chunks: [],
+    originalScript: '',
   });
 
   const processProduction = async (script: string, projectId: string): Promise<OrchestrationResult> => {
@@ -27,6 +29,7 @@ export const useSimpleProduction = () => {
       audioUrl: null,
       error: null,
       chunks: [],
+      originalScript: script,
     });
 
     try {
@@ -172,31 +175,67 @@ export const useSimpleProduction = () => {
       console.log(`   - AI Director: ${groqResult.processing_time_ms}ms`);
       console.log(`   - Orchestration: ${totalTime - totalAiTime}ms`);
 
-      const convertedChunks: ChunkProgressData[] = (directorJson.scenes || []).map((scene: any, index: number) => ({
-        chunk_id: scene.scene_id || `scene_${index}`,
-        project_id: projectId,
-        scene_title: scene.scene_title || `Scene ${index + 1}`,
-        version: 1,
-        director_notes: scene.director_notes || '',
-        lines: (scene.lines || []).map((line: any) => ({
-          ...line,
-          line_id: line.line_id || `line_${index}_${Math.random().toString(36).slice(2, 8)}`,
-          start: line.start || 0,
-          duration: line.duration || 3,
-          src: line.src || null,
-        })),
-        audio_direction: scene.audio_direction || { music: [], ambience: [], sfx: [] },
-      }));
+      const scenesArray = Array.isArray(directorJson) ? directorJson : (directorJson.scenes || []);
+      
+      const convertedChunks: ChunkProgressData[] = scenesArray.map((scene: any, index: number) => {
+        const sceneDialogue = scene.dialogue || scene.text || '';
+        const sceneCharacter = scene.character || 'NARRATOR';
+        
+        const estimatedDuration = Math.max(3, Math.ceil(sceneDialogue.length / 15));
+        const sceneStart = index * estimatedDuration;
+        
+        return {
+          chunk_id: String(scene.scene_id || `scene_${index + 1}`),
+          project_id: projectId,
+          scene_title: `Scene ${scene.scene_id || index + 1}`,
+          version: 1,
+          director_notes: scene.voice_style || scene.mood || '',
+          lines: [{
+            line_id: `line_${scene.scene_id || index + 1}`,
+            type: 'dialogue',
+            text: sceneDialogue,
+            character: sceneCharacter,
+            tts_settings: {
+              character: sceneCharacter,
+              voice_style: scene.voice_style || 'Natural',
+            },
+            start: sceneStart,
+            duration: estimatedDuration,
+            src: null,
+            volume: scene.mixing_parameters?.voiceVolume || 0.8,
+          }],
+          audio_direction: {
+            music: scene.background_music ? [{
+              track_id: `music_${index}`,
+              name: scene.background_music,
+              start: sceneStart,
+              duration: estimatedDuration,
+              volume: scene.mixing_parameters?.musicVolume || 0.3,
+              src: null,
+            }] : [],
+            ambience: scene.background_ambiance ? [{
+              track_id: `ambience_${index}`,
+              name: scene.background_ambiance,
+              start: sceneStart,
+              duration: estimatedDuration,
+              volume: scene.mixing_parameters?.ambianceVolume || 0.4,
+              src: null,
+            }] : [],
+            sfx: [],
+          },
+        };
+      });
 
       console.log('📦 Converted chunks:', convertedChunks.length);
 
-      setState({
+      setState(prev => ({
         isProcessing: false,
         step: 'Complete',
         audioUrl: publicUrl,
         error: null,
         chunks: convertedChunks,
-      });
+        originalScript: prev.originalScript,
+      }));
 
       console.log('🎵 Final audio URL:', publicUrl);
       return { ...result, public_url: publicUrl };
@@ -206,13 +245,14 @@ export const useSimpleProduction = () => {
       const currentStep = state.step || 'Unknown step';
       console.error(`Production failed at step "${currentStep}":`, message, err);
       
-      setState({
+      setState(prev => ({
         isProcessing: false,
         step: `Failed at: ${currentStep}`,
         audioUrl: null,
         error: `${currentStep}\n\n${message}`,
         chunks: [],
-      });
+        originalScript: prev.originalScript,
+      }));
       throw err;
     }
   };

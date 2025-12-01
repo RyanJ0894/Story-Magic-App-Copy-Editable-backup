@@ -18,17 +18,16 @@ export default function NewProject() {
   const { createProject, isCreating } = useNewProject();
   const production = useSimpleProduction();
 
-  const duration = production.chunks.reduce((total, chunk) => {
-    const chunkDuration = chunk.lines.reduce((sum, line) => sum + (line.duration || 0), 0);
-    return total + chunkDuration;
-  }, 0) || 60;
-
   const {
     currentTime,
     isPlaying,
+    duration,
     handleSeek,
     handlePlayPause,
-  } = useScriptPlayerControls({ duration });
+    handleTimeUpdate,
+    handleDurationChange,
+    handleEnded,
+  } = useScriptPlayerControls();
 
   useEffect(() => {
     console.log('Auth state:', { 
@@ -37,8 +36,9 @@ export default function NewProject() {
       isCreating, 
       isProcessing: production.isProcessing,
       chunksLoaded: production.chunks.length,
+      audioUrl: production.audioUrl,
     });
-  }, [currentUser, authLoading, isCreating, production.isProcessing, production.chunks.length]);
+  }, [currentUser, authLoading, isCreating, production.isProcessing, production.chunks.length, production.audioUrl]);
 
   const handleProjectSubmit = async (data: ProjectFormData) => {
     if (!currentUser) {
@@ -73,6 +73,8 @@ export default function NewProject() {
           <p>Project ID: {projectId || 'None'}</p>
           <p>Processing: {production.isProcessing ? `Yes - ${production.step}` : 'No'}</p>
           <p>Chunks: {production.chunks.length}</p>
+          <p>Audio URL: {production.audioUrl ? 'Yes' : 'No'}</p>
+          <p>Duration: {duration.toFixed(1)}s | Current: {currentTime.toFixed(1)}s | Playing: {isPlaying ? 'Yes' : 'No'}</p>
           {projectId && (
             <a 
               href={`https://supabase.com/dashboard/project/bcuhyyyerxwgkrkbrqbs/logs/edge-functions`}
@@ -100,7 +102,7 @@ export default function NewProject() {
             <h2 className="font-semibold text-green-300 mb-2">
               Production Complete!
             </h2>
-            <div className="flex gap-3">
+            <div className="flex gap-3 flex-wrap">
               <a
                 href={production.audioUrl}
                 download
@@ -119,23 +121,25 @@ export default function NewProject() {
             </div>
           </div>
 
-          {production.chunks.length > 0 && (
-            <>
-              <AudioPlayer
-                chunks={production.chunks}
-                currentTime={currentTime}
-                isPlaying={isPlaying}
-              />
-              
-              <ScreenplayPlayer
-                chunks={production.chunks}
-                currentTime={currentTime}
-                isPlaying={isPlaying}
-                duration={duration}
-                onSeek={handleSeek}
-                onPlayPause={handlePlayPause}
-              />
-            </>
+          <AudioPlayer
+            audioUrl={production.audioUrl}
+            isPlaying={isPlaying}
+            currentTime={currentTime}
+            onTimeUpdate={handleTimeUpdate}
+            onDurationChange={handleDurationChange}
+            onPlayPause={handlePlayPause}
+            onEnded={handleEnded}
+          />
+          
+          {production.originalScript && (
+            <ScreenplayPlayer
+              scriptText={production.originalScript}
+              currentTime={currentTime}
+              isPlaying={isPlaying}
+              duration={duration}
+              onSeek={handleSeek}
+              onPlayPause={handlePlayPause}
+            />
           )}
         </div>
       )}

@@ -1,221 +1,120 @@
-import { useEffect, useRef, useMemo } from 'react';
-import type { ChunkProgressData } from '@/features/projects/project-chunk.type';
+import { useEffect, useRef, useCallback } from 'react';
 
 interface AudioPlayerProps {
-  chunks: ChunkProgressData[];
-  currentTime: number;
+  audioUrl: string;
   isPlaying: boolean;
+  currentTime: number;
+  onTimeUpdate: (time: number) => void;
+  onDurationChange: (duration: number) => void;
+  onPlayPause: (playing: boolean) => void;
+  onEnded: () => void;
 }
 
 export default function AudioPlayer({ 
-  chunks, 
-  currentTime, 
-  isPlaying 
+  audioUrl,
+  isPlaying,
+  currentTime,
+  onTimeUpdate,
+  onDurationChange,
+  onPlayPause,
+  onEnded,
 }: AudioPlayerProps) {
-  const audioRefs = useRef<Map<string, HTMLAudioElement>>(new Map());
-  
-  const stableChunks = useMemo(() => chunks, [chunks.map(c => c.chunk_id).join(',')]);
-
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const lastSeekTime = useRef<number>(0);
+  const isSeeking = useRef<boolean>(false);
 
   useEffect(() => {
-    const chunkIds = stableChunks.map(c => c.chunk_id).sort().join(',');
-    const currentChunkIds = audioRefs.current.get('_chunkIds') as unknown as string;
-    
-    if (chunkIds !== currentChunkIds) {
-      audioRefs.current.forEach((audio, key) => {
-        if (key !== '_chunkIds' && audio && typeof audio.pause === 'function') {
-          audio.pause();
-          audio.src = '';
-          audio.load();
-        }
-      });
-      audioRefs.current.clear();
-      
-      stableChunks.forEach(chunk => {
-        chunk.lines.forEach(line => {
-          if (line.src) {
-            const audio = new Audio();
-            audio.crossOrigin = 'anonymous';
-            audio.preload = 'metadata'; // Preload metadata for better streaming
-            audio.volume = line.volume || 1;
-            audio.src = line.src;
-            
-            // Add event listeners for better streaming
-            audio.addEventListener('loadstart', () => {
-              console.log(`Loading audio: ${line.line_id}`);
-            });
-            
-            audio.addEventListener('canplay', () => {
-              console.log(`Audio ready: ${line.line_id}`);
-            });
-            
-            audio.addEventListener('error', (e) => {
-              console.error(`Audio error for ${line.line_id}:`, e);
-            });
-            
-            audioRefs.current.set(line.line_id, audio);
-          }
-        });
+    const audio = audioRef.current;
+    if (!audio) return;
 
-        const audioTracks = [
-          ...chunk.audio_direction.music.map(track => ({ ...track, type: 'music' })),
-          ...chunk.audio_direction.ambience.map(track => ({ ...track, type: 'ambience' })),
-          ...chunk.audio_direction.sfx.map(track => ({ ...track, type: 'sfx' }))
-        ];
+    const handleTimeUpdate = () => {
+      if (!isSeeking.current) {
+        onTimeUpdate(audio.currentTime);
+      }
+    };
 
-        audioTracks.forEach(track => {
-          if (track.src) {
-            const audio = new Audio();
-            audio.crossOrigin = 'anonymous';
-            audio.preload = 'metadata'; // Better streaming for background music
-            audio.volume = track.volume || 1;
-            audio.src = track.src;
-            
-            // Add event listeners for background tracks
-            audio.addEventListener('loadstart', () => {
-              console.log(`Loading track: ${track.track_id} (${track.type})`);
-            });
-            
-            audio.addEventListener('canplay', () => {
-              console.log(`Track ready: ${track.track_id} (${track.type})`);
-            });
-            
-            audio.addEventListener('error', (e) => {
-              console.error(`Track error for ${track.track_id}:`, e);
-            });
-            
-            audioRefs.current.set(track.track_id, audio);
-          }
-        });
-      });
-      
-      audioRefs.current.set('_chunkIds', chunkIds as any);
-    }
+    const handleDurationChange = () => {
+      if (audio.duration && !isNaN(audio.duration)) {
+        onDurationChange(audio.duration);
+      }
+    };
+
+    const handleEnded = () => {
+      onEnded();
+      onPlayPause(false);
+    };
+
+    const handleLoadedMetadata = () => {
+      if (audio.duration && !isNaN(audio.duration)) {
+        onDurationChange(audio.duration);
+      }
+    };
+
+    const handleCanPlay = () => {
+      console.log('Audio can play, duration:', audio.duration);
+    };
+
+    const handleError = (e: Event) => {
+      console.error('Audio error:', e);
+    };
+
+    audio.addEventListener('timeupdate', handleTimeUpdate);
+    audio.addEventListener('durationchange', handleDurationChange);
+    audio.addEventListener('loadedmetadata', handleLoadedMetadata);
+    audio.addEventListener('ended', handleEnded);
+    audio.addEventListener('canplay', handleCanPlay);
+    audio.addEventListener('error', handleError);
 
     return () => {
-      audioRefs.current.forEach((audio, key) => {
-        if (key !== '_chunkIds' && audio && typeof audio.pause === 'function') {
-          audio.pause();
-          audio.src = '';
-          audio.load();
-        }
-      });
-      audioRefs.current.clear();
+      audio.removeEventListener('timeupdate', handleTimeUpdate);
+      audio.removeEventListener('durationchange', handleDurationChange);
+      audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
+      audio.removeEventListener('ended', handleEnded);
+      audio.removeEventListener('canplay', handleCanPlay);
+      audio.removeEventListener('error', handleError);
     };
-  }, [stableChunks]);
+  }, [onTimeUpdate, onDurationChange, onPlayPause, onEnded]);
 
   useEffect(() => {
-    if (!isPlaying) {
-      audioRefs.current.forEach((audio, key) => {
-        if (key !== '_chunkIds' && audio && typeof audio.pause === 'function' && !audio.paused) {
-          audio.pause();
-        }
-      });
-      return;
-    }
-  }, [isPlaying]);
+    const audio = audioRef.current;
+    if (!audio) return;
 
-  const lastProcessedTime = useRef(0);
-  const processedAudio = useRef(new Set<string>());
+    if (isPlaying) {
+      const playPromise = audio.play();
+      if (playPromise !== undefined) {
+        playPromise.catch((e) => {
+          console.error('Play failed:', e);
+          onPlayPause(false);
+        });
+      }
+    } else {
+      audio.pause();
+    }
+  }, [isPlaying, onPlayPause]);
 
   useEffect(() => {
-    if (!isPlaying) {
-      processedAudio.current.clear();
-      return;
-    }
+    const audio = audioRef.current;
+    if (!audio) return;
 
-    if (Math.abs(currentTime - lastProcessedTime.current) < 0.05) {
-      return;
-    }
-    lastProcessedTime.current = currentTime;
-
-    for (const chunk of stableChunks) {
+    if (Math.abs(audio.currentTime - currentTime) > 0.5) {
+      isSeeking.current = true;
+      audio.currentTime = currentTime;
+      lastSeekTime.current = currentTime;
       
-      // Process script lines
-      for (const line of chunk.lines) {
-        if (line.src && audioRefs.current.has(line.line_id)) {
-          const audio = audioRefs.current.get(line.line_id)!;
-          const shouldPlay = currentTime >= line.start && currentTime < line.start + line.duration;
-          const audioKey = `line_${line.line_id}`;
-          
-          if (shouldPlay && audio.paused && !processedAudio.current.has(audioKey) && isPlaying) {
-            // Preload audio if not ready
-            if (audio.readyState < 2) {
-              console.log(`Preloading audio for line: ${line.line_id}`);
-              audio.load();
-              // Wait for canplay event before playing
-              audio.addEventListener('canplay', () => {
-                audio.currentTime = currentTime - line.start;
-                const playPromise = audio.play();
-                if (playPromise !== undefined) {
-                  playPromise
-                    .then(() => {
-                      console.log(`Audio playing: ${line.line_id}`);
-                    })
-                    .catch((e) => {
-                      console.error('Line play error:', e);
-                    });
-                }
-              }, { once: true });
-            } else {
-              // Audio is ready, play immediately
-              audio.currentTime = currentTime - line.start;
-              const playPromise = audio.play();
-              if (playPromise !== undefined) {
-                playPromise
-                  .then(() => {
-                    console.log(`Audio playing: ${line.line_id}`);
-                  })
-                  .catch((e) => {
-                    console.error('Line play error:', e);
-                  });
-              }
-            }
-            processedAudio.current.add(audioKey);
-          } else if (!shouldPlay && !audio.paused) {
-            audio.pause();
-            processedAudio.current.delete(audioKey);
-          }
-        }
-      }
-
-      // Process audio tracks
-      const audioTracks = [
-        ...chunk.audio_direction.music.map(track => ({ ...track, type: 'music' })),
-        ...chunk.audio_direction.ambience.map(track => ({ ...track, type: 'ambience' })),
-        ...chunk.audio_direction.sfx.map(track => ({ ...track, type: 'sfx' }))
-      ];
-
-      for (const track of audioTracks) {
-        if (track.src && audioRefs.current.has(track.track_id)) {
-          const audio = audioRefs.current.get(track.track_id)!;
-          const shouldPlay = currentTime >= track.start && currentTime < track.start + track.duration;
-          const audioKey = `track_${track.track_id}`;
-          
-          if (shouldPlay && audio.paused && !processedAudio.current.has(audioKey)) {
-            // Preload track if not ready
-            if (audio.readyState < 2) {
-              console.log(`Preloading track: ${track.track_id} (${track.type})`);
-              audio.load();
-              // Wait for canplay event before playing
-              audio.addEventListener('canplay', () => {
-                audio.currentTime = currentTime - track.start;
-                audio.play().catch((e) => console.error('Track play error:', e));
-              }, { once: true });
-            } else {
-              // Track is ready, play immediately
-              audio.currentTime = currentTime - track.start;
-              audio.play().catch((e) => console.error('Track play error:', e));
-            }
-            processedAudio.current.add(audioKey);
-          } else if (!shouldPlay && !audio.paused) {
-            audio.pause();
-            processedAudio.current.delete(audioKey);
-          }
-        }
-      }
+      setTimeout(() => {
+        isSeeking.current = false;
+      }, 100);
     }
-  }, [currentTime, isPlaying, stableChunks]);
+  }, [currentTime]);
 
-  return null;
+  return (
+    <audio
+      ref={audioRef}
+      src={audioUrl}
+      preload="metadata"
+      crossOrigin="anonymous"
+      style={{ display: 'none' }}
+      data-testid="audio-element"
+    />
+  );
 }
