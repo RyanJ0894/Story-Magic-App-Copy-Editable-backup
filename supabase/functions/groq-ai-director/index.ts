@@ -446,16 +446,28 @@ async function saveToSupabase(supabaseClient: any, projectId: string, directorJs
 
   const sanitizedJson = sanitizeVolumes(directorJson);
 
-  const { error } = await supabaseClient
+  // First try to update existing record
+  const { data: existing } = await supabaseClient
     .from("director_json")
-    .upsert({
-      project_id: projectId,
-      json_data: sanitizedJson,
-      status: "completed",
-      updated_at: new Date().toISOString(),
-    }, {
-      onConflict: "project_id",
-    });
+    .select("id")
+    .eq("project_id", projectId)
+    .maybeSingle();
+
+  let error;
+  if (existing) {
+    // Update existing record
+    const result = await supabaseClient
+      .from("director_json")
+      .update({ json_data: sanitizedJson })
+      .eq("project_id", projectId);
+    error = result.error;
+  } else {
+    // Insert new record
+    const result = await supabaseClient
+      .from("director_json")
+      .insert({ project_id: projectId, json_data: sanitizedJson });
+    error = result.error;
+  }
 
   if (error) {
     console.error("[Groq AI Director] Failed to save to Supabase:", error);
