@@ -226,17 +226,26 @@ function buildSystemPrompt(): string {
 
   return `You are Script-to-JSON Agent. Convert film scripts into strictly valid JSON for audio production.
 
-CRITICAL RULES:
-- Start taking the text from the top and identify where the script starts
-- Process ENTIRE script from beginning to end without losing any script part
-- Identify ALL scene headers (INT., EXT., I.E., I/E)
-- Create separate scene object for EACH header
-- Never stop until end of script is reached
-- MUST select music + ambience for every scene
-- CRITICAL: You MUST analyze the COMPLETE screenplay from beginning to end.
-- Process EVERY scene in the uploaded script, not just the first few.
-- Continue analyzing until you reach the final scene.
-- IMPORTANT: Include ALL text from the script including action lines, scene descriptions, and parentheticals as NARRATOR entries in the dialogue array. Do NOT skip any content.
+CRITICAL RULES - MUST FOLLOW:
+1. Process the COMPLETE script from FIRST line to LAST line - do NOT stop early
+2. Include EVERY LINE of text from the script - nothing should be omitted
+3. Create a scene object for each scene header (INT., EXT., I.E., I/E)
+4. Continue until you reach the absolute END of the script
+
+CONTENT CAPTURE RULES - EXTREMELY IMPORTANT:
+- Scene headers (INT./EXT.) → Use as scene_title, do NOT add to dialogue array
+- Action/description lines → Add as NARRATOR entry in dialogue array (character: "NARRATOR")
+- Character dialogue → Add as character entry in dialogue array  
+- Parentheticals like (beat) or (sighs) → Include with the dialogue text or as separate NARRATOR entry
+- Scene descriptions and stage directions → Add as NARRATOR entries
+- DO NOT summarize or condense any text - include the COMPLETE text as written
+- DO NOT skip any action lines, descriptions, or transitions
+- Page numbers should be IGNORED (do not include them)
+- FADE IN, FADE OUT, CUT TO, etc. → Include as NARRATOR entries
+
+EVERY piece of text in the script (except page numbers) MUST appear in the dialogue array as either:
+1. A character's spoken line (character: "CHARACTER_NAME")
+2. A narration/action/description (character: "NARRATOR")
 
 KNOWLEDGE BASE - USE ONLY THESE:
 
@@ -349,18 +358,17 @@ VOLUME GUIDELINES (all values should be 0.0 to 1.0):
 - ALL VOLUMES MUST BE >= 0 (never negative)
 
 PROCESSING STEPS:
-1. Read script from line 1
-2. Find scene header → create scene object
-3. Extract ALL content until next header:
-   - Action/description lines → add as NARRATOR entries in dialogue array
-   - Character dialogue → add as character entries in dialogue array
-   - Parentheticals → include with the dialogue or as NARRATOR
-   - Preserve the order exactly as it appears in the script
-4. Select appropriate voice for each character (use Narrator category voices for NARRATOR entries)
-5. Select music that matches scene mood
-6. Select ambience that matches scene location
-7. Add SFX for specific actions mentioned in the script
-8. Repeat until END OF SCRIPT
+1. Start at the FIRST line of the script
+2. Read each line in order from top to bottom
+3. For each scene header (INT./EXT.) → create new scene object with scene_title
+4. For each line of text BETWEEN scene headers:
+   - If it's a CHARACTER NAME followed by dialogue → add dialogue entry with that character
+   - If it's action/description/stage direction → add NARRATOR entry
+   - If it's a transition (CUT TO, FADE, etc.) → add NARRATOR entry
+5. COPY the EXACT text - do not summarize, shorten, or paraphrase
+6. Select voices, music, ambience, and SFX for each scene
+7. CONTINUE until you reach the ABSOLUTE LAST LINE of the script
+8. DO NOT STOP until you have processed every single line
 
 OUTPUT FORMAT:
 You MUST output ONLY valid JSON with this structure:
@@ -368,6 +376,8 @@ You MUST output ONLY valid JSON with this structure:
   "project_id": "the_project_id",
   "scenes": [array of scene objects]
 }
+
+FINAL REMINDER: Your output MUST contain ALL text from the script. If the script has 100 lines of text, your dialogue arrays combined should have approximately 100 entries. Every action line, every piece of dialogue, every description - ALL must be included. Do not stop early. Do not summarize. Include everything.
 
 Do not include any text before or after the JSON. Output ONLY the JSON object.`;
 }
@@ -380,7 +390,14 @@ async function callGroq(script: string, projectId: string): Promise<any> {
   }
 
   const systemPrompt = buildSystemPrompt();
-  const userMessage = `Convert this script to Director JSON. Project ID: ${projectId}\n\nSCRIPT:\n${script}`;
+  const userMessage = `Convert this COMPLETE script to Director JSON. Include EVERY line of text - all action lines, all dialogue, all descriptions. Do NOT skip any content. Do NOT stop early. Process from the first line to the absolute last line.
+
+Project ID: ${projectId}
+
+SCRIPT (process ALL of this from start to finish):
+${script}
+
+END OF SCRIPT - Make sure you have processed everything above.`;
 
   console.log("[Groq AI Director] Calling Groq API with llama-3.3-70b-versatile...");
   const startTime = Date.now();
