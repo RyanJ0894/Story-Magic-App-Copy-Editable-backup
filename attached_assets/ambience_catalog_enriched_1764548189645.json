@@ -1,0 +1,761 @@
+{
+  "schema": "story-magic.ambience.v1",
+  "items": [
+    {
+      "id": "a_countryside_farm_01",
+      "file": "ambience/a_countryside_farm_01.mp3",
+      "group": "Suburbs & Countryside",
+      "style": "general effect",
+      "mood": [
+        "natural",
+        "peaceful",
+        "outdoors"
+      ],
+      "intensity": 40,
+      "tags": [
+        "suburbs & countryside",
+        "general",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "a_countryside_birds_01",
+      "file": "ambience/a_countryside_birds_01.mp3",
+      "group": "Suburbs & Countryside",
+      "style": "general effect",
+      "mood": [
+        "natural",
+        "peaceful",
+        "outdoors"
+      ],
+      "intensity": 40,
+      "tags": [
+        "suburbs & countryside",
+        "general",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "a_forest_calm_01",
+      "file": "ambience/a_forest_calm_01.mp3",
+      "group": "Forest",
+      "style": "forest nature",
+      "mood": [
+        "natural",
+        "peaceful",
+        "outdoors"
+      ],
+      "intensity": 40,
+      "tags": [
+        "forest",
+        "forest",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "a_restaurant_people_outdoor_01",
+      "file": "ambience/a_restaurant_people_outdoor_01.mp3",
+      "group": "People in the City",
+      "style": "door sounds",
+      "mood": [
+        "busy",
+        "urban",
+        "energetic"
+      ],
+      "intensity": 70,
+      "tags": [
+        "people in the city",
+        "door",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "a_city_streets_people_01",
+      "file": "ambience/a_city_streets_people_01.mp3",
+      "group": "People in the City",
+      "style": "city ambience",
+      "mood": [
+        "busy",
+        "urban",
+        "energetic"
+      ],
+      "intensity": 50,
+      "tags": [
+        "people in the city",
+        "city",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "a_park_fair_music_01",
+      "file": "ambience/a_park_fair_music_01.mp3",
+      "group": "Parks",
+      "style": "general effect",
+      "mood": [
+        "neutral",
+        "ambient",
+        "cinematic"
+      ],
+      "intensity": 50,
+      "tags": [
+        "parks",
+        "general",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "a_park_spring_sounds_01",
+      "file": "ambience/a_park_spring_sounds_01.mp3",
+      "group": "Parks",
+      "style": "general effect",
+      "mood": [
+        "neutral",
+        "ambient",
+        "cinematic"
+      ],
+      "intensity": 50,
+      "tags": [
+        "parks",
+        "general",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "a_crowd_busy_01",
+      "file": "ambience/a_crowd_busy_01.mp3",
+      "group": "Big Crowds",
+      "style": "crowd ambience",
+      "mood": [
+        "social",
+        "lively",
+        "human"
+      ],
+      "intensity": 60,
+      "tags": [
+        "big crowds",
+        "crowd",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "a_building_fire_explosions_01",
+      "file": "ambience/a_building_fire_explosions_01.mp3",
+      "group": "Big Spaces",
+      "style": "explosion",
+      "mood": [
+        "neutral",
+        "ambient",
+        "cinematic"
+      ],
+      "intensity": 70,
+      "tags": [
+        "big spaces",
+        "explosion",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "a_city_streets_cars_people_01",
+      "file": "ambience/a_city_streets_cars_people_01.mp3",
+      "group": "Metropolis",
+      "style": "city ambience",
+      "mood": [
+        "busy",
+        "urban",
+        "energetic"
+      ],
+      "intensity": 80,
+      "tags": [
+        "metropolis",
+        "city",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "a_river_flow_birds_01",
+      "file": "ambience/a_river_flow_birds_01.mp3",
+      "group": "Lakes & Rivers",
+      "style": "general effect",
+      "mood": [
+        "neutral",
+        "ambient",
+        "cinematic"
+      ],
+      "intensity": 80,
+      "tags": [
+        "lakes & rivers",
+        "general",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "a_lake_spring_flowing_01",
+      "file": "ambience/a_lake_spring_flowing_01.mp3",
+      "group": "Lakes & Rivers",
+      "style": "general effect",
+      "mood": [
+        "neutral",
+        "ambient",
+        "cinematic"
+      ],
+      "intensity": 40,
+      "tags": [
+        "lakes & rivers",
+        "general",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "a_blizzard_wind_howling_01",
+      "file": "ambience/a_blizzard_wind_howling_01.mp3",
+      "group": "Wind",
+      "style": "wind ambience",
+      "mood": [
+        "neutral",
+        "ambient",
+        "cinematic"
+      ],
+      "intensity": 60,
+      "tags": [
+        "wind",
+        "wind",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "a_wind_howling_spooky_01",
+      "file": "ambience/a_wind_howling_spooky_01.mp3",
+      "group": "Wind",
+      "style": "wind ambience",
+      "mood": [
+        "neutral",
+        "ambient",
+        "cinematic"
+      ],
+      "intensity": 80,
+      "tags": [
+        "wind",
+        "wind",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "a_wind_blowing_steadily_01",
+      "file": "ambience/a_wind_blowing_steadily_01.mp3",
+      "group": "Wind",
+      "style": "wind ambience",
+      "mood": [
+        "neutral",
+        "ambient",
+        "cinematic"
+      ],
+      "intensity": 50,
+      "tags": [
+        "wind",
+        "wind",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "a_beach_ocean_waves_01",
+      "file": "ambience/a_beach_ocean_waves_01.mp3",
+      "group": "Beach & Ocean",
+      "style": "ocean/beach ambience",
+      "mood": [
+        "relaxing",
+        "natural",
+        "open"
+      ],
+      "intensity": 70,
+      "tags": [
+        "beach & ocean",
+        "ocean/beach",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "a_beach_splashing_sloshing_01",
+      "file": "ambience/a_beach_splashing_sloshing_01.mp3",
+      "group": "Beach & Ocean",
+      "style": "ocean/beach ambience",
+      "mood": [
+        "relaxing",
+        "natural",
+        "open"
+      ],
+      "intensity": 40,
+      "tags": [
+        "beach & ocean",
+        "ocean/beach",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "a_ocean_waves_crashing_01",
+      "file": "ambience/a_ocean_waves_crashing_01.mp3",
+      "group": "Beach & Ocean",
+      "style": "ocean/beach ambience",
+      "mood": [
+        "relaxing",
+        "natural",
+        "open"
+      ],
+      "intensity": 50,
+      "tags": [
+        "beach & ocean",
+        "ocean/beach",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "a_public_spaces_people_mall_airport_01",
+      "file": "ambience/a_public_spaces_people_mall_airport_01.mp3",
+      "group": "Small Crowds",
+      "style": "general effect",
+      "mood": [
+        "social",
+        "lively",
+        "human"
+      ],
+      "intensity": 40,
+      "tags": [
+        "small crowds",
+        "general",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "a_city_streets_small_calm_crowds_01",
+      "file": "ambience/a_city_streets_small_calm_crowds_01.mp3",
+      "group": "Small Crowds",
+      "style": "city ambience",
+      "mood": [
+        "social",
+        "lively",
+        "human"
+      ],
+      "intensity": 60,
+      "tags": [
+        "small crowds",
+        "city",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "a_driving_accelerating_low_01",
+      "file": "ambience/a_driving_accelerating_low_01.mp3",
+      "group": "Vehicles Ambience",
+      "style": "general effect",
+      "mood": [
+        "neutral",
+        "ambient",
+        "cinematic"
+      ],
+      "intensity": 50,
+      "tags": [
+        "vehicles ambience",
+        "general",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "a_sportscar_driving_fast_01",
+      "file": "ambience/a_sportscar_driving_fast_01.mp3",
+      "group": "Vehicles Ambience",
+      "style": "vehicle ambience",
+      "mood": [
+        "neutral",
+        "ambient",
+        "cinematic"
+      ],
+      "intensity": 50,
+      "tags": [
+        "vehicles ambience",
+        "vehicle",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "a_car_cruising_steady_01",
+      "file": "ambience/a_car_cruising_steady_01.mp3",
+      "group": "Vehicles Ambience",
+      "style": "vehicle ambience",
+      "mood": [
+        "neutral",
+        "ambient",
+        "cinematic"
+      ],
+      "intensity": 70,
+      "tags": [
+        "vehicles ambience",
+        "vehicle",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "a_fast_driving_getaway_01",
+      "file": "ambience/a_fast_driving_getaway_01.mp3",
+      "group": "Vehicles Ambience",
+      "style": "general effect",
+      "mood": [
+        "neutral",
+        "ambient",
+        "cinematic"
+      ],
+      "intensity": 60,
+      "tags": [
+        "vehicles ambience",
+        "general",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "a_car_cruising_steady_02",
+      "file": "ambience/a_car_cruising_steady_02.mp3",
+      "group": "Vehicles Ambience",
+      "style": "vehicle ambience",
+      "mood": [
+        "neutral",
+        "ambient",
+        "cinematic"
+      ],
+      "intensity": 50,
+      "tags": [
+        "vehicles ambience",
+        "vehicle",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "a_rain_light_outdoors_01",
+      "file": "ambience/a_rain_light_outdoors_01.mp3",
+      "group": "Rain",
+      "style": "rain ambience",
+      "mood": [
+        "wet",
+        "moody",
+        "atmospheric"
+      ],
+      "intensity": 80,
+      "tags": [
+        "rain",
+        "rain",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "a_rain_on_roof_01",
+      "file": "ambience/a_rain_on_roof_01.mp3",
+      "group": "Rain",
+      "style": "rain ambience",
+      "mood": [
+        "wet",
+        "moody",
+        "atmospheric"
+      ],
+      "intensity": 40,
+      "tags": [
+        "rain",
+        "rain",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "a_medical_equipment_beeping_01",
+      "file": "ambience/a_medical_equipment_beeping_01.mp3",
+      "group": "Medical Facilities",
+      "style": "general effect",
+      "mood": [
+        "neutral",
+        "ambient",
+        "cinematic"
+      ],
+      "intensity": 50,
+      "tags": [
+        "medical facilities",
+        "general",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "a_hospital_hallway_01",
+      "file": "ambience/a_hospital_hallway_01.mp3",
+      "group": "Medical Facilities",
+      "style": "general effect",
+      "mood": [
+        "neutral",
+        "ambient",
+        "cinematic"
+      ],
+      "intensity": 60,
+      "tags": [
+        "medical facilities",
+        "general",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "a_storming_thunderclaps_rain_01",
+      "file": "ambience/a_storming_thunderclaps_rain_01.mp3",
+      "group": "Storm",
+      "style": "rain ambience",
+      "mood": [
+        "wet",
+        "moody",
+        "atmospheric"
+      ],
+      "intensity": 50,
+      "tags": [
+        "storm",
+        "rain",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "a_rain_light_thunder_01",
+      "file": "ambience/a_rain_light_thunder_01.mp3",
+      "group": "Storm",
+      "style": "rain ambience",
+      "mood": [
+        "wet",
+        "moody",
+        "atmospheric"
+      ],
+      "intensity": 60,
+      "tags": [
+        "storm",
+        "rain",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "a_storm_raging_01",
+      "file": "ambience/a_storm_raging_01.mp3",
+      "group": "Storm",
+      "style": "general effect",
+      "mood": [
+        "wet",
+        "moody",
+        "atmospheric"
+      ],
+      "intensity": 40,
+      "tags": [
+        "storm",
+        "general",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "a_bus_ride_public_01",
+      "file": "ambience/a_bus_ride_public_01.mp3",
+      "group": "Public Transportation Ambience",
+      "style": "general effect",
+      "mood": [
+        "neutral",
+        "ambient",
+        "cinematic"
+      ],
+      "intensity": 60,
+      "tags": [
+        "public transportation ambience",
+        "general",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "a_restaurant_people_indoor_01",
+      "file": "ambience/a_restaurant_people_indoor_01.mp3",
+      "group": "Interiors (cafes, offices, apartments, classrooms)",
+      "style": "door sounds",
+      "mood": [
+        "quiet",
+        "neutral",
+        "background"
+      ],
+      "intensity": 40,
+      "tags": [
+        "interiors (cafes, offices, apartments, classrooms)",
+        "door",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "a_restaurant_people_indoor_02",
+      "file": "ambience/a_restaurant_people_indoor_02.mp3",
+      "group": "Interiors (cafes, offices, apartments, classrooms)",
+      "style": "door sounds",
+      "mood": [
+        "quiet",
+        "neutral",
+        "background"
+      ],
+      "intensity": 50,
+      "tags": [
+        "interiors (cafes, offices, apartments, classrooms)",
+        "door",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "a_office_phones_people_quiet_01",
+      "file": "ambience/a_office_phones_people_quiet_01.mp3",
+      "group": "Interiors (cafes, offices, apartments, classrooms)",
+      "style": "general effect",
+      "mood": [
+        "quiet",
+        "neutral",
+        "background"
+      ],
+      "intensity": 50,
+      "tags": [
+        "interiors (cafes, offices, apartments, classrooms)",
+        "general",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "a_battlefield_scifi_lasers_01",
+      "file": "ambience/a_battlefield_scifi_lasers_01.mp3",
+      "group": "Battlefield / War Zones",
+      "style": "battlefield sounds",
+      "mood": [
+        "chaotic",
+        "intense",
+        "violent"
+      ],
+      "intensity": 50,
+      "tags": [
+        "battlefield / war zones",
+        "battlefield",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "a_battlefield_scifi_lasers_02",
+      "file": "ambience/a_battlefield_scifi_lasers_02.mp3",
+      "group": "Battlefield / War Zones",
+      "style": "battlefield sounds",
+      "mood": [
+        "chaotic",
+        "intense",
+        "violent"
+      ],
+      "intensity": 70,
+      "tags": [
+        "battlefield / war zones",
+        "battlefield",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "a_warzone_gunshots_rockets_01",
+      "file": "ambience/a_warzone_gunshots_rockets_01.mp3",
+      "group": "Battlefield / War Zones",
+      "style": "battlefield sounds",
+      "mood": [
+        "chaotic",
+        "intense",
+        "violent"
+      ],
+      "intensity": 40,
+      "tags": [
+        "battlefield / war zones",
+        "battlefield",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "a_warzone_distant_gunshots_explosions_soldiers_01",
+      "file": "ambience/a_warzone_distant_gunshots_explosions_soldiers_01.mp3",
+      "group": "Battlefield / War Zones",
+      "style": "battlefield sounds",
+      "mood": [
+        "chaotic",
+        "intense",
+        "violent"
+      ],
+      "intensity": 60,
+      "tags": [
+        "battlefield / war zones",
+        "battlefield",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "a_military_medical_tent_01",
+      "file": "ambience/a_military_medical_tent_01.mp3",
+      "group": "Battlefield / War Zones",
+      "style": "general effect",
+      "mood": [
+        "chaotic",
+        "intense",
+        "violent"
+      ],
+      "intensity": 40,
+      "tags": [
+        "battlefield / war zones",
+        "general",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "a_industrial_warehouse_01",
+      "file": "ambience/a_industrial_warehouse_01.mp3",
+      "group": "Industrial / Factories / Construction",
+      "style": "battlefield sounds",
+      "mood": [
+        "mechanical",
+        "noisy",
+        "gritty"
+      ],
+      "intensity": 50,
+      "tags": [
+        "industrial / factories / construction",
+        "battlefield",
+        "cinematic"
+      ],
+      "loopable": true
+    }
+  ]
+}

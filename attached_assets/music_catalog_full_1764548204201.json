@@ -1,0 +1,831 @@
+{
+  "schema": "story-magic.music.v1",
+  "items": [
+    {
+      "id": "m_string_orchestra_uplifting_01",
+      "title": "String Orchestra Uplifting 01",
+      "file": "music/m_string_orchestra_uplifting_01.mp3",
+      "group": "UPLIFTING",
+      "style": "orchestral strings",
+      "mood": [
+        "uplifting",
+        "hopeful",
+        "bright",
+        "soaring",
+        "inspiring"
+      ],
+      "intensity": 70,
+      "tags": [
+        "cinematic",
+        "orchestra",
+        "strings"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "m_piano_orchestra_uplifting_02",
+      "title": "Piano Orchestra Uplifting 02",
+      "file": "music/m_piano_orchestra_uplifting_02.mp3",
+      "group": "UPLIFTING",
+      "style": "piano and orchestra",
+      "mood": [
+        "uplifting",
+        "hopeful",
+        "bright",
+        "soaring",
+        "inspiring"
+      ],
+      "intensity": 70,
+      "tags": [
+        "intimate",
+        "orchestra",
+        "piano"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "m_string_orchestra_uplifting_02",
+      "title": "String Orchestra Uplifting 02",
+      "file": "music/m_string_orchestra_uplifting_02.mp3",
+      "group": "UPLIFTING",
+      "style": "orchestral strings",
+      "mood": [
+        "uplifting",
+        "hopeful",
+        "bright",
+        "soaring",
+        "inspiring"
+      ],
+      "intensity": 70,
+      "tags": [
+        "cinematic",
+        "orchestra",
+        "strings"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "m_electronic_uplifting_01",
+      "title": "Electronic Uplifting 01",
+      "file": "music/m_electronic_uplifting_01.mp3",
+      "group": "UPLIFTING",
+      "style": "electronic underscore",
+      "mood": [
+        "uplifting",
+        "hopeful",
+        "bright",
+        "soaring",
+        "inspiring"
+      ],
+      "intensity": 70,
+      "tags": [
+        "electronic",
+        "underscore"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "m_string_orchestra_dramatic_01",
+      "title": "String Orchestra Dramatic 01",
+      "file": "music/m_string_orchestra_dramatic_01.mp3",
+      "group": "DRAMATIC",
+      "style": "orchestral strings",
+      "mood": [
+        "dramatic",
+        "serious",
+        "weighty",
+        "emotional",
+        "tense"
+      ],
+      "intensity": 75,
+      "tags": [
+        "cinematic",
+        "orchestra",
+        "strings"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "m_piano_strings_dramatic_01",
+      "title": "Piano Strings Dramatic 01",
+      "file": "music/m_piano_strings_dramatic_01.mp3",
+      "group": "DRAMATIC",
+      "style": "piano and strings",
+      "mood": [
+        "dramatic",
+        "serious",
+        "weighty",
+        "emotional",
+        "tense"
+      ],
+      "intensity": 75,
+      "tags": [
+        "cinematic",
+        "intimate",
+        "piano",
+        "strings"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "m_strings_drums_dramatic_01",
+      "title": "Strings Drums Dramatic 01",
+      "file": "music/m_strings_drums_dramatic_01.mp3",
+      "group": "DRAMATIC",
+      "style": "strings with percussion",
+      "mood": [
+        "dramatic",
+        "serious",
+        "weighty",
+        "emotional",
+        "tense"
+      ],
+      "intensity": 75,
+      "tags": [
+        "cinematic",
+        "rhythmic",
+        "strings"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "m_orchestra_epic_01",
+      "title": "Orchestra Epic 01",
+      "file": "music/m_orchestra_epic_01.mp3",
+      "group": "EPIC",
+      "style": "orchestra",
+      "mood": [
+        "epic",
+        "heroic",
+        "majestic",
+        "powerful",
+        "grand"
+      ],
+      "intensity": 85,
+      "tags": [
+        "anthemic",
+        "climax",
+        "orchestra"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "m_strings_orchestra_epic_01",
+      "title": "Strings Orchestra Epic 01",
+      "file": "music/m_strings_orchestra_epic_01.mp3",
+      "group": "EPIC",
+      "style": "orchestral strings",
+      "mood": [
+        "epic",
+        "heroic",
+        "majestic",
+        "powerful",
+        "grand"
+      ],
+      "intensity": 85,
+      "tags": [
+        "anthemic",
+        "cinematic",
+        "climax",
+        "orchestra",
+        "strings"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "m_orchestra_epic_02",
+      "title": "Orchestra Epic 02",
+      "file": "music/m_orchestra_epic_02.mp3",
+      "group": "EPIC",
+      "style": "orchestra",
+      "mood": [
+        "epic",
+        "heroic",
+        "majestic",
+        "powerful",
+        "grand"
+      ],
+      "intensity": 85,
+      "tags": [
+        "anthemic",
+        "climax",
+        "orchestra"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "m_orchestra_epic_03",
+      "title": "Orchestra Epic 03",
+      "file": "music/m_orchestra_epic_03.mp3",
+      "group": "EPIC",
+      "style": "orchestra",
+      "mood": [
+        "epic",
+        "heroic",
+        "majestic",
+        "powerful",
+        "grand"
+      ],
+      "intensity": 85,
+      "tags": [
+        "anthemic",
+        "climax",
+        "orchestra"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "m_drums_horns_epic_01",
+      "title": "Drums Horns Epic 01",
+      "file": "music/m_drums_horns_epic_01.mp3",
+      "group": "EPIC",
+      "style": "brass & drums",
+      "mood": [
+        "epic",
+        "heroic",
+        "majestic",
+        "powerful",
+        "grand"
+      ],
+      "intensity": 85,
+      "tags": [
+        "anthemic",
+        "brass",
+        "climax",
+        "rhythmic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "m_string_orchestra_love_01",
+      "title": "String Orchestra Love 01",
+      "file": "music/m_string_orchestra_love_01.mp3",
+      "group": "LOVE",
+      "style": "orchestral strings",
+      "mood": [
+        "romantic",
+        "tender",
+        "warm",
+        "intimate",
+        "glowing"
+      ],
+      "intensity": 55,
+      "tags": [
+        "cinematic",
+        "orchestra",
+        "romantic",
+        "strings"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "m_piano_strings_love_01",
+      "title": "Piano Strings Love 01",
+      "file": "music/m_piano_strings_love_01.mp3",
+      "group": "LOVE",
+      "style": "piano and strings",
+      "mood": [
+        "romantic",
+        "tender",
+        "warm",
+        "intimate",
+        "glowing"
+      ],
+      "intensity": 55,
+      "tags": [
+        "cinematic",
+        "intimate",
+        "piano",
+        "romantic",
+        "strings"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "m_latin_jazz_love_01",
+      "title": "Latin Jazz Love 01",
+      "file": "music/m_latin_jazz_love_01.mp3",
+      "group": "LOVE",
+      "style": "latin jazz",
+      "mood": [
+        "romantic",
+        "tender",
+        "warm",
+        "intimate",
+        "glowing"
+      ],
+      "intensity": 55,
+      "tags": [
+        "latin",
+        "romantic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "m_latin_jazz_love_02",
+      "title": "Latin Jazz Love 02",
+      "file": "music/m_latin_jazz_love_02.mp3",
+      "group": "LOVE",
+      "style": "latin jazz",
+      "mood": [
+        "romantic",
+        "tender",
+        "warm",
+        "intimate",
+        "glowing"
+      ],
+      "intensity": 55,
+      "tags": [
+        "latin",
+        "romantic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "m_soul_jazz_love_01",
+      "title": "Soul Jazz Love 01",
+      "file": "music/m_soul_jazz_love_01.mp3",
+      "group": "LOVE",
+      "style": "soul jazz",
+      "mood": [
+        "romantic",
+        "tender",
+        "warm",
+        "intimate",
+        "glowing"
+      ],
+      "intensity": 55,
+      "tags": [
+        "romantic",
+        "soul"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "m_soul_jazz_love_02",
+      "title": "Soul Jazz Love 02",
+      "file": "music/m_soul_jazz_love_02.mp3",
+      "group": "LOVE",
+      "style": "soul jazz",
+      "mood": [
+        "romantic",
+        "tender",
+        "warm",
+        "intimate",
+        "glowing"
+      ],
+      "intensity": 55,
+      "tags": [
+        "romantic",
+        "soul"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "m_piano_strings_groovy_01",
+      "title": "Piano Strings Groovy 01",
+      "file": "music/m_piano_strings_groovy_01.mp3",
+      "group": "GROOVY RETRO",
+      "style": "piano and strings",
+      "mood": [
+        "groovy",
+        "retro",
+        "playful",
+        "cool",
+        "bouncy"
+      ],
+      "intensity": 50,
+      "tags": [
+        "cinematic",
+        "groove",
+        "intimate",
+        "piano",
+        "retro",
+        "strings"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "m_strings_drums_groovy_01",
+      "title": "Strings Drums Groovy 01",
+      "file": "music/m_strings_drums_groovy_01.mp3",
+      "group": "GROOVY RETRO",
+      "style": "strings with percussion",
+      "mood": [
+        "groovy",
+        "retro",
+        "playful",
+        "cool",
+        "bouncy"
+      ],
+      "intensity": 50,
+      "tags": [
+        "cinematic",
+        "groove",
+        "retro",
+        "rhythmic",
+        "strings"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "m_soul_lounge_groovy_01",
+      "title": "Soul Lounge Groovy 01",
+      "file": "music/m_soul_lounge_groovy_01.mp3",
+      "group": "GROOVY RETRO",
+      "style": "soul lounge",
+      "mood": [
+        "groovy",
+        "retro",
+        "playful",
+        "cool",
+        "bouncy"
+      ],
+      "intensity": 50,
+      "tags": [
+        "groove",
+        "retro",
+        "soul"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "m_horns_orchestra_tense_01",
+      "title": "Horns Orchestra Tense 01",
+      "file": "music/m_horns_orchestra_tense_01.mp3",
+      "group": "TENSE",
+      "style": "orchestra",
+      "mood": [
+        "tense",
+        "uneasy",
+        "suspenseful",
+        "urgent",
+        "nervy"
+      ],
+      "intensity": 65,
+      "tags": [
+        "brass",
+        "orchestra",
+        "tension"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "m_horns_orchestra_tense_02",
+      "title": "Horns Orchestra Tense 02",
+      "file": "music/m_horns_orchestra_tense_02.mp3",
+      "group": "TENSE",
+      "style": "orchestra",
+      "mood": [
+        "tense",
+        "uneasy",
+        "suspenseful",
+        "urgent",
+        "nervy"
+      ],
+      "intensity": 65,
+      "tags": [
+        "brass",
+        "orchestra",
+        "tension"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "m_strings_orchestra_tense_01",
+      "title": "Strings Orchestra Tense 01",
+      "file": "music/m_strings_orchestra_tense_01.mp3",
+      "group": "TENSE",
+      "style": "orchestral strings",
+      "mood": [
+        "tense",
+        "uneasy",
+        "suspenseful",
+        "urgent",
+        "nervy"
+      ],
+      "intensity": 65,
+      "tags": [
+        "cinematic",
+        "orchestra",
+        "strings",
+        "tension"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "m_drums_strings_tesnse_01",
+      "title": "Drums Strings Tesnse 01",
+      "file": "music/m_drums_strings_tesnse_01.mp3",
+      "group": "TENSE",
+      "style": "strings",
+      "mood": [
+        "tense",
+        "uneasy",
+        "suspenseful",
+        "urgent",
+        "nervy"
+      ],
+      "intensity": 65,
+      "tags": [
+        "cinematic",
+        "rhythmic",
+        "strings",
+        "tension"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "m_drums_orchestra_tense_01",
+      "title": "Drums Orchestra Tense 01",
+      "file": "music/m_drums_orchestra_tense_01.mp3",
+      "group": "TENSE",
+      "style": "orchestra",
+      "mood": [
+        "tense",
+        "uneasy",
+        "suspenseful",
+        "urgent",
+        "nervy"
+      ],
+      "intensity": 65,
+      "tags": [
+        "orchestra",
+        "rhythmic",
+        "tension"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "m_piano_strings_sexy_01",
+      "title": "Piano Strings Sexy 01",
+      "file": "music/m_piano_strings_sexy_01.mp3",
+      "group": "SEXY",
+      "style": "piano and strings",
+      "mood": [
+        "sensual",
+        "smoky",
+        "smooth",
+        "confident",
+        "late-night"
+      ],
+      "intensity": 50,
+      "tags": [
+        "cinematic",
+        "intimate",
+        "piano",
+        "strings"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "m_sax_piano_sexy_01",
+      "title": "Sax Piano Sexy 01",
+      "file": "music/m_sax_piano_sexy_01.mp3",
+      "group": "SEXY",
+      "style": "sax & piano",
+      "mood": [
+        "sensual",
+        "smoky",
+        "smooth",
+        "confident",
+        "late-night"
+      ],
+      "intensity": 50,
+      "tags": [
+        "brass",
+        "intimate",
+        "piano"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "m_guitar_drums_sexy_01",
+      "title": "Guitar Drums Sexy 01",
+      "file": "music/m_guitar_drums_sexy_01.mp3",
+      "group": "SEXY",
+      "style": "guitar & drums",
+      "mood": [
+        "sensual",
+        "smoky",
+        "smooth",
+        "confident",
+        "late-night"
+      ],
+      "intensity": 50,
+      "tags": [
+        "rhythmic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "m_piano_strings_playful_01",
+      "title": "Piano Strings Playful 01",
+      "file": "music/m_piano_strings_playful_01.mp3",
+      "group": "PLAYFUL",
+      "style": "piano and strings",
+      "mood": [
+        "playful",
+        "cheeky",
+        "light",
+        "whimsical",
+        "spry"
+      ],
+      "intensity": 45,
+      "tags": [
+        "cinematic",
+        "intimate",
+        "light",
+        "piano",
+        "quirky",
+        "strings"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "m_jazz_retro_playful_01",
+      "title": "Jazz Retro Playful 01",
+      "file": "music/m_jazz_retro_playful_01.mp3",
+      "group": "PLAYFUL",
+      "style": "retro jazz",
+      "mood": [
+        "playful",
+        "cheeky",
+        "light",
+        "whimsical",
+        "spry"
+      ],
+      "intensity": 45,
+      "tags": [
+        "light",
+        "quirky"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "m_drums_hum_mysterious_01",
+      "title": "Drums Humysterious 01",
+      "file": "music/m_drums_hum_mysterious_01.mp3",
+      "group": "MYSTERIOUS, SCARY",
+      "style": "underscore",
+      "mood": [
+        "mysterious",
+        "ominous",
+        "noir",
+        "scary",
+        "foreboding"
+      ],
+      "intensity": 60,
+      "tags": [
+        "dark",
+        "rhythmic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "m_paino_soft_mysterious_01",
+      "title": "Paino Soft Mysterious 01",
+      "file": "music/m_paino_soft_mysterious_01.mp3",
+      "group": "MYSTERIOUS, SCARY",
+      "style": "underscore",
+      "mood": [
+        "mysterious",
+        "ominous",
+        "noir",
+        "scary",
+        "foreboding"
+      ],
+      "intensity": 60,
+      "tags": [
+        "dark"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "m_drums_strings_scary_01",
+      "title": "Drums Strings Scary 01",
+      "file": "music/m_drums_strings_scary_01.mp3",
+      "group": "MYSTERIOUS, SCARY",
+      "style": "strings",
+      "mood": [
+        "mysterious",
+        "ominous",
+        "noir",
+        "scary",
+        "foreboding"
+      ],
+      "intensity": 60,
+      "tags": [
+        "cinematic",
+        "dark",
+        "rhythmic",
+        "strings"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "m_deep_strings_scary_01",
+      "title": "Deep Strings Scary 01",
+      "file": "music/m_deep_strings_scary_01.mp3",
+      "group": "MYSTERIOUS, SCARY",
+      "style": "strings",
+      "mood": [
+        "mysterious",
+        "ominous",
+        "noir",
+        "scary",
+        "foreboding"
+      ],
+      "intensity": 60,
+      "tags": [
+        "cinematic",
+        "dark",
+        "strings"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "m_piano_scary_01",
+      "title": "Piano Scary 01",
+      "file": "music/m_piano_scary_01.mp3",
+      "group": "MYSTERIOUS, SCARY",
+      "style": "piano",
+      "mood": [
+        "mysterious",
+        "ominous",
+        "noir",
+        "scary",
+        "foreboding"
+      ],
+      "intensity": 60,
+      "tags": [
+        "dark",
+        "intimate",
+        "piano"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "m_piano_slow_sad_01",
+      "title": "Piano Slow Sad 01",
+      "file": "music/m_piano_slow_sad_01.mp3",
+      "group": "SAD",
+      "style": "slow piano solo",
+      "mood": [
+        "sad",
+        "melancholic",
+        "pensive",
+        "tender",
+        "quiet"
+      ],
+      "intensity": 40,
+      "tags": [
+        "intimate",
+        "piano"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "m_piano_strings_sad_01",
+      "title": "Piano Strings Sad 01",
+      "file": "music/m_piano_strings_sad_01.mp3",
+      "group": "SAD",
+      "style": "piano and strings",
+      "mood": [
+        "sad",
+        "melancholic",
+        "pensive",
+        "tender",
+        "quiet"
+      ],
+      "intensity": 40,
+      "tags": [
+        "cinematic",
+        "intimate",
+        "piano",
+        "strings"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "m_strings_sad_01",
+      "title": "Strings Sad 01",
+      "file": "music/m_strings_sad_01.mp3",
+      "group": "SAD",
+      "style": "strings",
+      "mood": [
+        "sad",
+        "melancholic",
+        "pensive",
+        "tender",
+        "quiet"
+      ],
+      "intensity": 40,
+      "tags": [
+        "cinematic",
+        "strings"
+      ],
+      "loopable": true
+    }
+  ]
+}
