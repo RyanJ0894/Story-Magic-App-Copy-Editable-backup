@@ -63,8 +63,8 @@ export default function NewProject() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto py-10">
-      <h1 className="text-3xl font-bold mb-6">Create New Project</h1>
+    <div className="max-w-4xl mx-auto px-3 sm:px-6 py-6 sm:py-10">
+      <h1 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6">Create New Project</h1>
 
       {import.meta.env.DEV && (
         <div className="mb-6 p-4 bg-muted border border-border rounded text-xs font-mono">

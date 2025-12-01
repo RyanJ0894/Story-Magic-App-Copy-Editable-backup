@@ -382,25 +382,117 @@ FINAL REMINDER: Your output MUST contain ALL text from the script. If the script
 Do not include any text before or after the JSON. Output ONLY the JSON object.`;
 }
 
-async function callGroq(script: string, projectId: string): Promise<any> {
-  const groqApiKey = Deno.env.get("GROQ_API_KEY");
+interface SceneBlock {
+  sceneNumber: number;
+  heading: string;
+  content: string;
+}
+
+function parseScriptIntoScenes(script: string): SceneBlock[] {
+  const lines = script.split('\n');
+  const scenes: SceneBlock[] = [];
+  let currentScene: SceneBlock | null = null;
+  let sceneNumber = 0;
+  let preambleContent = '';
   
-  if (!groqApiKey) {
-    throw new Error("GROQ_API_KEY is not configured");
+  const sceneHeaderPattern = /^(INT\.|EXT\.|I\.E\.|I\/E\.?|INTERIOR|EXTERIOR)/i;
+  const pageNumberPattern = /^\s*\d+\.?\s*$/;
+  const paginationPattern = /^(page|p\.?\s*\d+|continued|\(continued\)|\(more\)|\(cont'd\))/i;
+  
+  for (const line of lines) {
+    const trimmedLine = line.trim();
+    
+    if (pageNumberPattern.test(trimmedLine) || paginationPattern.test(trimmedLine)) {
+      continue;
+    }
+    
+    if (sceneHeaderPattern.test(trimmedLine)) {
+      if (currentScene && currentScene.content.trim()) {
+        scenes.push(currentScene);
+      } else if (preambleContent.trim() && !currentScene) {
+        sceneNumber++;
+        scenes.push({
+          sceneNumber,
+          heading: 'OPENING',
+          content: preambleContent,
+        });
+        preambleContent = '';
+      }
+      sceneNumber++;
+      currentScene = {
+        sceneNumber,
+        heading: trimmedLine,
+        content: trimmedLine + '\n',
+      };
+    } else if (currentScene) {
+      currentScene.content += line + '\n';
+    } else if (trimmedLine) {
+      preambleContent += line + '\n';
+    }
   }
+  
+  if (currentScene && currentScene.content.trim()) {
+    scenes.push(currentScene);
+  } else if (preambleContent.trim() && scenes.length === 0) {
+    scenes.push({
+      sceneNumber: 1,
+      heading: 'SCRIPT',
+      content: preambleContent,
+    });
+  }
+  
+  const validScenes = scenes.filter(s => {
+    const contentLines = s.content.split('\n').filter(l => l.trim()).length;
+    return contentLines >= 1;
+  });
+  
+  console.log(`[Groq AI Director] Parsed script into ${validScenes.length} scene(s)`);
+  return validScenes;
+}
 
-  const systemPrompt = buildSystemPrompt();
-  const userMessage = `Convert this COMPLETE script to Director JSON. Include EVERY line of text - all action lines, all dialogue, all descriptions. Do NOT skip any content. Do NOT stop early. Process from the first line to the absolute last line.
+function buildCompactPrompt(): string {
+  const voiceList = VOICES.map(v => `${v.voice_id}: ${v.label} (${v.gender})`).join(", ");
+  const musicList = MUSIC_CATALOG.slice(0, 15).map(m => m.file).join(", ");
+  const ambienceList = AMBIENCE_CATALOG.slice(0, 10).map(a => a.file).join(", ");
+  
+  return `Convert this scene to JSON. Include EVERY line as dialogue entries.
 
-Project ID: ${projectId}
+RULES:
+- Action/description lines → character: "NARRATOR"
+- Character dialogue → character: "CHARACTER_NAME"
+- Include ALL text verbatim, do not summarize
+- Page numbers should be ignored
 
-SCRIPT (process ALL of this from start to finish):
-${script}
+VOICES: ${voiceList}
+MUSIC: ${musicList}
+AMBIENCE: ${ambienceList}
 
-END OF SCRIPT - Make sure you have processed everything above.`;
+OUTPUT JSON:
+{
+  "scene_id": "scene_XXX",
+  "scene_title": "the scene heading",
+  "mood": "emotional tone",
+  "intensity": 0.7,
+  "dialogue": [
+    {"line_id": "line_001", "character": "NARRATOR or NAME", "text": "exact text", "voice_key": "voice_id"}
+  ],
+  "music": [{"track_id": "music/file.mp3", "volume": 0.25}],
+  "ambience": [{"track_id": "ambience/file.mp3", "volume": 0.28}]
+}`;
+}
 
-  console.log("[Groq AI Director] Calling Groq API with llama-3.3-70b-versatile...");
-  const startTime = Date.now();
+async function processSceneWithGroq(scene: SceneBlock, groqApiKey: string, voiceAssignments: Map<string, string>): Promise<any> {
+  const prompt = buildCompactPrompt();
+  const voiceHints = voiceAssignments.size > 0 
+    ? `\nASSIGNED VOICES: ${Array.from(voiceAssignments.entries()).map(([char, voice]) => `${char}=${voice}`).join(", ")}`
+    : '';
+  
+  const userMessage = `Scene ${scene.sceneNumber}: Process this scene completely. Include EVERY line.${voiceHints}
+
+SCENE CONTENT:
+${scene.content}
+
+END OF SCENE - Include all text above as dialogue entries.`;
 
   const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
     method: "POST",
@@ -411,37 +503,148 @@ END OF SCRIPT - Make sure you have processed everything above.`;
     body: JSON.stringify({
       model: "llama-3.3-70b-versatile",
       messages: [
-        { role: "system", content: systemPrompt },
+        { role: "system", content: prompt },
         { role: "user", content: userMessage },
       ],
-      temperature: 0.3,
-      max_tokens: 32000,
+      temperature: 0.2,
+      max_tokens: 8000,
       response_format: { type: "json_object" },
     }),
   });
 
   if (!response.ok) {
     const errorText = await response.text();
-    console.error("[Groq AI Director] Groq API error:", errorText);
-    throw new Error(`Groq API error: ${response.status} - ${errorText}`);
+    throw new Error(`Groq API error for scene ${scene.sceneNumber}: ${response.status}`);
   }
 
   const data = await response.json();
-  const elapsed = Date.now() - startTime;
-  console.log(`[Groq AI Director] Groq API response in ${elapsed}ms`);
-
   const content = data.choices?.[0]?.message?.content;
+  
   if (!content) {
-    throw new Error("No content in Groq response");
+    throw new Error(`No content for scene ${scene.sceneNumber}`);
   }
 
-  try {
-    const parsed = JSON.parse(content);
-    return parsed;
-  } catch (e) {
-    console.error("[Groq AI Director] Failed to parse JSON response:", content.substring(0, 500));
-    throw new Error("Failed to parse Groq response as JSON");
+  const parsed = JSON.parse(content);
+  
+  if (parsed.dialogue) {
+    for (const line of parsed.dialogue) {
+      if (line.character && line.character !== 'NARRATOR' && line.voice_key) {
+        voiceAssignments.set(line.character.toUpperCase(), line.voice_key);
+      }
+    }
   }
+  
+  return {
+    ...parsed,
+    scene_id: `scene_${String(scene.sceneNumber).padStart(3, '0')}`,
+    scene_title: scene.heading,
+  };
+}
+
+async function callGroq(script: string, projectId: string): Promise<any> {
+  const groqApiKey = Deno.env.get("GROQ_API_KEY");
+  
+  if (!groqApiKey) {
+    throw new Error("GROQ_API_KEY is not configured");
+  }
+
+  const scenes = parseScriptIntoScenes(script);
+  
+  if (scenes.length === 0) {
+    throw new Error("No scenes found in script");
+  }
+
+  const scriptLength = script.length;
+  const useChunked = scriptLength > 3000 || scenes.length > 2;
+  
+  console.log(`[Groq AI Director] Script length: ${scriptLength} chars, ${scenes.length} scenes. Using ${useChunked ? 'chunked' : 'single'} processing.`);
+
+  if (!useChunked) {
+    const systemPrompt = buildSystemPrompt();
+    const userMessage = `Convert this COMPLETE script to Director JSON. Include EVERY line of text.
+
+Project ID: ${projectId}
+
+SCRIPT:
+${script}
+
+END OF SCRIPT`;
+
+    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${groqApiKey}`,
+      },
+      body: JSON.stringify({
+        model: "llama-3.3-70b-versatile",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userMessage },
+        ],
+        temperature: 0.3,
+        max_tokens: 16000,
+        response_format: { type: "json_object" },
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Groq API error: ${response.status} - ${errorText}`);
+    }
+
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content;
+    if (!content) {
+      throw new Error("No content in Groq response");
+    }
+
+    return JSON.parse(content);
+  }
+
+  console.log(`[Groq AI Director] Processing ${scenes.length} scenes individually...`);
+  const startTime = Date.now();
+  
+  const voiceAssignments = new Map<string, string>();
+  const processedScenes: any[] = [];
+
+  for (let i = 0; i < scenes.length; i++) {
+    const scene = scenes[i];
+    console.log(`[Groq AI Director] Processing scene ${i + 1}/${scenes.length}: ${scene.heading.substring(0, 50)}...`);
+    
+    try {
+      const sceneResult = await processSceneWithGroq(scene, groqApiKey, voiceAssignments);
+      processedScenes.push(sceneResult);
+      
+      if (i < scenes.length - 1) {
+        await new Promise(resolve => setTimeout(resolve, 200));
+      }
+    } catch (error) {
+      console.error(`[Groq AI Director] Failed to process scene ${i + 1}:`, error);
+      processedScenes.push({
+        scene_id: `scene_${String(scene.sceneNumber).padStart(3, '0')}`,
+        scene_title: scene.heading,
+        mood: "neutral",
+        intensity: 0.5,
+        dialogue: scene.content.split('\n').filter(l => l.trim()).map((line, idx) => ({
+          line_id: `line_${scene.sceneNumber}_${idx}`,
+          character: "NARRATOR",
+          text: line.trim(),
+          voice_key: VOICES.find(v => v.category === "Narrator")?.voice_id || "narrator_male_01",
+        })),
+        music: [],
+        ambience: [],
+      });
+    }
+  }
+
+  const elapsed = Date.now() - startTime;
+  console.log(`[Groq AI Director] Completed ${processedScenes.length} scenes in ${elapsed}ms`);
+
+  return {
+    project_id: projectId,
+    scenes: processedScenes,
+  };
 }
 
 function sanitizeVolumes(directorJson: any): any {

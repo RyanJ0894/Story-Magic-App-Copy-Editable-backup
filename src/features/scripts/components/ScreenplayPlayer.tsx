@@ -172,40 +172,40 @@ export default function ScreenplayPlayer({
     
     switch (line.type) {
       case 'scene_heading':
-        return `${baseClasses} font-mono text-sm uppercase tracking-wider text-sky-400 mb-6 mt-8 first:mt-0 font-bold`;
+        return `${baseClasses} font-mono text-xs sm:text-sm uppercase tracking-wider text-sky-400 mb-4 sm:mb-6 mt-6 sm:mt-8 first:mt-0 font-bold`;
       case 'action':
-        return `${baseClasses} font-mono text-sm leading-relaxed mb-4 ${
+        return `${baseClasses} font-mono text-xs sm:text-sm leading-relaxed mb-3 sm:mb-4 ${
           isActive 
-            ? 'bg-sky-500/20 text-sky-200 px-2 py-1 -mx-2 rounded' 
+            ? 'bg-sky-500/20 text-sky-200 px-2 py-1 rounded' 
             : 'text-slate-300'
         }`;
       case 'character':
-        return `${baseClasses} font-mono text-sm uppercase tracking-wide mt-6 mb-1 ml-[35%] font-semibold ${
+        return `${baseClasses} font-mono text-xs sm:text-sm uppercase tracking-wide mt-4 sm:mt-6 mb-1 text-center sm:text-left sm:ml-[35%] font-semibold ${
           isCharacterOfActive 
             ? 'text-sky-300' 
             : 'text-slate-200'
         }`;
       case 'dialogue':
-        return `${baseClasses} font-mono text-sm leading-relaxed ml-[25%] max-w-[35ch] mb-4 ${
+        return `${baseClasses} font-mono text-xs sm:text-sm leading-relaxed text-center sm:text-left sm:ml-[25%] max-w-full sm:max-w-[35ch] mx-auto sm:mx-0 mb-3 sm:mb-4 ${
           isActive 
-            ? 'bg-sky-500/20 text-sky-200 px-2 py-1 -mx-2 rounded' 
+            ? 'bg-sky-500/20 text-sky-200 px-2 py-1 rounded' 
             : 'text-slate-300'
         }`;
       default:
-        return `${baseClasses} font-mono text-sm`;
+        return `${baseClasses} font-mono text-xs sm:text-sm`;
     }
   };
   
   return (
-    <div className="flex flex-col h-[80vh] border border-slate-700 rounded-lg bg-slate-900 overflow-hidden">
+    <div className="flex flex-col h-[70vh] sm:h-[80vh] border border-slate-700 rounded-lg bg-slate-900 overflow-hidden">
       <div 
         ref={scrollContainerRef}
-        className="flex-1 overflow-y-auto px-8 py-6"
+        className="flex-1 overflow-y-auto px-3 sm:px-8 py-4 sm:py-6"
         style={{
           scrollBehavior: 'smooth',
         }}
       >
-        <div className="max-w-3xl mx-auto">
+        <div className="max-w-full sm:max-w-3xl mx-auto">
           {displayLines.length === 0 ? (
             <div className="text-center text-muted-foreground py-12">
               <p>No script content to display</p>
@@ -238,10 +238,10 @@ export default function ScreenplayPlayer({
         </div>
       </div>
       
-      <div className="border-t border-slate-700 bg-slate-900/95 backdrop-blur-sm p-4">
-        <div className="max-w-3xl mx-auto space-y-3">
+      <div className="border-t border-slate-700 bg-slate-900/95 backdrop-blur-sm p-2 sm:p-4">
+        <div className="max-w-full sm:max-w-3xl mx-auto space-y-2 sm:space-y-3">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-mono text-slate-400 w-12">
+            <span className="text-xs font-mono text-slate-400 w-10 sm:w-12 text-center">
               {formatTime(currentTime)}
             </span>
             <Slider
@@ -253,12 +253,12 @@ export default function ScreenplayPlayer({
               className="flex-1"
               data-testid="slider-playback"
             />
-            <span className="text-xs font-mono text-slate-400 w-12 text-right">
+            <span className="text-xs font-mono text-slate-400 w-10 sm:w-12 text-right">
               {formatTime(duration)}
             </span>
           </div>
           
-          <div className="flex items-center justify-center gap-2">
+          <div className="flex items-center justify-center gap-1 sm:gap-2">
             <Button
               variant="ghost"
               size="icon"
@@ -273,13 +273,13 @@ export default function ScreenplayPlayer({
               variant="default"
               size="icon"
               onClick={() => onPlayPause(!isPlaying)}
-              className="h-12 w-12 bg-sky-500 hover:bg-sky-600 text-white"
+              className="h-10 w-10 sm:h-12 sm:w-12 bg-sky-500 hover:bg-sky-600 text-white"
               data-testid="button-play-pause"
             >
               {isPlaying ? (
-                <Pause className="h-5 w-5" />
+                <Pause className="h-4 w-4 sm:h-5 sm:w-5" />
               ) : (
-                <Play className="h-5 w-5 ml-0.5" />
+                <Play className="h-4 w-4 sm:h-5 sm:w-5 ml-0.5" />
               )}
             </Button>
             
