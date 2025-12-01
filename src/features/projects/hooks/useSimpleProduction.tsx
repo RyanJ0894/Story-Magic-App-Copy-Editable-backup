@@ -46,7 +46,28 @@ export const useSimpleProduction = () => {
 
       if (response.error) {
         console.error('❌ Groq AI Director error:', response.error);
-        const errorDetail = response.data?.error || response.error?.message || JSON.stringify(response.error);
+        
+        // Try to get detailed error from response context
+        let errorDetail = 'Unknown error';
+        if (response.error.context?.body) {
+          try {
+            const bodyText = await response.error.context.body.text?.() || response.error.context.body;
+            console.error('❌ Error body:', bodyText);
+            errorDetail = bodyText;
+          } catch (e) {
+            console.error('❌ Could not read error body:', e);
+          }
+        }
+        
+        // Also check data for error
+        if (response.data?.error) {
+          errorDetail = response.data.error;
+        }
+        
+        if (errorDetail === 'Unknown error') {
+          errorDetail = response.error?.message || JSON.stringify(response.error);
+        }
+        
         throw new Error(`Groq AI Director error: ${errorDetail}`);
       }
 
