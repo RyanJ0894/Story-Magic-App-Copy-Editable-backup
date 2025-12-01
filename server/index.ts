@@ -43,7 +43,7 @@ async function getResendCredentials() {
 
   return { 
     apiKey: connectionSettings.settings.api_key, 
-    fromEmail: connectionSettings.settings.from_email || 'Story Magic <onboarding@resend.dev>'
+    fromEmail: 'Story Magic <noreply@storymagicapp.net>'
   };
 }
 
