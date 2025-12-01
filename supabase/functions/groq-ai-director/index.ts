@@ -236,6 +236,7 @@ CRITICAL RULES:
 - CRITICAL: You MUST analyze the COMPLETE screenplay from beginning to end.
 - Process EVERY scene in the uploaded script, not just the first few.
 - Continue analyzing until you reach the final scene.
+- IMPORTANT: Include ALL text from the script including action lines, scene descriptions, and parentheticals as NARRATOR entries in the dialogue array. Do NOT skip any content.
 
 KNOWLEDGE BASE - USE ONLY THESE:
 
@@ -268,9 +269,15 @@ SCENE STRUCTURE:
   "dialogue": [
     {
       "line_id": "line_001",
-      "character": "Character Name or Narrator",
-      "text": "dialogue text",
-      "voice_key": "voice_id_from_list_above"
+      "character": "NARRATOR",
+      "text": "Action or scene description text goes here",
+      "voice_key": "narrator_voice_id"
+    },
+    {
+      "line_id": "line_002",
+      "character": "CHARACTER NAME",
+      "text": "Character's spoken dialogue",
+      "voice_key": "character_voice_id"
     }
   ],
   "music": [
@@ -344,11 +351,15 @@ VOLUME GUIDELINES (all values should be 0.0 to 1.0):
 PROCESSING STEPS:
 1. Read script from line 1
 2. Find scene header → create scene object
-3. Extract dialogue until next header
-4. Select appropriate voice for each character
+3. Extract ALL content until next header:
+   - Action/description lines → add as NARRATOR entries in dialogue array
+   - Character dialogue → add as character entries in dialogue array
+   - Parentheticals → include with the dialogue or as NARRATOR
+   - Preserve the order exactly as it appears in the script
+4. Select appropriate voice for each character (use Narrator category voices for NARRATOR entries)
 5. Select music that matches scene mood
 6. Select ambience that matches scene location
-7. Add SFX for specific actions
+7. Add SFX for specific actions mentioned in the script
 8. Repeat until END OF SCRIPT
 
 OUTPUT FORMAT:
