@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { orchestrateAudio, OrchestrationResult } from '@/integrations/supabase/railwayOrchestrator';
+import type { ChunkProgressData } from '../project-chunk.type';
 
 interface ProductionState {
   isProcessing: boolean;
   step: string;
   audioUrl: string | null;
   error: string | null;
+  chunks: ChunkProgressData[];
 }
 
 export const useSimpleProduction = () => {
@@ -15,6 +17,7 @@ export const useSimpleProduction = () => {
     step: '',
     audioUrl: null,
     error: null,
+    chunks: [],
   });
 
   const processProduction = async (script: string, projectId: string): Promise<OrchestrationResult> => {
@@ -23,6 +26,7 @@ export const useSimpleProduction = () => {
       step: 'Sending script to Groq AI Director...',
       audioUrl: null,
       error: null,
+      chunks: [],
     });
 
     try {
@@ -168,11 +172,30 @@ export const useSimpleProduction = () => {
       console.log(`   - AI Director: ${groqResult.processing_time_ms}ms`);
       console.log(`   - Orchestration: ${totalTime - totalAiTime}ms`);
 
+      const convertedChunks: ChunkProgressData[] = (directorJson.scenes || []).map((scene: any, index: number) => ({
+        chunk_id: scene.scene_id || `scene_${index}`,
+        project_id: projectId,
+        scene_title: scene.scene_title || `Scene ${index + 1}`,
+        version: 1,
+        director_notes: scene.director_notes || '',
+        lines: (scene.lines || []).map((line: any) => ({
+          ...line,
+          line_id: line.line_id || `line_${index}_${Math.random().toString(36).slice(2, 8)}`,
+          start: line.start || 0,
+          duration: line.duration || 3,
+          src: line.src || null,
+        })),
+        audio_direction: scene.audio_direction || { music: [], ambience: [], sfx: [] },
+      }));
+
+      console.log('📦 Converted chunks:', convertedChunks.length);
+
       setState({
         isProcessing: false,
-        step: '✅ Complete',
+        step: 'Complete',
         audioUrl: publicUrl,
         error: null,
+        chunks: convertedChunks,
       });
 
       console.log('🎵 Final audio URL:', publicUrl);
@@ -181,13 +204,14 @@ export const useSimpleProduction = () => {
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Unknown error';
       const currentStep = state.step || 'Unknown step';
-      console.error(`❌ Production failed at step "${currentStep}":`, message, err);
+      console.error(`Production failed at step "${currentStep}":`, message, err);
       
       setState({
         isProcessing: false,
-        step: `❌ Failed at: ${currentStep}`,
+        step: `Failed at: ${currentStep}`,
         audioUrl: null,
         error: `${currentStep}\n\n${message}`,
+        chunks: [],
       });
       throw err;
     }

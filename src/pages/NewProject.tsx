@@ -6,23 +6,19 @@ import { ProjectForm } from "@/features/projects/components/ProjectForm";
 import { ProjectFormData } from "@/features/projects/components/ProjectForm/schema";
 import { useAuth } from "@/features/auth/auth";
 import { toast } from "sonner";
-import { ChunkProgress } from "@/features/projects/components/ChunkProgress";
 import ScreenplayPlayer from "@/features/scripts/components/ScreenplayPlayer";
 import AudioPlayer from "@/features/scripts/components/AudioPlayer";
 import { useScriptPlayerControls } from "@/features/scripts/hooks/useScriptPlayerControls";
-import type { ChunkProgressData } from "@/features/projects/project-chunk.type";
 
 export default function NewProject() {
   const navigate = useNavigate();
   const { data: currentUser, isLoading: authLoading } = useAuth();
   const [projectId, setProjectId] = useState<string | null>(null);
-  const [loadedChunks, setLoadedChunks] = useState<ChunkProgressData[]>([]);
-  const [script, setScript] = useState<string>("");
 
   const { createProject, isCreating } = useNewProject();
   const production = useSimpleProduction();
 
-  const duration = loadedChunks.reduce((total, chunk) => {
+  const duration = production.chunks.reduce((total, chunk) => {
     const chunkDuration = chunk.lines.reduce((sum, line) => sum + (line.duration || 0), 0);
     return total + chunkDuration;
   }, 0) || 60;
@@ -39,14 +35,10 @@ export default function NewProject() {
       currentUser: currentUser?.id, 
       authLoading, 
       isCreating, 
-      isProcessing: production.isProcessing 
+      isProcessing: production.isProcessing,
+      chunksLoaded: production.chunks.length,
     });
-  }, [currentUser, authLoading, isCreating, production.isProcessing]);
-
-  const handleChunksChange = (chunks: ChunkProgressData[]) => {
-    console.log('Chunks loaded:', chunks.length);
-    setLoadedChunks(chunks);
-  };
+  }, [currentUser, authLoading, isCreating, production.isProcessing, production.chunks.length]);
 
   const handleProjectSubmit = async (data: ProjectFormData) => {
     if (!currentUser) {
@@ -55,8 +47,6 @@ export default function NewProject() {
     }
 
     try {
-      setScript(data.script);
-      
       const project = await createProject({
         title: data.title,
         script: data.script,
@@ -82,6 +72,7 @@ export default function NewProject() {
           <p>Auth: {authLoading ? 'Loading...' : currentUser ? `${currentUser.id.slice(0, 8)}...` : 'Not logged in'}</p>
           <p>Project ID: {projectId || 'None'}</p>
           <p>Processing: {production.isProcessing ? `Yes - ${production.step}` : 'No'}</p>
+          <p>Chunks: {production.chunks.length}</p>
           {projectId && (
             <a 
               href={`https://supabase.com/dashboard/project/bcuhyyyerxwgkrkbrqbs/logs/edge-functions`}
@@ -103,7 +94,7 @@ export default function NewProject() {
         </div>
       )}
 
-      {production.audioUrl && projectId && (
+      {production.audioUrl && (
         <div className="mb-6 space-y-4">
           <div className="p-4 bg-green-900/20 border border-green-700 rounded-lg">
             <h2 className="font-semibold text-green-300 mb-2">
@@ -128,22 +119,16 @@ export default function NewProject() {
             </div>
           </div>
 
-          <ChunkProgress
-            projectId={projectId}
-            script={script}
-            onChunksChange={handleChunksChange}
-          />
-
-          {loadedChunks.length > 0 && (
+          {production.chunks.length > 0 && (
             <>
               <AudioPlayer
-                chunks={loadedChunks}
+                chunks={production.chunks}
                 currentTime={currentTime}
                 isPlaying={isPlaying}
               />
               
               <ScreenplayPlayer
-                chunks={loadedChunks}
+                chunks={production.chunks}
                 currentTime={currentTime}
                 isPlaying={isPlaying}
                 duration={duration}
