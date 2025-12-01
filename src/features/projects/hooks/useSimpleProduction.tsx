@@ -36,42 +36,42 @@ export const useSimpleProduction = () => {
 
       setState(prev => ({ ...prev, step: 'Processing script with Groq LPU (ultra-fast AI)...' }));
 
-      const response = await supabase.functions.invoke('groq-ai-director', {
-        body: { project_id: projectId, script },
+      // Use fetch directly to get better error messages
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const fetchResponse = await fetch(`${supabaseUrl}/functions/v1/groq-ai-director`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ project_id: projectId, script }),
       });
 
       const groqElapsed = Date.now() - startTime;
       console.log(`⚡ Groq AI Director response in ${groqElapsed}ms`);
-      console.log('📥 Full response:', JSON.stringify(response, null, 2));
 
-      if (response.error) {
-        console.error('❌ Groq AI Director error:', response.error);
-        
-        // Try to get detailed error from response context
-        let errorDetail = 'Unknown error';
-        if (response.error.context?.body) {
-          try {
-            const bodyText = await response.error.context.body.text?.() || response.error.context.body;
-            console.error('❌ Error body:', bodyText);
-            errorDetail = bodyText;
-          } catch (e) {
-            console.error('❌ Could not read error body:', e);
-          }
+      const responseText = await fetchResponse.text();
+      console.log('📥 Response status:', fetchResponse.status);
+      console.log('📥 Response body:', responseText);
+
+      if (!fetchResponse.ok) {
+        console.error('❌ Groq AI Director error:', responseText);
+        let errorMessage = `HTTP ${fetchResponse.status}`;
+        try {
+          const errorJson = JSON.parse(responseText);
+          errorMessage = errorJson.error || errorJson.message || responseText;
+        } catch {
+          errorMessage = responseText || `HTTP ${fetchResponse.status}`;
         }
-        
-        // Also check data for error
-        if (response.data?.error) {
-          errorDetail = response.data.error;
-        }
-        
-        if (errorDetail === 'Unknown error') {
-          errorDetail = response.error?.message || JSON.stringify(response.error);
-        }
-        
-        throw new Error(`Groq AI Director error: ${errorDetail}`);
+        throw new Error(`Groq AI Director error: ${errorMessage}`);
       }
 
-      const groqResult = response.data;
+      let groqResult;
+      try {
+        groqResult = JSON.parse(responseText);
+      } catch {
+        throw new Error('Failed to parse Groq AI Director response');
+      }
       if (!groqResult?.success) {
         console.error('❌ Groq AI Director failed:', groqResult);
         throw new Error(groqResult?.error || 'Groq AI Director returned unsuccessful response');
