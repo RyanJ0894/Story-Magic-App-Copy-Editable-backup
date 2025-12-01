@@ -36,18 +36,21 @@ export const useSimpleProduction = () => {
 
       setState(prev => ({ ...prev, step: 'Processing script with Groq LPU (ultra-fast AI)...' }));
 
-      const { data: groqResult, error: groqError } = await supabase.functions.invoke('groq-ai-director', {
+      const response = await supabase.functions.invoke('groq-ai-director', {
         body: { project_id: projectId, script },
       });
 
       const groqElapsed = Date.now() - startTime;
       console.log(`⚡ Groq AI Director response in ${groqElapsed}ms`);
+      console.log('📥 Full response:', JSON.stringify(response, null, 2));
 
-      if (groqError) {
-        console.error('❌ Groq AI Director error:', groqError);
-        throw new Error(`Groq AI Director error: ${groqError.message || JSON.stringify(groqError)}`);
+      if (response.error) {
+        console.error('❌ Groq AI Director error:', response.error);
+        const errorDetail = response.data?.error || response.error?.message || JSON.stringify(response.error);
+        throw new Error(`Groq AI Director error: ${errorDetail}`);
       }
 
+      const groqResult = response.data;
       if (!groqResult?.success) {
         console.error('❌ Groq AI Director failed:', groqResult);
         throw new Error(groqResult?.error || 'Groq AI Director returned unsuccessful response');
