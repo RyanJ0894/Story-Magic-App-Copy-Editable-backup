@@ -23,33 +23,78 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const systemPrompt = `You are an AI Film Director. Analyze the script and return ONLY a valid JSON array. For any script provided, create exactly ONE scene that contains the complete narrative:
+    const systemPrompt = `You are an AI Film Director analyzing screenplays. Your job is to preserve the screenplay structure and output it as a structured JSON array where EACH line of dialogue or action becomes its own entry.
 
+OUTPUT FORMAT - Return ONLY a valid JSON array with this structure:
 [
   {
     "scene_id": 1,
+    "line_id": 1,
+    "type": "scene_heading",
+    "character": null,
+    "text": "INT. COFFEE SHOP - DAY",
+    "voice_key": null,
+    "voice_style": null,
+    "mood": "establishing",
+    "estimated_duration_seconds": 0
+  },
+  {
+    "scene_id": 1,
+    "line_id": 2,
+    "type": "action",
     "character": "NARRATOR",
-    "dialogue": "[Complete script content converted to narrative form - include all dialogue, action, and scene descriptions as one flowing story]",
-    "voice_style": "Cinematic, dramatic",
-    "mood": "Appropriate to the script's tone",
-    "background_ambiance": "Sound effects matching the scene",
-    "background_music": "Musical underscore matching the mood",
-    "mixing_parameters": {
-      "voiceVolume": 0.8,
-      "ambianceVolume": 0.4,
-      "musicVolume": 0.3,
-      "crossfadeDuration": 2.0
-    }
+    "text": "A busy coffee shop. Customers chat quietly.",
+    "voice_key": "narrator",
+    "voice_style": "Calm, descriptive",
+    "mood": "ambient",
+    "estimated_duration_seconds": 3
+  },
+  {
+    "scene_id": 1,
+    "line_id": 3,
+    "type": "dialogue",
+    "character": "SARAH",
+    "text": "I can't believe you're actually here.",
+    "voice_key": "sarah",
+    "voice_style": "Surprised, emotional",
+    "mood": "surprised",
+    "estimated_duration_seconds": 2
+  },
+  {
+    "scene_id": 1,
+    "line_id": 4,
+    "type": "dialogue",
+    "character": "MIKE",
+    "text": "I promised I'd come back, didn't I?",
+    "voice_key": "mike",
+    "voice_style": "Warm, sincere",
+    "mood": "heartfelt",
+    "estimated_duration_seconds": 2
   }
 ]
 
+LINE TYPES:
+- "scene_heading": For INT./EXT. scene headers (no voice needed)
+- "action": For action/description lines (use NARRATOR character with voice_key "narrator")
+- "dialogue": For character dialogue (preserve the character name, create a unique voice_key)
+- "transition": For FADE IN, CUT TO, etc. (no voice needed)
+- "parenthetical": For parentheticals like (whispering) (no voice, just metadata)
+
+VOICE_KEY RULES:
+- Create a unique, lowercase voice_key for each character (e.g., "sarah", "mike", "detective_jones")
+- Use "narrator" for all action/description lines
+- voice_key should be consistent for the same character throughout
+- Set to null for scene_heading and transition types
+
 CRITICAL RULES:
-- Return ONLY the JSON array, no other text or markdown
-- Create exactly ONE scene object (scene_id: 1)
-- Convert the entire script into a single flowing narrative dialogue
-- Use NARRATOR as the character for everything
-- Include all character dialogue and actions in the narrative
-- Choose appropriate voice_style, mood, background_ambiance, and background_music`;
+1. Return ONLY the JSON array, no markdown or extra text
+2. Preserve EVERY line from the screenplay - do not summarize or combine
+3. Each dialogue line should be its own entry
+4. Each action/description paragraph should be its own entry
+5. Keep the original character names exactly as written
+6. Estimate duration based on text length (roughly 150 words per minute speaking rate)
+7. Increment scene_id when you encounter a new INT./EXT. scene heading
+8. line_id should be unique and sequential across the entire script`;
 
     const startTime = Date.now();
     
@@ -78,11 +123,11 @@ CRITICAL RULES:
             },
             {
               role: 'user',
-              content: `Analyze this script excerpt and return the JSON array:\n\n${script}`
+              content: `Analyze this screenplay and return the structured JSON array preserving each line:\n\n${script}`
             }
           ],
-          temperature: 0.3,
-          max_tokens: 4000
+          temperature: 0.2,
+          max_tokens: 8000
         })
       });
     } else if (openaiApiKey) {
@@ -104,11 +149,11 @@ CRITICAL RULES:
             },
             {
               role: 'user',
-              content: `Analyze this script excerpt and return the JSON array:\n\n${script}`
+              content: `Analyze this screenplay and return the structured JSON array preserving each line:\n\n${script}`
             }
           ],
-          temperature: 0.3,
-          max_tokens: 4000
+          temperature: 0.2,
+          max_tokens: 8000
         })
       });
     } else {
@@ -139,18 +184,14 @@ CRITICAL RULES:
       directorJson = [
         {
           scene_id: 1,
+          line_id: 1,
+          type: "action",
           character: "NARRATOR",
-          dialogue: "Script analysis in progress. The system is processing your screenplay.",
+          text: "Script analysis in progress. The system is processing your screenplay.",
+          voice_key: "narrator",
           voice_style: "Professional, clear",
           mood: "Informative",
-          background_ambiance: "Quiet studio",
-          background_music: "None",
-          mixing_parameters: {
-            voiceVolume: 0.8,
-            ambianceVolume: 0.1,
-            musicVolume: 0.0,
-            crossfadeDuration: 1.0
-          }
+          estimated_duration_seconds: 3
         }
       ];
     }
@@ -160,30 +201,41 @@ CRITICAL RULES:
       directorJson = [
         {
           scene_id: 1,
+          line_id: 1,
+          type: "action",
           character: "NARRATOR",
-          dialogue: "Script analysis completed. Please review the processed content.",
+          text: "Script analysis completed. Please review the processed content.",
+          voice_key: "narrator",
           voice_style: "Professional, clear",
           mood: "Informative",
-          background_ambiance: "Quiet studio",
-          background_music: "None",
-          mixing_parameters: {
-            voiceVolume: 0.8,
-            ambianceVolume: 0.1,
-            musicVolume: 0.0,
-            crossfadeDuration: 1.0
-          }
+          estimated_duration_seconds: 3
         }
       ];
     }
 
-    const scenesWithStatus = directorJson.map((scene: any, index: number) => ({
-      ...scene,
-      scene_id: scene.scene_id || index + 1,
+    const linesWithStatus = directorJson.map((line: any, index: number) => ({
+      ...line,
+      scene_id: line.scene_id || 1,
+      line_id: line.line_id || index + 1,
+      type: line.type || 'dialogue',
       status: 'pending'
     }));
 
+    const uniqueCharacters = [...new Set(
+      linesWithStatus
+        .filter((l: any) => l.character && l.character !== 'NARRATOR')
+        .map((l: any) => l.character)
+    )];
+    
+    const voiceAssignments: Record<string, string> = {};
+    linesWithStatus.forEach((line: any) => {
+      if (line.voice_key && line.character) {
+        voiceAssignments[line.character] = line.voice_key;
+      }
+    });
+
     const { error: updateError } = await supabase.from('user_projects').update({
-      ai_director_json: scenesWithStatus,
+      ai_director_json: linesWithStatus,
       script: script
     }).eq('id', project_id);
 
@@ -193,11 +245,16 @@ CRITICAL RULES:
     }
 
     console.log(`Successfully analyzed script for project ${project_id} using ${providerUsed} in ${processingTime}ms`);
+    console.log(`Found ${uniqueCharacters.length} unique characters: ${uniqueCharacters.join(', ')}`);
+    console.log(`Total lines: ${linesWithStatus.length}`);
 
     return new Response(JSON.stringify({
       success: true,
-      scene_count: scenesWithStatus.length,
-      director_json: scenesWithStatus,
+      line_count: linesWithStatus.length,
+      character_count: uniqueCharacters.length,
+      characters: uniqueCharacters,
+      voice_assignments: voiceAssignments,
+      director_json: linesWithStatus,
       provider: providerUsed,
       processing_time_ms: processingTime
     }), {
