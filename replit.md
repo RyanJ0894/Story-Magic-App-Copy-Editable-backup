@@ -72,8 +72,12 @@ Preferred communication style: Simple, everyday language.
 **Audio Direction System:**
 - Scripts are parsed and divided into "chunks" (scenes)
 - Each chunk contains lines (dialogue/narration) and audio direction (music, ambience, SFX)
-- AI Director analyzes script and generates timing, voice assignments, and audio cues
-- Audio tracks are generated separately and mixed client-side or server-side
+- AI Director (groq-ai-director) analyzes script and generates structured scene data with:
+  - Per-line dialogue arrays with character, text, and voice_key assignments
+  - Music, ambience, and SFX cues per scene
+- Railway Orchestrator generates audio and returns manifest with scene-level timing (offset, duration)
+- ScreenplayPlayer synchronizes text highlighting with audio using manifest timing
+- Per-line timing within scenes is proportionally distributed based on text length
 
 **FFmpeg Integration:** Client-side FFmpeg (via @ffmpeg/ffmpeg) for audio processing, mixing, and format conversion in the browser.
 
