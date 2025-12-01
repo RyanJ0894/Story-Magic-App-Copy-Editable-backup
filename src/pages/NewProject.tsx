@@ -131,9 +131,9 @@ export default function NewProject() {
             onEnded={handleEnded}
           />
           
-          {production.originalScript && (
+          {production.chunks.length > 0 && (
             <ScreenplayPlayer
-              scriptText={production.originalScript}
+              chunks={production.chunks}
               currentTime={currentTime}
               isPlaying={isPlaying}
               duration={duration}

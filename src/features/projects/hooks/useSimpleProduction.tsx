@@ -177,51 +177,96 @@ export const useSimpleProduction = () => {
 
       const scenesArray = Array.isArray(directorJson) ? directorJson : (directorJson.scenes || []);
       
-      const convertedChunks: ChunkProgressData[] = scenesArray.map((scene: any, index: number) => {
-        const sceneDialogue = scene.dialogue || scene.text || '';
-        const sceneCharacter = scene.character || 'NARRATOR';
+      const manifestOrder = result.manifest?.order || [];
+      const manifestMap = new Map(manifestOrder.map((m: any) => [m.scene_id, m]));
+      
+      let fallbackCumulativeTime = 0;
+      
+      const convertedChunks: ChunkProgressData[] = scenesArray.map((scene: any, sceneIndex: number) => {
+        const sceneDialogue = scene.dialogue || [];
+        const sceneId = scene.scene_id || `scene_${sceneIndex + 1}`;
         
-        const estimatedDuration = Math.max(3, Math.ceil(sceneDialogue.length / 15));
-        const sceneStart = index * estimatedDuration;
+        const manifestTiming = manifestMap.get(sceneId);
+        const sceneOffset = manifestTiming?.offset ?? fallbackCumulativeTime;
+        const sceneDurationFromManifest = manifestTiming?.duration ?? 0;
+        
+        const sceneLines = Array.isArray(sceneDialogue) ? sceneDialogue.map((line: any, lineIndex: number) => {
+          const lineText = line.text || '';
+          const lineCharacter = line.character || 'NARRATOR';
+          
+          const isNarrator = lineCharacter.toUpperCase() === 'NARRATOR';
+          const lineType = isNarrator ? 'action' : 'dialogue';
+          
+          const totalCharsInScene = sceneDialogue.reduce((sum: number, l: any) => sum + (l.text?.length || 0), 0);
+          const lineWeight = lineText.length / Math.max(totalCharsInScene, 1);
+          const lineDuration = sceneDurationFromManifest > 0 
+            ? lineWeight * sceneDurationFromManifest 
+            : Math.max(2, Math.ceil(lineText.length / 15));
+          
+          const priorChars = sceneDialogue.slice(0, lineIndex).reduce((sum: number, l: any) => sum + (l.text?.length || 0), 0);
+          const priorWeight = priorChars / Math.max(totalCharsInScene, 1);
+          const lineStart = sceneOffset + (sceneDurationFromManifest > 0 ? priorWeight * sceneDurationFromManifest : fallbackCumulativeTime - sceneOffset);
+          
+          if (!manifestTiming) {
+            fallbackCumulativeTime += lineDuration;
+          }
+          
+          return {
+            line_id: line.line_id || `line_${sceneIndex}_${lineIndex}`,
+            type: lineType as 'action' | 'dialogue',
+            text: lineText,
+            character: lineCharacter,
+            voice_key: line.voice_key || null,
+            tts_settings: {
+              character: lineCharacter,
+              voice_style: line.voice_style || 'Natural',
+            },
+            start: lineStart,
+            duration: lineDuration,
+            src: null,
+            volume: 0.8,
+          };
+        }) : [];
+        
+        const computedSceneDuration = sceneLines.reduce((sum, line) => sum + line.duration, 0);
+        const finalSceneDuration = sceneDurationFromManifest > 0 ? sceneDurationFromManifest : computedSceneDuration;
+        
+        if (!manifestTiming) {
+          fallbackCumulativeTime = sceneOffset + finalSceneDuration;
+        }
         
         return {
-          chunk_id: String(scene.scene_id || `scene_${index + 1}`),
+          chunk_id: String(sceneId),
           project_id: projectId,
-          scene_title: `Scene ${scene.scene_id || index + 1}`,
+          scene_title: scene.scene_id || `Scene ${sceneIndex + 1}`,
           version: 1,
-          director_notes: scene.voice_style || scene.mood || '',
-          lines: [{
-            line_id: `line_${scene.scene_id || index + 1}`,
-            type: 'dialogue',
-            text: sceneDialogue,
-            character: sceneCharacter,
-            tts_settings: {
-              character: sceneCharacter,
-              voice_style: scene.voice_style || 'Natural',
-            },
-            start: sceneStart,
-            duration: estimatedDuration,
-            src: null,
-            volume: scene.mixing_parameters?.voiceVolume || 0.8,
-          }],
+          director_notes: scene.mood || '',
+          lines: sceneLines,
           audio_direction: {
-            music: scene.background_music ? [{
-              track_id: `music_${index}`,
-              name: scene.background_music,
-              start: sceneStart,
-              duration: estimatedDuration,
-              volume: scene.mixing_parameters?.musicVolume || 0.3,
+            music: scene.music?.map((m: any, idx: number) => ({
+              track_id: m.track_id || `music_${sceneIndex}_${idx}`,
+              name: m.track_id || '',
+              start: sceneOffset,
+              duration: finalSceneDuration,
+              volume: m.volume || 0.25,
               src: null,
-            }] : [],
-            ambience: scene.background_ambiance ? [{
-              track_id: `ambience_${index}`,
-              name: scene.background_ambiance,
-              start: sceneStart,
-              duration: estimatedDuration,
-              volume: scene.mixing_parameters?.ambianceVolume || 0.4,
+            })) || [],
+            ambience: scene.ambience?.map((a: any, idx: number) => ({
+              track_id: a.track_id || `ambience_${sceneIndex}_${idx}`,
+              name: a.track_id || '',
+              start: sceneOffset,
+              duration: finalSceneDuration,
+              volume: a.volume || 0.28,
               src: null,
-            }] : [],
-            sfx: [],
+            })) || [],
+            sfx: scene.sfx?.map((s: any, idx: number) => ({
+              track_id: s.track_id || `sfx_${sceneIndex}_${idx}`,
+              name: s.track_id || '',
+              start: sceneOffset + (s.at || 0),
+              duration: 2,
+              volume: s.volume || 0.5,
+              src: null,
+            })) || [],
           },
         };
       });

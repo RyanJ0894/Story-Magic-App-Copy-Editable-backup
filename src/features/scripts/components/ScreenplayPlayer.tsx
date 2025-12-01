@@ -2,9 +2,10 @@ import { useRef, useEffect, useMemo } from 'react';
 import { Play, Pause, SkipBack, SkipForward } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
+import type { ChunkProgressData } from '@/features/projects/project-chunk.type';
 
 interface ScreenplayPlayerProps {
-  scriptText: string;
+  chunks: ChunkProgressData[];
   currentTime: number;
   isPlaying: boolean;
   duration: number;
@@ -12,14 +13,16 @@ interface ScreenplayPlayerProps {
   onPlayPause: (playing: boolean) => void;
 }
 
-interface ScriptLine {
+interface DisplayLine {
   id: string;
-  type: 'scene_heading' | 'action' | 'character' | 'dialogue' | 'parenthetical' | 'transition';
+  type: 'scene_heading' | 'character' | 'dialogue' | 'action';
   text: string;
   character?: string;
+  voice_key?: string;
   start: number;
   duration: number;
   end: number;
+  sceneId: string;
 }
 
 function formatTime(seconds: number): string {
@@ -28,101 +31,75 @@ function formatTime(seconds: number): string {
   return `${mins}:${secs.toString().padStart(2, '0')}`;
 }
 
-function parseScreenplay(scriptText: string, totalDuration: number): ScriptLine[] {
-  if (!scriptText || !scriptText.trim()) {
-    return [];
-  }
-
-  const rawLines = scriptText.split('\n');
-  
-  const sceneHeadingPattern = /^(INT\.|EXT\.|INT\/EXT\.|I\/E\.).*$/i;
-  const transitionPattern = /^(FADE IN:|FADE OUT:|CUT TO:|DISSOLVE TO:|SMASH CUT:|MATCH CUT:).*$/i;
-  const characterPattern = /^[A-Z][A-Z\s\.']+(\s*\([^)]+\))?$/;
-  const parentheticalPattern = /^\([^)]+\)$/;
-  
-  let currentCharacter = '';
-  let lastLineWasCharacter = false;
-  
-  const parsedLines: { type: string; text: string; character?: string; charWeight: number }[] = [];
-  
-  for (let i = 0; i < rawLines.length; i++) {
-    const line = rawLines[i].trim();
-    
-    if (!line) {
-      lastLineWasCharacter = false;
-      continue;
-    }
-    
-    if (sceneHeadingPattern.test(line)) {
-      parsedLines.push({ type: 'scene_heading', text: line, charWeight: 0 });
-      currentCharacter = '';
-      lastLineWasCharacter = false;
-    } else if (transitionPattern.test(line)) {
-      parsedLines.push({ type: 'transition', text: line, charWeight: 0 });
-      lastLineWasCharacter = false;
-    } else if (parentheticalPattern.test(line) && currentCharacter) {
-      parsedLines.push({ type: 'parenthetical', text: line, character: currentCharacter, charWeight: 0 });
-      lastLineWasCharacter = false;
-    } else if (characterPattern.test(line) && line.length < 40) {
-      const charName = line.replace(/\s*\([^)]+\)$/, '').trim();
-      if (charName.length > 1 && !charName.startsWith('(')) {
-        currentCharacter = charName;
-        parsedLines.push({ type: 'character', text: charName, character: charName, charWeight: 0 });
-        lastLineWasCharacter = true;
-      }
-    } else if (lastLineWasCharacter || currentCharacter) {
-      parsedLines.push({ type: 'dialogue', text: line, character: currentCharacter, charWeight: line.length });
-      lastLineWasCharacter = false;
-    } else {
-      parsedLines.push({ type: 'action', text: line, charWeight: line.length });
-      lastLineWasCharacter = false;
-    }
-  }
-  
-  const totalWeight = parsedLines.reduce((sum, l) => sum + l.charWeight, 0);
-  
-  if (totalWeight === 0) {
-    return parsedLines.map((line, index) => ({
-      id: `line_${index}`,
-      type: line.type as ScriptLine['type'],
-      text: line.text,
-      character: line.character,
-      start: 0,
-      duration: 0,
-      end: 0,
-    }));
-  }
-  
-  const effectiveDuration = Math.max(totalDuration, 1);
-  
-  const lines: ScriptLine[] = [];
-  let currentTime = 0;
+function extractDisplayLines(chunks: ChunkProgressData[]): DisplayLine[] {
+  const lines: DisplayLine[] = [];
   let lineIndex = 0;
+  let lastCharacter = '';
+  let lastSceneId = '';
   
-  for (const parsedLine of parsedLines) {
-    const lineStart = currentTime;
-    const lineDuration = parsedLine.charWeight > 0 
-      ? (parsedLine.charWeight / totalWeight) * effectiveDuration
-      : 0;
+  for (const chunk of chunks) {
+    const sceneId = chunk.chunk_id || chunk.scene_title;
     
-    lines.push({
-      id: `line_${lineIndex++}`,
-      type: parsedLine.type as ScriptLine['type'],
-      text: parsedLine.text,
-      character: parsedLine.character,
-      start: lineStart,
-      duration: lineDuration,
-      end: lineStart + lineDuration,
-    });
+    if (sceneId !== lastSceneId) {
+      const firstLine = chunk.lines?.[0];
+      const sceneStart = firstLine?.start ?? 0;
+      
+      lines.push({
+        id: `scene_heading_${lineIndex++}`,
+        type: 'scene_heading',
+        text: chunk.scene_title || `Scene ${sceneId.replace('scene_', '')}`,
+        start: sceneStart,
+        duration: 0,
+        end: sceneStart,
+        sceneId: sceneId,
+      });
+      lastSceneId = sceneId;
+      lastCharacter = '';
+    }
     
-    currentTime += lineDuration;
+    if (!chunk.lines) continue;
+    
+    for (const line of chunk.lines) {
+      const lineStart = line.start ?? 0;
+      const lineDuration = line.duration ?? 2;
+      const lineEnd = lineStart + lineDuration;
+      const lineCharacter = line.character || 'NARRATOR';
+      const lineType = line.type || (lineCharacter.toUpperCase() === 'NARRATOR' ? 'action' : 'dialogue');
+      
+      if (lineCharacter !== lastCharacter && lineCharacter.toUpperCase() !== 'NARRATOR') {
+        lines.push({
+          id: `character_${lineIndex++}`,
+          type: 'character',
+          text: lineCharacter,
+          character: lineCharacter,
+          voice_key: line.voice_key,
+          start: lineStart,
+          duration: 0,
+          end: lineStart,
+          sceneId: sceneId,
+        });
+        lastCharacter = lineCharacter;
+      }
+      
+      lines.push({
+        id: `line_${lineIndex++}`,
+        type: lineType as 'action' | 'dialogue',
+        text: line.text || '',
+        character: lineCharacter,
+        voice_key: line.voice_key,
+        start: lineStart,
+        duration: lineDuration,
+        end: lineEnd,
+        sceneId: sceneId,
+      });
+    }
   }
   
   return lines;
 }
 
 export default function ScreenplayPlayer({
-  scriptText,
+  chunks,
   currentTime,
   isPlaying,
   duration,
@@ -132,19 +109,29 @@ export default function ScreenplayPlayer({
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const activeLineRef = useRef<HTMLDivElement>(null);
   
-  const scriptLines = useMemo(() => parseScreenplay(scriptText, duration), [scriptText, duration]);
+  const displayLines = useMemo(() => extractDisplayLines(chunks), [chunks]);
   
   const currentLineId = useMemo(() => {
-    for (let i = scriptLines.length - 1; i >= 0; i--) {
-      const line = scriptLines[i];
+    for (let i = displayLines.length - 1; i >= 0; i--) {
+      const line = displayLines[i];
       if (line.type === 'dialogue' || line.type === 'action') {
         if (currentTime >= line.start && currentTime < line.end) {
           return line.id;
         }
       }
     }
+    
+    for (let i = 0; i < displayLines.length; i++) {
+      const line = displayLines[i];
+      if (line.type === 'dialogue' || line.type === 'action') {
+        if (currentTime < line.end) {
+          return line.id;
+        }
+      }
+    }
+    
     return null;
-  }, [scriptLines, currentTime]);
+  }, [displayLines, currentTime]);
   
   useEffect(() => {
     if (activeLineRef.current && scrollContainerRef.current && isPlaying) {
@@ -176,13 +163,12 @@ export default function ScreenplayPlayer({
     onSeek(Math.min(duration, currentTime + 10));
   };
   
-  const getLineClassName = (line: ScriptLine): string => {
+  const getLineClassName = (line: DisplayLine): string => {
     const baseClasses = 'transition-all duration-200';
     const isActive = line.id === currentLineId;
-    const isCharacterOfActive = line.type === 'character' && 
-      scriptLines.find(l => l.id === currentLineId)?.character === line.character &&
-      scriptLines.findIndex(l => l.id === line.id) === 
-      scriptLines.findIndex(l => l.id === currentLineId) - 1;
+    
+    const currentActiveCharacter = displayLines.find(l => l.id === currentLineId)?.character;
+    const isCharacterOfActive = line.type === 'character' && currentActiveCharacter === line.character;
     
     switch (line.type) {
       case 'scene_heading':
@@ -205,10 +191,6 @@ export default function ScreenplayPlayer({
             ? 'bg-amber-500/20 text-amber-200 px-2 py-1 -mx-2 rounded' 
             : 'text-foreground/90'
         }`;
-      case 'parenthetical':
-        return `${baseClasses} font-mono text-sm italic ml-[30%] text-muted-foreground mb-1`;
-      case 'transition':
-        return `${baseClasses} font-mono text-sm uppercase text-right text-muted-foreground mt-6 mb-6`;
       default:
         return `${baseClasses} font-mono text-sm`;
     }
@@ -224,13 +206,14 @@ export default function ScreenplayPlayer({
         }}
       >
         <div className="max-w-2xl mx-auto">
-          {scriptLines.length === 0 ? (
+          {displayLines.length === 0 ? (
             <div className="text-center text-muted-foreground py-12">
               <p>No script content to display</p>
             </div>
           ) : (
-            scriptLines.map((line, index) => {
+            displayLines.map((line) => {
               const isActive = line.id === currentLineId;
+              const isClickable = line.type === 'dialogue' || line.type === 'action';
               
               return (
                 <div
@@ -238,12 +221,12 @@ export default function ScreenplayPlayer({
                   ref={isActive ? activeLineRef : null}
                   className={getLineClassName(line)}
                   onClick={() => {
-                    if (line.type === 'dialogue' || line.type === 'action') {
+                    if (isClickable) {
                       onSeek(line.start);
                     }
                   }}
                   style={{
-                    cursor: (line.type === 'dialogue' || line.type === 'action') ? 'pointer' : 'default',
+                    cursor: isClickable ? 'pointer' : 'default',
                   }}
                   data-testid={`screenplay-line-${line.id}`}
                 >
@@ -264,7 +247,7 @@ export default function ScreenplayPlayer({
             <Slider
               value={[currentTime]}
               min={0}
-              max={duration}
+              max={duration || 1}
               step={0.1}
               onValueChange={handleSliderChange}
               className="flex-1"
