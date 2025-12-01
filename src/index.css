@@ -48,3 +48,27 @@
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  .screenplay-scroll {
+    scroll-behavior: smooth;
+  }
+  
+  .screenplay-scroll::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  .screenplay-scroll::-webkit-scrollbar-track {
+    background: hsl(var(--muted));
+    border-radius: 4px;
+  }
+  
+  .screenplay-scroll::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground) / 0.3);
+    border-radius: 4px;
+  }
+  
+  .screenplay-scroll::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.5);
+  }
+}
