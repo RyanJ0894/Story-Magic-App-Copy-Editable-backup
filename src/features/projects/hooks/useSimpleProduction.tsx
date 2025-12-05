@@ -41,17 +41,17 @@ export const useSimpleProduction = () => {
       
       const startTime = Date.now();
 
-      setState(prev => ({ ...prev, step: 'Processing script with Groq LPU (ultra-fast AI)...' }));
+      setState(prev => ({ ...prev, step: 'Processing script with Director Agent ...' }));
 
       // Use fetch directly to get better error messages
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const fetchResponse = await fetch(`${supabaseUrl}/functions/v1/groq-ai-director`, {
+      const fetchResponse = await fetch(`https://story-magic-director-agent-production.up.railway.app/generate-scenes`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${session.access_token}`,
         },
-        body: JSON.stringify({ project_id: projectId, script }),
+        body: JSON.stringify({ project_id: projectId, script_text:script }),
       });
 
       const groqElapsed = Date.now() - startTime;
@@ -86,7 +86,7 @@ export const useSimpleProduction = () => {
 
       console.log('✅ Groq AI Director completed:', {
         scene_count: groqResult.scene_count,
-        processing_time_ms: groqResult.processing_time_ms,
+        processing_time_ms: groqResult.processing_time,
       });
 
       setState(prev => ({ ...prev, step: 'Retrieving Director JSON...' }));

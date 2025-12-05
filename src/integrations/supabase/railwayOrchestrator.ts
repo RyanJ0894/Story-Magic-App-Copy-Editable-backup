@@ -1,7 +1,7 @@
 // Railway Orchestrator API Integration
 // Handles communication with the Story Magic backend
 
-const RAILWAY_ORCHESTRATOR_URL = import.meta.env.VITE_RAILWAY_ORCHESTRATOR_URL || 'https://web-production-7c7a9.up.railway.app';
+const RAILWAY_ORCHESTRATOR_URL = import.meta.env.VITE_RAILWAY_ORCHESTRATOR_URL || 'https://web-production-75057.up.railway.app';
 
 export interface DirectorJSON {
   project_id: string;
