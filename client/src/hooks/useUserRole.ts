@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../../supabase/client';
+import { supabase } from '../../../supabase/client';
 import { type UserRole, type UserProfile } from '@/types/roles';
 import { useToast } from '@/hooks/use-toast';
 

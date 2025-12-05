@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Shield } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "../../../supabase/client";
+import { supabase } from "../../../../supabase/client";
 
 interface RoleDebugPanelProps {
   profile: any;
