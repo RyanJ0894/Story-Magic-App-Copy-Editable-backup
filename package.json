@@ -5,7 +5,7 @@
     "type": "module",
     "scripts": {
         "dev": "tsx watch --ignore 'vite.config.ts*' --clear-screen=false server/index.ts",
-        "build": "vite build --outDir dist/public",
+        "build": "vite build --outDir dist",
         "start": "NODE_ENV=production tsx server/index.ts",
         "lint": "eslint .",
         "db:push": "drizzle-kit push",
