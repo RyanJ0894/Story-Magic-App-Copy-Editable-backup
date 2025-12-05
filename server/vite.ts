@@ -27,7 +27,7 @@ export async function setupVite(app: Express, server: Server) {
       hmr: { server },
     },
     appType: "custom",
-    root: path.resolve(__dirname, "../client"),
+    root: path.resolve(__dirname, ".."),
   });
 
   app.use(vite.middlewares);
@@ -35,8 +35,8 @@ export async function setupVite(app: Express, server: Server) {
     const url = req.originalUrl;
 
     try {
-      const clientIndexPath = path.resolve(__dirname, "../client/index.html");
-      let template = fs.readFileSync(clientIndexPath, "utf-8");
+      const indexPath = path.resolve(__dirname, "../index.html");
+      let template = fs.readFileSync(indexPath, "utf-8");
       template = await vite.transformIndexHtml(url, template);
 
       res.status(200).set({ "Content-Type": "text/html" }).end(template);
@@ -48,7 +48,7 @@ export async function setupVite(app: Express, server: Server) {
 }
 
 export function serveStatic(app: Express) {
-  const distPath = path.resolve(__dirname, "../dist/public");
+  const distPath = path.resolve(__dirname, "../dist");
 
   if (!fs.existsSync(distPath)) {
     log(`Warning: Build directory not found: ${distPath}`);
