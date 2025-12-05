@@ -5,9 +5,10 @@ import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
-  server: {
-    host: "0.0.0.0",
-    port: 5000,
+  root: path.resolve(__dirname, "client"),
+  build: {
+    outDir: path.resolve(__dirname, "dist/public"),
+    emptyOutDir: true,
   },
   plugins: [
     react(),
@@ -16,15 +17,11 @@ export default defineConfig(({ mode }) => ({
   ].filter(Boolean),
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./src"),
+      "@": path.resolve(__dirname, "./client/src"),
+      "@shared": path.resolve(__dirname, "./shared"),
     },
   },
   optimizeDeps: {
     include: ['pdfjs-dist'],
-  },
-  build: {
-    rollupOptions: {
-      external: [],
-    },
   },
 }));

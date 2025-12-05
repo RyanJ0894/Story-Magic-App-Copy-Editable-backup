@@ -9,8 +9,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 console.log('🚀 main.tsx: Starting app initialization');
 
 // Initialize integrations (no top-level await needed)
-import "../supabase/client.ts";
-import "../supabase/filmDirectorApi";
+import "@/integrations/supabase/client";
+import "@/integrations/supabase/filmDirectorApi";
 
 const rootElement = document.getElementById("root");
 console.log('🎯 main.tsx: Root element found:', !!rootElement);
