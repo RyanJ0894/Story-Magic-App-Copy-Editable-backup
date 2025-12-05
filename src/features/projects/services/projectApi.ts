@@ -1,6 +1,6 @@
 import { CreateProjectData, Project, ProjectWithDetails } from "../project.type";
-import { supabase } from "../../../../../supabase/client";
-import { runDirector } from "../../../../../supabase/filmDirectorApi";
+import { supabase } from "../../../../supabase/client";
+import { runDirector } from "../../../../supabase/filmDirectorApi";
 
 export const projectApi = {
   // Get all projects for current user

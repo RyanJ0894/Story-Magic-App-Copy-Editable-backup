@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { supabase } from '../../../supabase/client'
+import { supabase } from '../../supabase/client'
 import { useToast } from '@/hooks/use-toast'
 
 export interface ElevenLabsVoice {

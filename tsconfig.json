@@ -7,7 +7,7 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./client/src/*"],
+      "@/*": ["src/*"],
       "@shared/*": ["./shared/*"]
     },
     "noImplicitAny": false,
@@ -17,5 +17,5 @@
     "noUnusedLocals": false,
     "strictNullChecks": false
   },
-  "include": ["client/src", "server", "shared"]
+  "include": ["src", "server", "shared"]
 }

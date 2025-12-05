@@ -7,8 +7,8 @@ import { AudioPlayer } from "@/components/feature/AudioPlayer";
 import { FeedbackForm } from "@/components/layout/FeedbackForm";
 import ChunkProgressDemo from "@/components/demo/ChunkProgressDemo";
 import ScriptPlayerDemo from "@/components/demo/ScriptPlayerDemo";
-import { supabase } from "../../../supabase/client";
-import { getDirectorJSON, generateAudio, DirectorJSON } from "../../../supabase/filmDirectorApi";
+import { supabase } from "../../supabase/client";
+import { getDirectorJSON, generateAudio, DirectorJSON } from "../../supabase/filmDirectorApi";
 import { ChunkProgressData } from "@/features/projects/project-chunk.type";
 
 async function selectLatestProjectId(userId: string | null) {

@@ -1,16 +1,15 @@
+
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
 
 export default defineConfig(({ mode }) => ({
-  root: path.resolve(__dirname, "client"),
-
+  // Remove 'root' - use project root
   build: {
-    outDir: path.resolve(__dirname, "dist/public"),
+    outDir: path.resolve(__dirname, "dist"),
     emptyOutDir: true,
   },
-
   server: {
     host: "0.0.0.0",
     port: 5000,
@@ -22,18 +21,16 @@ export default defineConfig(({ mode }) => ({
     },
     allowedHosts: true,
   },
-
-  plugins: [react(), mode === "development" && componentTagger()].filter(
-    Boolean,
-  ),
-
+  plugins: [
+    react(),
+    mode === "development" && componentTagger(),
+  ].filter(Boolean),
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./client/src"),
+      "@": path.resolve(__dirname, "./src"),
       "@shared": path.resolve(__dirname, "./shared"),
     },
   },
-
   optimizeDeps: {
     include: ["pdfjs-dist"],
   },
