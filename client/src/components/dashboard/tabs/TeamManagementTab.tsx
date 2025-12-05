@@ -127,28 +127,29 @@ export function TeamManagementTab({ userRole, permissions }: TeamManagementTabPr
       }
       console.log('Invitation inserted successfully');
 
-      // Call edge function to send email
+      // Call local API to send email using Resend integration
       try {
-        console.log('Calling send-invitation edge function...');
-        const { data: emailResult, error: emailError } = await supabase.functions.invoke('send-invitation', {
-          body: {
+        console.log('Calling local send-invitation API...');
+        const response = await fetch('/api/send-invitation', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
             email: inviteEmail,
             role: inviteRole,
             token: token,
-            inviterName: 'Team Lead'
-          }
+            inviterName: 'Team Lead',
+            origin: window.location.origin
+          })
         });
 
-        if (emailError) {
-          console.error('Email function error:', emailError);
-          throw new Error(`Failed to send invitation email: ${emailError.message}`);
-        }
+        const emailResult = await response.json();
+        console.log('Email API result:', emailResult);
 
-        console.log('Email function result:', emailResult);
-        
-        if (emailResult?.error) {
-          console.error('Email service error:', emailResult.error);
-          throw new Error(`Email delivery failed: ${emailResult.error}`);
+        if (!response.ok || !emailResult.success) {
+          console.error('Email API error:', emailResult.error);
+          throw new Error(emailResult.error || 'Failed to send invitation email');
         }
 
         // Success - show the invitation link for development
@@ -167,11 +168,11 @@ export function TeamManagementTab({ userRole, permissions }: TeamManagementTabPr
         const resendInfo = emailResult?.emailId ? ` (Resend ID: ${emailResult.emailId})` : '';
         toast({
           title: "Invitation Sent Successfully!",
-          description: `Email sent to ${inviteEmail} as ${inviteRole}${resendInfo}. Check spam folder if not received. Verify your domain at resend.com/domains`,
+          description: `Email sent to ${inviteEmail} as ${inviteRole}${resendInfo}`,
         });
 
       } catch (emailError: any) {
-        console.error('Email function failed:', emailError);
+        console.error('Email API failed:', emailError);
         // Don't fail the whole process if email fails, but warn the user
         toast({
           title: "Database Updated, Email Failed",

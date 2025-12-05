@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useProjectDetail } from "@/features/projects/hooks/useProjectDetail";
 import { ChunkProgress } from "@/features/projects/components/ChunkProgress";
 import { ProjectDataViewer } from "@/features/projects/components/ProjectDataViewer";
-import ScriptPlayer from "@/features/scripts/components/ScriptPlayer";
+import ScreenplayPlayer from "@/features/scripts/components/ScreenplayPlayer";
 import AudioPlayer from "@/features/scripts/components/AudioPlayer";
 import { useScriptPlayerControls } from "@/features/scripts/hooks/useScriptPlayerControls";
 import { ChunkProgressData } from "@/features/projects/project-chunk.type";
@@ -245,10 +245,13 @@ export default function ProjectDetail() {
           </div>
         )}
 
-        {/* Script Player Section */}
+        {/* Screenplay Player Section */}
         {loadedChunks.length > 0 && (
-          <div className="space-y-6">
-            <h2 className="text-2xl font-bold">Script Player</h2>
+          <div className="space-y-4">
+            <h2 className="text-2xl font-bold">Script Playback</h2>
+            <p className="text-sm text-muted-foreground">
+              Click on any line to jump to that point in the audio
+            </p>
 
             <AudioPlayer
               chunks={loadedChunks}
@@ -256,17 +259,13 @@ export default function ProjectDetail() {
               isPlaying={isPlaying}
             />
 
-            <ScriptPlayer
+            <ScreenplayPlayer
               chunks={loadedChunks}
               currentTime={currentTime}
               isPlaying={isPlaying}
               duration={duration}
               onSeek={handleSeek}
               onPlayPause={handlePlayPause}
-              onLineChange={handleLineChange}
-              onVoiceChange={handleVoiceChange}
-              onVolumeChange={handleVolumeChange}
-              onSfxChange={handleSfxChange}
             />
           </div>
         )}

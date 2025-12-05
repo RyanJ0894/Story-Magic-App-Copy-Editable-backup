@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useCallback } from 'react';
 
 interface UseScriptPlayerControlsProps {
-  duration: number;
+  initialDuration?: number;
   onLineChange?: (lineId: string) => void;
   onVoiceChange?: (lineId: string, voiceKey: string) => void;
   onVolumeChange?: (trackId: string, volume: number) => void;
@@ -9,72 +9,64 @@ interface UseScriptPlayerControlsProps {
 }
 
 export const useScriptPlayerControls = ({
-  duration,
+  initialDuration = 60,
   onLineChange,
   onVoiceChange,
   onVolumeChange,
   onSfxChange
-}: UseScriptPlayerControlsProps) => {
+}: UseScriptPlayerControlsProps = {}) => {
   const [currentTime, setCurrentTime] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const [duration, setDuration] = useState(initialDuration);
 
-  // Timer logic for playback
-  useEffect(() => {
-    if (isPlaying) {
-      timerRef.current = setInterval(() => {
-        setCurrentTime(prevTime => {
-          const newTime = prevTime + 0.1;
-          if (newTime >= duration) {
-            setIsPlaying(false);
-            return duration;
-          }
-          return newTime;
-        });
-      }, 100);
-    } else {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-        timerRef.current = null;
-      }
-    }
-
-    return () => {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-      }
-    };
-  }, [isPlaying, duration]);
-
-  const handleSeek = (time: number) => {
+  const handleSeek = useCallback((time: number) => {
     setCurrentTime(time);
-  };
+  }, []);
 
-  const handlePlayPause = (playing: boolean) => {
+  const handlePlayPause = useCallback((playing: boolean) => {
     setIsPlaying(playing);
-  };
+  }, []);
 
-  const handleLineChange = (lineId: string) => {
+  const handleTimeUpdate = useCallback((time: number) => {
+    setCurrentTime(time);
+  }, []);
+
+  const handleDurationChange = useCallback((newDuration: number) => {
+    if (newDuration && !isNaN(newDuration) && newDuration > 0) {
+      setDuration(newDuration);
+    }
+  }, []);
+
+  const handleEnded = useCallback(() => {
+    setIsPlaying(false);
+    setCurrentTime(0);
+  }, []);
+
+  const handleLineChange = useCallback((lineId: string) => {
     onLineChange?.(lineId);
-  };
+  }, [onLineChange]);
 
-  const handleVoiceChange = (lineId: string, voiceKey: string) => {
+  const handleVoiceChange = useCallback((lineId: string, voiceKey: string) => {
     onVoiceChange?.(lineId, voiceKey);
-  };
+  }, [onVoiceChange]);
 
-  const handleVolumeChange = (trackId: string, volume: number) => {
+  const handleVolumeChange = useCallback((trackId: string, volume: number) => {
     onVolumeChange?.(trackId, volume);
-  };
+  }, [onVolumeChange]);
 
-  const handleSfxChange = (trackId: string, sfxKey: string) => {
+  const handleSfxChange = useCallback((trackId: string, sfxKey: string) => {
     onSfxChange?.(trackId, sfxKey);
-  };
+  }, [onSfxChange]);
 
   return {
     currentTime,
     isPlaying,
+    duration,
     handleSeek,
     handlePlayPause,
+    handleTimeUpdate,
+    handleDurationChange,
+    handleEnded,
     handleLineChange,
     handleVoiceChange,
     handleVolumeChange,

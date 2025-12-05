@@ -1,0 +1,959 @@
+{
+  "schema": "story-magic.sfx.v1",
+  "items": [
+    {
+      "id": "s_explosion_light_debris_01",
+      "file": "sfx/s_explosion_light_debris_01.mp3",
+      "group": "Explosions",
+      "style": "explosion",
+      "mood": [
+        "neutral",
+        "ambient",
+        "cinematic"
+      ],
+      "intensity": 80,
+      "tags": [
+        "explosions",
+        "explosion",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "s_explosion_heavy_debris_breaking_glass_01",
+      "file": "sfx/s_explosion_heavy_debris_breaking_glass_01.mp3",
+      "group": "Explosions",
+      "style": "glass break/shatter",
+      "mood": [
+        "neutral",
+        "ambient",
+        "cinematic"
+      ],
+      "intensity": 40,
+      "tags": [
+        "explosions",
+        "glass",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "s_grappling_fighting_01",
+      "file": "sfx/s_grappling_fighting_01.mp3",
+      "group": "Fighting",
+      "style": "general effect",
+      "mood": [
+        "neutral",
+        "ambient",
+        "cinematic"
+      ],
+      "intensity": 80,
+      "tags": [
+        "fighting",
+        "general",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "s_bar_fight_brawl_01",
+      "file": "sfx/s_bar_fight_brawl_01.mp3",
+      "group": "Fighting",
+      "style": "general effect",
+      "mood": [
+        "neutral",
+        "ambient",
+        "cinematic"
+      ],
+      "intensity": 40,
+      "tags": [
+        "fighting",
+        "general",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "s_fighting_hand_to_hand_01",
+      "file": "sfx/s_fighting_hand_to_hand_01.mp3",
+      "group": "Fighting",
+      "style": "general effect",
+      "mood": [
+        "neutral",
+        "ambient",
+        "cinematic"
+      ],
+      "intensity": 40,
+      "tags": [
+        "fighting",
+        "general",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "s_single_gunshot_01",
+      "file": "sfx/s_single_gunshot_01.mp3",
+      "group": "Gunshot(s)",
+      "style": "general effect",
+      "mood": [
+        "neutral",
+        "ambient",
+        "cinematic"
+      ],
+      "intensity": 50,
+      "tags": [
+        "gunshot(s)",
+        "general",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "s_machine_pistol_multiple_shots_01",
+      "file": "sfx/s_machine_pistol_multiple_shots_01.mp3",
+      "group": "Gunshot(s)",
+      "style": "general effect",
+      "mood": [
+        "neutral",
+        "ambient",
+        "cinematic"
+      ],
+      "intensity": 80,
+      "tags": [
+        "gunshot(s)",
+        "general",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "s_machine_gun_sporadic_01",
+      "file": "sfx/s_machine_gun_sporadic_01.mp3",
+      "group": "Gunshot(s)",
+      "style": "general effect",
+      "mood": [
+        "neutral",
+        "ambient",
+        "cinematic"
+      ],
+      "intensity": 60,
+      "tags": [
+        "gunshot(s)",
+        "general",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "s_single_gunshot_glass_shatter_01",
+      "file": "sfx/s_single_gunshot_glass_shatter_01.mp3",
+      "group": "Gunshot(s)",
+      "style": "glass break/shatter",
+      "mood": [
+        "neutral",
+        "ambient",
+        "cinematic"
+      ],
+      "intensity": 80,
+      "tags": [
+        "gunshot(s)",
+        "glass",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "s_military_assault_rifles_shooting_ricochets_01",
+      "file": "sfx/s_military_assault_rifles_shooting_ricochets_01.mp3",
+      "group": "Gunshot(s)",
+      "style": "general effect",
+      "mood": [
+        "neutral",
+        "ambient",
+        "cinematic"
+      ],
+      "intensity": 40,
+      "tags": [
+        "gunshot(s)",
+        "general",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "s_engine_acceleration_01",
+      "file": "sfx/s_engine_acceleration_01.mp3",
+      "group": "Cars",
+      "style": "vehicle ambience",
+      "mood": [
+        "neutral",
+        "ambient",
+        "cinematic"
+      ],
+      "intensity": 70,
+      "tags": [
+        "cars",
+        "vehicle",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "s_car_crash_01",
+      "file": "sfx/s_car_crash_01.mp3",
+      "group": "Cars",
+      "style": "vehicle ambience",
+      "mood": [
+        "neutral",
+        "ambient",
+        "cinematic"
+      ],
+      "intensity": 80,
+      "tags": [
+        "cars",
+        "vehicle",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "s_walking_hardwood_floor_01",
+      "file": "sfx/s_walking_hardwood_floor_01.mp3",
+      "group": "Wooden Floor",
+      "style": "footsteps",
+      "mood": [
+        "neutral",
+        "ambient",
+        "cinematic"
+      ],
+      "intensity": 70,
+      "tags": [
+        "wooden floor",
+        "footsteps",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "s_walking_fast_creeking_01",
+      "file": "sfx/s_walking_fast_creeking_01.mp3",
+      "group": "Wooden Floor",
+      "style": "footsteps",
+      "mood": [
+        "neutral",
+        "ambient",
+        "cinematic"
+      ],
+      "intensity": 80,
+      "tags": [
+        "wooden floor",
+        "footsteps",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "s_walking_in_leaves_01",
+      "file": "sfx/s_walking_in_leaves_01.mp3",
+      "group": "Walking",
+      "style": "footsteps",
+      "mood": [
+        "neutral",
+        "ambient",
+        "cinematic"
+      ],
+      "intensity": 40,
+      "tags": [
+        "walking",
+        "footsteps",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "s_crowd_cheering_01",
+      "file": "sfx/s_crowd_cheering_01.mp3",
+      "group": "Reactions",
+      "style": "crowd ambience",
+      "mood": [
+        "neutral",
+        "ambient",
+        "cinematic"
+      ],
+      "intensity": 60,
+      "tags": [
+        "reactions",
+        "crowd",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "s_coughing_male_01",
+      "file": "sfx/s_coughing_male_01.mp3",
+      "group": "Bodily Functions",
+      "style": "general effect",
+      "mood": [
+        "neutral",
+        "ambient",
+        "cinematic"
+      ],
+      "intensity": 50,
+      "tags": [
+        "bodily functions",
+        "general",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "s_coughing_female_01",
+      "file": "sfx/s_coughing_female_01.mp3",
+      "group": "Bodily Functions",
+      "style": "general effect",
+      "mood": [
+        "neutral",
+        "ambient",
+        "cinematic"
+      ],
+      "intensity": 40,
+      "tags": [
+        "bodily functions",
+        "general",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "s_children_laughing_group_01",
+      "file": "sfx/s_children_laughing_group_01.mp3",
+      "group": "Kids",
+      "style": "general effect",
+      "mood": [
+        "neutral",
+        "ambient",
+        "cinematic"
+      ],
+      "intensity": 60,
+      "tags": [
+        "kids",
+        "general",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "s_rocks_debris_breaking_falling_01",
+      "file": "sfx/s_rocks_debris_breaking_falling_01.mp3",
+      "group": "Demolition",
+      "style": "general effect",
+      "mood": [
+        "neutral",
+        "ambient",
+        "cinematic"
+      ],
+      "intensity": 50,
+      "tags": [
+        "demolition",
+        "general",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "s_rockslide_breaking_01",
+      "file": "sfx/s_rockslide_breaking_01.mp3",
+      "group": "Demolition",
+      "style": "general effect",
+      "mood": [
+        "neutral",
+        "ambient",
+        "cinematic"
+      ],
+      "intensity": 70,
+      "tags": [
+        "demolition",
+        "general",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "s_demolition_heavy_01",
+      "file": "sfx/s_demolition_heavy_01.mp3",
+      "group": "Demolition",
+      "style": "general effect",
+      "mood": [
+        "neutral",
+        "ambient",
+        "cinematic"
+      ],
+      "intensity": 80,
+      "tags": [
+        "demolition",
+        "general",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "s_siren_ambulance_01",
+      "file": "sfx/s_siren_ambulance_01.mp3",
+      "group": "Sirens/Ambulance",
+      "style": "general effect",
+      "mood": [
+        "neutral",
+        "ambient",
+        "cinematic"
+      ],
+      "intensity": 80,
+      "tags": [
+        "sirens/ambulance",
+        "general",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "s_police_siren_01",
+      "file": "sfx/s_police_siren_01.mp3",
+      "group": "Sirens/Ambulance",
+      "style": "general effect",
+      "mood": [
+        "neutral",
+        "ambient",
+        "cinematic"
+      ],
+      "intensity": 50,
+      "tags": [
+        "sirens/ambulance",
+        "general",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "s_heartbeat_steady_01",
+      "file": "sfx/s_heartbeat_steady_01.mp3",
+      "group": "Heartbeat",
+      "style": "general effect",
+      "mood": [
+        "neutral",
+        "ambient",
+        "cinematic"
+      ],
+      "intensity": 80,
+      "tags": [
+        "heartbeat",
+        "general",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "s_beeping_medical_equipment_01",
+      "file": "sfx/s_beeping_medical_equipment_01.mp3",
+      "group": "Medical Equipment",
+      "style": "general effect",
+      "mood": [
+        "neutral",
+        "ambient",
+        "cinematic"
+      ],
+      "intensity": 40,
+      "tags": [
+        "medical equipment",
+        "general",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "s_door_knocking_01",
+      "file": "sfx/s_door_knocking_01.mp3",
+      "group": "Doors (open, close, slam, creak)",
+      "style": "door sounds",
+      "mood": [
+        "neutral",
+        "ambient",
+        "cinematic"
+      ],
+      "intensity": 60,
+      "tags": [
+        "doors (open, close, slam, creak)",
+        "door",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "s_car_door_opening_01",
+      "file": "sfx/s_car_door_opening_01.mp3",
+      "group": "Doors (open, close, slam, creak)",
+      "style": "vehicle ambience",
+      "mood": [
+        "neutral",
+        "ambient",
+        "cinematic"
+      ],
+      "intensity": 50,
+      "tags": [
+        "doors (open, close, slam, creak)",
+        "vehicle",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "s_door_knocking_02",
+      "file": "sfx/s_door_knocking_02.mp3",
+      "group": "Doors (open, close, slam, creak)",
+      "style": "door sounds",
+      "mood": [
+        "neutral",
+        "ambient",
+        "cinematic"
+      ],
+      "intensity": 50,
+      "tags": [
+        "doors (open, close, slam, creak)",
+        "door",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "s_door_lock_01",
+      "file": "sfx/s_door_lock_01.mp3",
+      "group": "Doors (open, close, slam, creak)",
+      "style": "door sounds",
+      "mood": [
+        "neutral",
+        "ambient",
+        "cinematic"
+      ],
+      "intensity": 80,
+      "tags": [
+        "doors (open, close, slam, creak)",
+        "door",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "s_door_closing_01",
+      "file": "sfx/s_door_closing_01.mp3",
+      "group": "Doors (open, close, slam, creak)",
+      "style": "door sounds",
+      "mood": [
+        "neutral",
+        "ambient",
+        "cinematic"
+      ],
+      "intensity": 70,
+      "tags": [
+        "doors (open, close, slam, creak)",
+        "door",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "s_janitor_keys_jingling_01",
+      "file": "sfx/s_janitor_keys_jingling_01.mp3",
+      "group": "Doors (open, close, slam, creak)",
+      "style": "general effect",
+      "mood": [
+        "neutral",
+        "ambient",
+        "cinematic"
+      ],
+      "intensity": 60,
+      "tags": [
+        "doors (open, close, slam, creak)",
+        "general",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "s_window_breaking_01",
+      "file": "sfx/s_window_breaking_01.mp3",
+      "group": "Glass (shattering, breaking, tinkling)",
+      "style": "wind ambience",
+      "mood": [
+        "neutral",
+        "ambient",
+        "cinematic"
+      ],
+      "intensity": 80,
+      "tags": [
+        "glass (shattering, breaking, tinkling)",
+        "wind",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "s_wine_glass_shattering_01",
+      "file": "sfx/s_wine_glass_shattering_01.mp3",
+      "group": "Glass (shattering, breaking, tinkling)",
+      "style": "glass break/shatter",
+      "mood": [
+        "neutral",
+        "ambient",
+        "cinematic"
+      ],
+      "intensity": 60,
+      "tags": [
+        "glass (shattering, breaking, tinkling)",
+        "glass",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "s_window_breaking_02",
+      "file": "sfx/s_window_breaking_02.mp3",
+      "group": "Glass (shattering, breaking, tinkling)",
+      "style": "wind ambience",
+      "mood": [
+        "neutral",
+        "ambient",
+        "cinematic"
+      ],
+      "intensity": 80,
+      "tags": [
+        "glass (shattering, breaking, tinkling)",
+        "wind",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "s_drip_on_rythym_01",
+      "file": "sfx/s_drip_on_rythym_01.mp3",
+      "group": "Water (splashes, drips, pouring)",
+      "style": "general effect",
+      "mood": [
+        "neutral",
+        "ambient",
+        "cinematic"
+      ],
+      "intensity": 70,
+      "tags": [
+        "water (splashes, drips, pouring)",
+        "general",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "s_bonfire_crackling_01",
+      "file": "sfx/s_bonfire_crackling_01.mp3",
+      "group": "Fire (ignition, burning, whoosh)",
+      "style": "fire sounds",
+      "mood": [
+        "neutral",
+        "ambient",
+        "cinematic"
+      ],
+      "intensity": 50,
+      "tags": [
+        "fire (ignition, burning, whoosh)",
+        "fire",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "s_wildfire_whoosh_01",
+      "file": "sfx/s_wildfire_whoosh_01.mp3",
+      "group": "Fire (ignition, burning, whoosh)",
+      "style": "fire sounds",
+      "mood": [
+        "neutral",
+        "ambient",
+        "cinematic"
+      ],
+      "intensity": 70,
+      "tags": [
+        "fire (ignition, burning, whoosh)",
+        "fire",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "s_match_lit_01",
+      "file": "sfx/s_match_lit_01.mp3",
+      "group": "Fire (ignition, burning, whoosh)",
+      "style": "general effect",
+      "mood": [
+        "neutral",
+        "ambient",
+        "cinematic"
+      ],
+      "intensity": 70,
+      "tags": [
+        "fire (ignition, burning, whoosh)",
+        "general",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "s_office_phone_ringing_01",
+      "file": "sfx/s_office_phone_ringing_01.mp3",
+      "group": "Electronics / Tech (keyboards, beeps, alarms, phones)",
+      "style": "general effect",
+      "mood": [
+        "neutral",
+        "ambient",
+        "cinematic"
+      ],
+      "intensity": 70,
+      "tags": [
+        "electronics / tech (keyboards, beeps, alarms, phones)",
+        "general",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "s_landline_ringing_01",
+      "file": "sfx/s_landline_ringing_01.mp3",
+      "group": "Electronics / Tech (keyboards, beeps, alarms, phones)",
+      "style": "general effect",
+      "mood": [
+        "neutral",
+        "ambient",
+        "cinematic"
+      ],
+      "intensity": 80,
+      "tags": [
+        "electronics / tech (keyboards, beeps, alarms, phones)",
+        "general",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "s_landline_ringing_02",
+      "file": "sfx/s_landline_ringing_02.mp3",
+      "group": "Electronics / Tech (keyboards, beeps, alarms, phones)",
+      "style": "general effect",
+      "mood": [
+        "neutral",
+        "ambient",
+        "cinematic"
+      ],
+      "intensity": 60,
+      "tags": [
+        "electronics / tech (keyboards, beeps, alarms, phones)",
+        "general",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "s_phone_notification_chime_01",
+      "file": "sfx/s_phone_notification_chime_01.mp3",
+      "group": "Electronics / Tech (keyboards, beeps, alarms, phones)",
+      "style": "animal sounds",
+      "mood": [
+        "neutral",
+        "ambient",
+        "cinematic"
+      ],
+      "intensity": 80,
+      "tags": [
+        "electronics / tech (keyboards, beeps, alarms, phones)",
+        "animal",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "s_typing_computer_01",
+      "file": "sfx/s_typing_computer_01.mp3",
+      "group": "Electronics / Tech (keyboards, beeps, alarms, phones)",
+      "style": "general effect",
+      "mood": [
+        "neutral",
+        "ambient",
+        "cinematic"
+      ],
+      "intensity": 40,
+      "tags": [
+        "electronics / tech (keyboards, beeps, alarms, phones)",
+        "general",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "s_alarm_clock_retro_01",
+      "file": "sfx/s_alarm_clock_retro_01.mp3",
+      "group": "Electronics / Tech (keyboards, beeps, alarms, phones)",
+      "style": "general effect",
+      "mood": [
+        "neutral",
+        "ambient",
+        "cinematic"
+      ],
+      "intensity": 80,
+      "tags": [
+        "electronics / tech (keyboards, beeps, alarms, phones)",
+        "general",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "s_watch_alarm_stop_watch_01",
+      "file": "sfx/s_watch_alarm_stop_watch_01.mp3",
+      "group": "Electronics / Tech (keyboards, beeps, alarms, phones)",
+      "style": "general effect",
+      "mood": [
+        "neutral",
+        "ambient",
+        "cinematic"
+      ],
+      "intensity": 80,
+      "tags": [
+        "electronics / tech (keyboards, beeps, alarms, phones)",
+        "general",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "s_alarm_clock_01",
+      "file": "sfx/s_alarm_clock_01.mp3",
+      "group": "Electronics / Tech (keyboards, beeps, alarms, phones)",
+      "style": "general effect",
+      "mood": [
+        "neutral",
+        "ambient",
+        "cinematic"
+      ],
+      "intensity": 70,
+      "tags": [
+        "electronics / tech (keyboards, beeps, alarms, phones)",
+        "general",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "s_swords_fighting_01",
+      "file": "sfx/s_swords_fighting_01.mp3",
+      "group": "Weapons - Non-Gun (swords, knives, arrows, bows, melee)",
+      "style": "weapon impact",
+      "mood": [
+        "neutral",
+        "ambient",
+        "cinematic"
+      ],
+      "intensity": 80,
+      "tags": [
+        "weapons - non-gun (swords, knives, arrows, bows, melee)",
+        "weapon",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "s_swords_fighting_02",
+      "file": "sfx/s_swords_fighting_02.mp3",
+      "group": "Weapons - Non-Gun (swords, knives, arrows, bows, melee)",
+      "style": "weapon impact",
+      "mood": [
+        "neutral",
+        "ambient",
+        "cinematic"
+      ],
+      "intensity": 50,
+      "tags": [
+        "weapons - non-gun (swords, knives, arrows, bows, melee)",
+        "weapon",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "s_dog_barking_neighborhood_01",
+      "file": "sfx/s_dog_barking_neighborhood_01.mp3",
+      "group": "Animals (horses, birds, dogs, cats, insects, farm animals)",
+      "style": "animal sounds",
+      "mood": [
+        "neutral",
+        "ambient",
+        "cinematic"
+      ],
+      "intensity": 70,
+      "tags": [
+        "animals (horses, birds, dogs, cats, insects, farm animals)",
+        "animal",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "s_horse_galloping_sporadically_01",
+      "file": "sfx/s_horse_galloping_sporadically_01.mp3",
+      "group": "Animals (horses, birds, dogs, cats, insects, farm animals)",
+      "style": "animal sounds",
+      "mood": [
+        "neutral",
+        "ambient",
+        "cinematic"
+      ],
+      "intensity": 40,
+      "tags": [
+        "animals (horses, birds, dogs, cats, insects, farm animals)",
+        "animal",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "s_horse_neighing_01",
+      "file": "sfx/s_horse_neighing_01.mp3",
+      "group": "Animals (horses, birds, dogs, cats, insects, farm animals)",
+      "style": "animal sounds",
+      "mood": [
+        "neutral",
+        "ambient",
+        "cinematic"
+      ],
+      "intensity": 40,
+      "tags": [
+        "animals (horses, birds, dogs, cats, insects, farm animals)",
+        "animal",
+        "cinematic"
+      ],
+      "loopable": true
+    },
+    {
+      "id": "s_cat_meow_01",
+      "file": "sfx/s_cat_meow_01.mp3",
+      "group": "Animals (horses, birds, dogs, cats, insects, farm animals)",
+      "style": "animal sounds",
+      "mood": [
+        "neutral",
+        "ambient",
+        "cinematic"
+      ],
+      "intensity": 40,
+      "tags": [
+        "animals (horses, birds, dogs, cats, insects, farm animals)",
+        "animal",
+        "cinematic"
+      ],
+      "loopable": true
+    }
+  ]
+}
