@@ -17,7 +17,9 @@ interface DashboardTabsProps {
   availablePackages: PlanTier[];
   projects: any[];
   onDeleteProject: (id: string, title: string) => void;
+  onBulkDeleteProjects?: (ids: string[]) => Promise<number>;
   deletingId: string | null;
+  isBulkDeleting?: boolean;
 }
 
 const TAB_ICONS = {
@@ -29,7 +31,7 @@ const TAB_ICONS = {
   'university-academic': GraduationCap
 };
 
-export function DashboardTabs({ currentPlan, availablePackages, projects, onDeleteProject, deletingId }: DashboardTabsProps) {
+export function DashboardTabs({ currentPlan, availablePackages, projects, onDeleteProject, onBulkDeleteProjects, deletingId, isBulkDeleting = false }: DashboardTabsProps) {
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
   const [selectedUpgradePlan, setSelectedUpgradePlan] = useState<PlanTier | null>(null);
   const [userCurrentPlan, setUserCurrentPlan] = useState<PlanTier>(currentPlan);
@@ -56,7 +58,7 @@ export function DashboardTabs({ currentPlan, availablePackages, projects, onDele
   };
 
   const renderTabContent = (planTier: PlanTier) => {
-    const tabProps = { projects, onDeleteProject, deletingId };
+    const tabProps = { projects, onDeleteProject, onBulkDeleteProjects, deletingId, isBulkDeleting };
     
     switch (planTier) {
       case 'individual':

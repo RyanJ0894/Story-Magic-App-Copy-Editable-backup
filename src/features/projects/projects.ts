@@ -63,6 +63,27 @@ export const useDeleteProject = () => {
   });
 };
 
+// Bulk delete projects mutation
+export const useBulkDeleteProjects = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (ids: string[]) => {
+      const results = await Promise.allSettled(
+        ids.map(id => projectApi.deleteProject(id))
+      );
+      const failed = results.filter(r => r.status === 'rejected');
+      if (failed.length > 0) {
+        throw new Error(`Failed to delete ${failed.length} of ${ids.length} projects`);
+      }
+      return results.length;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: PROJECTS_KEY_FACTORY.lists() });
+    },
+  });
+};
+
 // Update project mutation
 export const useUpdateProject = () => {
   const queryClient = useQueryClient();

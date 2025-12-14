@@ -1,22 +1,70 @@
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Eye, Trash2, AlertTriangle, Plus, Users, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { VoiceLibrary } from "@/components/feature/VoiceLibrary";
 import { useVoiceCount } from "@/hooks/useVoiceCount";
 interface IndividualTabProps {
   projects: any[];
   onDeleteProject: (id: string, title: string) => void;
+  onBulkDeleteProjects?: (ids: string[]) => Promise<number>;
   deletingId: string | null;
+  isBulkDeleting?: boolean;
 }
 export function IndividualTab({
   projects,
   onDeleteProject,
-  deletingId
+  onBulkDeleteProjects,
+  deletingId,
+  isBulkDeleting = false
 }: IndividualTabProps) {
   const { count: voiceCount, loading: voiceCountLoading } = useVoiceCount();
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
+
+  useEffect(() => {
+    const projectIds = new Set(projects.map(p => p.id));
+    setSelectedIds(prev => {
+      const filtered = new Set([...prev].filter(id => projectIds.has(id)));
+      return filtered.size !== prev.size ? filtered : prev;
+    });
+  }, [projects]);
+
+  const toggleSelection = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === projects.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(projects.map(p => p.id)));
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (onBulkDeleteProjects && selectedIds.size > 0) {
+      try {
+        await onBulkDeleteProjects(Array.from(selectedIds));
+        setSelectedIds(new Set());
+        setBulkDeleteDialogOpen(false);
+      } catch {
+        setBulkDeleteDialogOpen(false);
+      }
+    }
+  };
   return <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -67,9 +115,52 @@ export function IndividualTab({
 
       {/* Projects Section */}
       <Card>
-        <CardHeader>
-          <CardTitle>My Projects</CardTitle>
-          <CardDescription>Manage your personal audio projects</CardDescription>
+        <CardHeader className="flex flex-row items-start justify-between gap-4">
+          <div>
+            <CardTitle>My Projects</CardTitle>
+            <CardDescription>Manage your personal audio projects</CardDescription>
+          </div>
+          {projects.length > 0 && (
+            <div className="flex items-center gap-2">
+              {selectedIds.size > 0 && (
+                <AlertDialog open={bulkDeleteDialogOpen} onOpenChange={setBulkDeleteDialogOpen}>
+                  <AlertDialogTrigger asChild>
+                    <Button 
+                      variant="destructive" 
+                      size="sm"
+                      disabled={isBulkDeleting}
+                      data-testid="button-bulk-delete"
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete {selectedIds.size} Selected
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle className="flex items-center gap-2">
+                        <AlertTriangle className="h-5 w-5 text-destructive" />
+                        Delete {selectedIds.size} Projects
+                      </AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Are you sure you want to delete {selectedIds.size} project{selectedIds.size !== 1 ? 's' : ''}? 
+                        This action cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction 
+                        onClick={handleBulkDelete} 
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        disabled={isBulkDeleting}
+                      >
+                        {isBulkDeleting ? "Deleting..." : "Delete Projects"}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
+            </div>
+          )}
         </CardHeader>
         <CardContent>
           {projects.length === 0 ? <div className="text-center py-8 space-y-4">
@@ -81,26 +172,46 @@ export function IndividualTab({
                 </Button>
               </Link>
             </div> : <div className="space-y-3">
+              {/* Select All Row */}
+              <div className="flex items-center gap-3 pb-2 border-b">
+                <Checkbox
+                  checked={selectedIds.size === projects.length && projects.length > 0}
+                  onCheckedChange={toggleSelectAll}
+                  data-testid="checkbox-select-all"
+                />
+                <span className="text-sm text-muted-foreground">
+                  {selectedIds.size === 0 
+                    ? "Select all" 
+                    : `${selectedIds.size} of ${projects.length} selected`}
+                </span>
+              </div>
               {projects.map(project => <div key={project.id} className="flex items-center justify-between p-3 border rounded-lg">
-                  <div className="flex-1">
-                    <div className="font-medium">{project.title || "Untitled Project"}</div>
-                    <div className="text-sm text-muted-foreground">
-                      {new Date(project.created_at).toLocaleDateString()}
+                  <div className="flex items-center gap-3 flex-1">
+                    <Checkbox
+                      checked={selectedIds.has(project.id)}
+                      onCheckedChange={() => toggleSelection(project.id)}
+                      data-testid={`checkbox-project-${project.id}`}
+                    />
+                    <div className="flex-1">
+                      <div className="font-medium">{project.title || "Untitled Project"}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {new Date(project.created_at).toLocaleDateString()}
+                      </div>
+                      <Badge variant="outline" className="mt-1">
+                        {project.ai_director_json ? project.audio_url ? 'Complete' : 'Analyzed' : 'Draft'}
+                      </Badge>
                     </div>
-                    <Badge variant="outline" className="mt-1">
-                      {project.ai_director_json ? project.audio_url ? 'Complete' : 'Analyzed' : 'Draft'}
-                    </Badge>
                   </div>
                   <div className="flex items-center gap-2">
                     <Link to={`/projects/${project.id}`}>
-                      <Button variant="outline" size="sm">
+                      <Button variant="outline" size="sm" data-testid={`button-view-project-${project.id}`}>
                         <Eye className="h-4 w-4 mr-2" />
                         View
                       </Button>
                     </Link>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button variant="ghost" size="sm" disabled={deletingId === project.id} className="text-destructive hover:text-destructive hover:bg-destructive/10">
+                        <Button variant="ghost" size="sm" disabled={deletingId === project.id} className="text-destructive hover:text-destructive hover:bg-destructive/10" data-testid={`button-delete-project-${project.id}`}>
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </AlertDialogTrigger>

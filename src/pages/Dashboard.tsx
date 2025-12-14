@@ -24,7 +24,9 @@ export default function Dashboard() {
     isLoading,
     error,
     isDeleting,
+    isBulkDeleting,
     handleDeleteProject,
+    handleBulkDeleteProjects,
   } = useDashboard();
 
   const handleRoleChange = () => {
@@ -80,7 +82,9 @@ export default function Dashboard() {
         availablePackages={availablePackages}
         projects={projects}
         onDeleteProject={handleDeleteProject}
+        onBulkDeleteProjects={handleBulkDeleteProjects}
         deletingId={null}
+        isBulkDeleting={isBulkDeleting}
       />
     </div>
   );
