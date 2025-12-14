@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Pencil, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { projectApi } from "@/features/projects/services/projectApi";
 
 export default function NewProject() {
   const navigate = useNavigate();
@@ -52,7 +53,16 @@ export default function NewProject() {
       setProjectId(project.id);
       setProjectTitle(data.title);
 
-      await production.processProduction(data.script, project.id);
+      const result = await production.processProduction(data.script, project.id);
+      
+      if (result?.public_url) {
+        try {
+          await projectApi.updateProjectAudioUrl(project.id, result.public_url);
+          console.log('✅ Saved audio URL to project:', result.public_url);
+        } catch (saveError) {
+          console.error('Failed to save audio URL to project:', saveError);
+        }
+      }
     } catch (error) {
       console.error("Failed to create project:", error);
       toast.error("Failed to create project");
@@ -173,7 +183,15 @@ export default function NewProject() {
               onSeek={handleSeek}
               onPlayPause={handlePlayPause}
               onRegenerateAudio={async (voiceAssignments) => {
-                await production.regenerateWithVoices(projectId, voiceAssignments);
+                const result = await production.regenerateWithVoices(projectId, voiceAssignments);
+                if (result?.public_url) {
+                  try {
+                    await projectApi.updateProjectAudioUrl(projectId, result.public_url);
+                    console.log('✅ Saved regenerated audio URL to project:', result.public_url);
+                  } catch (saveError) {
+                    console.error('Failed to save audio URL to project:', saveError);
+                  }
+                }
               }}
               isRegenerating={production.isProcessing}
             />

@@ -218,6 +218,7 @@ export type Database = {
       }
       projects: {
         Row: {
+          audio_url: string | null
           created_at: string | null
           id: string
           project_key: string
@@ -228,6 +229,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          audio_url?: string | null
           created_at?: string | null
           id?: string
           project_key: string
@@ -238,6 +240,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          audio_url?: string | null
           created_at?: string | null
           id?: string
           project_key?: string

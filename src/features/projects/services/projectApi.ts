@@ -118,4 +118,20 @@ export const projectApi = {
   ): Promise<void> => {
     await runDirector(projectId, chunkKey, script, chunkIndex, start, duration);
   },
+
+  // Update project audio URL
+  updateProjectAudioUrl: async (id: string, audioUrl: string): Promise<Project> => {
+    const { data, error } = await supabase
+      .from("projects")
+      .update({
+        audio_url: audioUrl,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data as Project;
+  },
 };

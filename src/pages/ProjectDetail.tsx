@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Loader2, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import { useScriptPlayerControls } from "@/features/scripts/hooks/useScriptPlaye
 import { ChunkProgressData } from "@/features/projects/project-chunk.type";
 import { useGenerateProjectAudio } from "@/features/projects/projects";
 import { AudioGenerationRequest } from "@/features/projects/services/audioGenerationApi";
+import { projectApi } from "@/features/projects/services/projectApi";
 import { toast } from "sonner";
 
 export default function ProjectDetail() {
@@ -28,6 +29,14 @@ export default function ProjectDetail() {
     error,
     getProjectStatus,
   } = useProjectDetail(id);
+
+  // Load saved audio URL from project when it loads
+  useEffect(() => {
+    if (project?.audio_url && !generatedAudioUrl) {
+      setGeneratedAudioUrl(project.audio_url);
+      console.log('📥 Loaded saved audio URL from project:', project.audio_url);
+    }
+  }, [project?.audio_url]);
 
   // Handle chunks change from ChunkProgress
   const handleChunksChange = (chunks: ChunkProgressData[]) => {
@@ -180,6 +189,16 @@ export default function ProjectDetail() {
       const response = await generateAudio(requestData);
       console.log("🎵 Generate Audio - Response:", response);
       setGeneratedAudioUrl(response.public_url);
+
+      // Save audio URL to the project
+      if (project?.id && response.public_url) {
+        try {
+          await projectApi.updateProjectAudioUrl(project.id, response.public_url);
+          console.log('✅ Saved audio URL to project:', response.public_url);
+        } catch (saveError) {
+          console.error('Failed to save audio URL to project:', saveError);
+        }
+      }
 
       toast.success("Audio generated successfully!", {
         description: `Download: ${response.output_filename}`,
