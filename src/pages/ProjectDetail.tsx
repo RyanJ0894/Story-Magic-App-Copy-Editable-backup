@@ -65,14 +65,18 @@ export default function ProjectDetail() {
   const {
     currentTime,
     isPlaying,
+    duration: playerDuration,
     handleSeek,
     handlePlayPause,
+    handleTimeUpdate,
+    handleDurationChange,
+    handleEnded,
     handleLineChange,
     handleVoiceChange,
     handleVolumeChange,
     handleSfxChange,
   } = useScriptPlayerControls({
-    duration,
+    initialDuration: duration,
     onLineChange: (lineId: string) => {
       console.log("Active line changed:", lineId);
     },
@@ -253,17 +257,23 @@ export default function ProjectDetail() {
               Click on any line to jump to that point in the audio
             </p>
 
-            <AudioPlayer
-              chunks={loadedChunks}
-              currentTime={currentTime}
-              isPlaying={isPlaying}
-            />
+            {generatedAudioUrl && (
+              <AudioPlayer
+                audioUrl={generatedAudioUrl}
+                currentTime={currentTime}
+                isPlaying={isPlaying}
+                onTimeUpdate={handleTimeUpdate}
+                onDurationChange={handleDurationChange}
+                onPlayPause={handlePlayPause}
+                onEnded={handleEnded}
+              />
+            )}
 
             <ScreenplayPlayer
               chunks={loadedChunks}
               currentTime={currentTime}
               isPlaying={isPlaying}
-              duration={duration}
+              duration={playerDuration}
               onSeek={handleSeek}
               onPlayPause={handlePlayPause}
             />
