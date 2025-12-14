@@ -12,7 +12,93 @@ import { ChunkProgressData } from "@/features/projects/project-chunk.type";
 import { useGenerateProjectAudio } from "@/features/projects/projects";
 import { AudioGenerationRequest } from "@/features/projects/services/audioGenerationApi";
 import { projectApi } from "@/features/projects/services/projectApi";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+
+function convertDirectorJsonToChunks(directorJson: any, projectId: string): ChunkProgressData[] {
+  const scenesArray = Array.isArray(directorJson) ? directorJson : (directorJson.scenes || []);
+  
+  let fallbackCumulativeTime = 0;
+  
+  return scenesArray.map((scene: any, sceneIndex: number) => {
+    const sceneDialogue = scene.dialogue || [];
+    const sceneId = scene.scene_id || `scene_${sceneIndex + 1}`;
+    
+    const sceneOffset = fallbackCumulativeTime;
+    
+    const sceneLines = Array.isArray(sceneDialogue) ? sceneDialogue.map((line: any, lineIndex: number) => {
+      const lineText = line.text || '';
+      const lineCharacter = line.character || 'NARRATOR';
+      
+      const isNarrator = lineCharacter.toUpperCase() === 'NARRATOR';
+      const lineType = isNarrator ? 'action' : 'dialogue';
+      
+      const totalCharsInScene = sceneDialogue.reduce((sum: number, l: any) => sum + (l.text?.length || 0), 0);
+      const lineWeight = lineText.length / Math.max(totalCharsInScene, 1);
+      const lineDuration = Math.max(2, Math.ceil(lineText.length / 15));
+      
+      const priorChars = sceneDialogue.slice(0, lineIndex).reduce((sum: number, l: any) => sum + (l.text?.length || 0), 0);
+      const priorWeight = priorChars / Math.max(totalCharsInScene, 1);
+      const lineStart = sceneOffset + (fallbackCumulativeTime - sceneOffset);
+      
+      fallbackCumulativeTime += lineDuration;
+      
+      return {
+        line_id: line.line_id || `line_${sceneIndex}_${lineIndex}`,
+        type: lineType as 'action' | 'dialogue',
+        text: lineText,
+        character: lineCharacter,
+        voice_key: line.voice_key || null,
+        tts_settings: {
+          character: lineCharacter,
+          voice_style: line.voice_style || 'Natural',
+        },
+        start: lineStart,
+        duration: lineDuration,
+        src: null,
+        volume: 0.8,
+      };
+    }) : [];
+    
+    const computedSceneDuration = sceneLines.reduce((sum, line) => sum + line.duration, 0);
+    fallbackCumulativeTime = sceneOffset + computedSceneDuration;
+    
+    return {
+      chunk_id: String(sceneId),
+      project_id: projectId,
+      scene_title: scene.scene_id || `Scene ${sceneIndex + 1}`,
+      version: 1,
+      director_notes: scene.mood || '',
+      lines: sceneLines,
+      audio_direction: {
+        music: scene.music?.map((m: any, idx: number) => ({
+          track_id: m.track_id || `music_${sceneIndex}_${idx}`,
+          name: m.track_id || '',
+          start: sceneOffset,
+          duration: computedSceneDuration,
+          volume: m.volume || 0.25,
+          src: null,
+        })) || [],
+        ambience: scene.ambience?.map((a: any, idx: number) => ({
+          track_id: a.track_id || `ambience_${sceneIndex}_${idx}`,
+          name: a.track_id || '',
+          start: sceneOffset,
+          duration: computedSceneDuration,
+          volume: a.volume || 0.28,
+          src: null,
+        })) || [],
+        sfx: scene.sfx?.map((s: any, idx: number) => ({
+          track_id: s.track_id || `sfx_${sceneIndex}_${idx}`,
+          name: s.track_id || '',
+          start: sceneOffset + (s.at || 0),
+          duration: 2,
+          volume: s.volume || 0.5,
+          src: null,
+        })) || [],
+      },
+    };
+  });
+}
 
 export default function ProjectDetail() {
   const { id } = useParams<{ id: string }>();
@@ -37,6 +123,63 @@ export default function ProjectDetail() {
       console.log('📥 Loaded saved audio URL from project:', project.audio_url);
     }
   }, [project?.audio_url]);
+
+  // Load chunks from Director JSON when viewing a completed project
+  useEffect(() => {
+    const loadChunksFromDirectorJson = async () => {
+      if (!id || !project?.audio_url || loadedChunks.length > 0) return;
+      
+      console.log('📊 Fetching Director JSON for project:', id);
+      
+      try {
+        // Try director_json table first
+        const { data: directorData, error: directorError } = await supabase
+          .from('director_json')
+          .select('json_data')
+          .eq('project_id', id)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        
+        let directorJson = directorData?.json_data as Record<string, any> | null;
+        
+        // Fallback to user_projects table
+        if (!directorJson) {
+          const { data: projectData } = await supabase
+            .from('user_projects')
+            .select('ai_director_json')
+            .eq('id', id)
+            .maybeSingle();
+          
+          directorJson = projectData?.ai_director_json as Record<string, any> | null;
+        }
+        
+        if (directorJson?.scenes?.length) {
+          const chunks = convertDirectorJsonToChunks(directorJson, id);
+          console.log('✅ Loaded chunks from Director JSON:', chunks.length);
+          setLoadedChunks(chunks);
+          
+          // Calculate duration
+          let maxEndTime = 0;
+          chunks.forEach(chunk => {
+            chunk.lines.forEach((line: any) => {
+              const endTime = line.start + line.duration;
+              if (endTime > maxEndTime) maxEndTime = endTime;
+            });
+          });
+          if (maxEndTime > 0) {
+            setDuration(Math.ceil(maxEndTime));
+          }
+        } else {
+          console.log('⚠️ No Director JSON found for project');
+        }
+      } catch (err) {
+        console.error('Failed to load Director JSON:', err);
+      }
+    };
+    
+    loadChunksFromDirectorJson();
+  }, [id, project?.audio_url, loadedChunks.length]);
 
   // Handle chunks change from ChunkProgress
   const handleChunksChange = (chunks: ChunkProgressData[]) => {
