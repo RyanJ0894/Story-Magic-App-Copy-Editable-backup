@@ -303,10 +303,7 @@ const Index = () => {
           <AudioPlayer />
           <FeedbackForm />
 
-          {/* Auto-resolving debug panel - hidden on mobile to save space */}
-          <div className="hidden md:block">
-            <AIDirectorDebugPanel />
-          </div>
+          {/* Debug panel hidden from user view */}
         </section>
       </main>
     </div>
