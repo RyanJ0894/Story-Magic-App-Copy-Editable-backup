@@ -1,143 +1,194 @@
 import { useState, useEffect } from "react";
-import { Check, Star, Users, Zap, Sparkles } from "lucide-react";
+import { Check, X, Star, Users, Zap, Sparkles, Building2, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { Link } from "react-router-dom";
 import { Header } from "@/components/layout/Header";
 import { EnterpriseContactModal, AcademicVerificationModal } from "@/components/layout/PlanSelectionModals";
 import { useToast } from "@/hooks/use-toast";
 
+type PricingTier = {
+  id: string;
+  name: string;
+  tagline: string;
+  monthlyPrice: number;
+  annualPrice: number;
+  positioning: string;
+  features: string[];
+  limitations: string[];
+  perfectFor?: string[];
+  ctaText: string;
+  popular: boolean;
+};
 
 export default function Pricing() {
-  const [billingCycle, setBillingCycle] = useState<"monthly" | "annual">("monthly");
+  const [isAnnual, setIsAnnual] = useState(false);
   const [isNewUser, setIsNewUser] = useState(false);
   const [enterpriseModalOpen, setEnterpriseModalOpen] = useState(false);
   const [academicModalOpen, setAcademicModalOpen] = useState(false);
   const [selectedEnterprisePlan, setSelectedEnterprisePlan] = useState("");
-  const {
-    toast
-  } = useToast();
+  const { toast } = useToast();
+
   useEffect(() => {
-    console.log("🎯 Pricing page loaded successfully");
-    // Check for newuser parameter
+    console.log("Pricing page loaded successfully");
     const urlParams = new URLSearchParams(window.location.search);
     setIsNewUser(urlParams.get('newuser') === 'true');
   }, []);
-  const handleIndividualTrial = () => {
-    // Redirect to auth page to sign up/sign in before starting trial
+
+  const handleGetStarted = (tierName: string) => {
     window.location.href = "/auth";
   };
-  const handleEnterprisePlan = (planName: string) => {
-    setSelectedEnterprisePlan(planName);
+
+  const handleEnterpriseInquiry = () => {
+    setSelectedEnterprisePlan("Enterprise");
     setEnterpriseModalOpen(true);
   };
-  const handleAcademicPlan = () => {
-    setAcademicModalOpen(true);
-  };
-  const pricingCards = [{
-    id: "individual",
-    title: "Individual",
-    price: "$30",
-    period: "/month",
-    billing: "Monthly recurring",
-    target: "Perfect for freelancers, independent writers, and individual professionals",
-    features: ["Full access to AI voice library", "Unlimited script uploads", "All ambient soundscapes & music", "Sound effects library", "Mobile & desktop access", "Email support"],
-    ctaText: "Start Free Trial",
-    ctaVariant: "cinema" as const,
-    popular: false
-  }, {
-    id: "starter",
-    title: "Starter Enterprise",
-    price: "$2,400",
-    period: "/year",
-    perUser: "($20/user/month)",
-    billing: "Annual commitment - paid upfront",
-    target: "Small agencies, boutique production companies, university film departments",
-    includes: "10 user accounts",
-    features: ["Admin dashboard & user management", "Shared script library", "Basic collaboration tools (comments, playlists)", "Standard voice library (20+ voices)", "Email support (48hr response)", "Usage analytics"],
-    additionalUsers: "$20/month each (11-25 users: $15/month each)",
-    ctaText: "Contact Sales",
-    ctaVariant: "cinema-outline" as const,
-    popular: false
-  }, {
-    id: "professional",
-    title: "Professional Enterprise",
-    price: "$6,000",
-    period: "/year",
-    perUser: "($16.67/user/month)",
-    billing: "Annual commitment - paid upfront",
-    target: "Mid-size talent agencies, production companies, established film programs",
-    includes: "30 user accounts",
-    features: ["Everything in Starter Enterprise, plus:", "Premium voice library (50+ voices)", "Custom voice cloning (up to 5 voices)", "Advanced collaboration suite", "Priority audio processing", "Phone + email support (24hr response)", "Custom ambient sound library (100+ environments)", "Advanced analytics dashboard"],
-    additionalUsers: "$20/month each (31-75 users: $15/month each)",
-    ctaText: "Contact Sales",
-    ctaVariant: "cinema" as const,
-    popular: true
-  }, {
-    id: "studio",
-    title: "Studio Enterprise",
-    price: "$15,000",
-    period: "/year",
-    perUser: "($16.67/user/month)",
-    billing: "Annual commitment - paid upfront",
-    target: "Major talent agencies, film studios, large production companies",
-    includes: "75 user accounts",
-    features: ["Everything in Professional Enterprise, plus:", "Unlimited custom voice cloning", "Dedicated account manager", "24/7 priority support", "Enterprise-grade security (SSO)", "Custom ambient soundscapes", "Advanced workflow automation", "Detailed reporting suite"],
-    additionalUsers: "$20/month each (76-200 users: $15/month each)",
-    ctaText: "Contact Sales",
-    ctaVariant: "cinema-outline" as const,
-    popular: false
-  }, {
-    id: "unlimited",
-    title: "Enterprise Unlimited",
-    price: "Custom Pricing",
-    period: "",
-    billing: "Annual commitment - paid upfront",
-    target: "Major studios, large university systems, enterprise-wide implementations",
-    includes: "200+ user accounts",
-    features: ["Everything in Studio Enterprise, plus:", "Unlimited user accounts", "Dedicated infrastructure", "Custom feature development", "Advanced compliance (SOC 2, GDPR)", "Multiple admin hierarchies", "Custom voice library development", "Quarterly business reviews"],
-    baseFee: "Starting at $25,000/year",
-    ctaText: "Schedule Consultation",
-    ctaVariant: "cinema-outline" as const,
-    popular: false
-  }, {
-    id: "university",
-    title: "University Program",
-    price: "50% Off Enterprise",
-    period: "",
-    billing: "Academic year licensing",
-    target: "Accredited film schools and university programs",
-    options: ["Academic Starter: $1,200/year (10 accounts)", "Academic Professional: $3,000/year (30 accounts)"],
-    requirements: "Academic accreditation verification required",
-    ctaText: "Apply for Academic Pricing",
-    ctaVariant: "cinema-outline" as const,
-    popular: false
-  }];
+
+  const pricingTiers: PricingTier[] = [
+    {
+      id: "free",
+      name: "Free",
+      tagline: "Discovery",
+      monthlyPrice: 0,
+      annualPrice: 0,
+      positioning: "Experience cinematic audio production - once.",
+      features: [
+        "1 script upload per month (up to 150 pages)",
+        "Full standard AI voice library (50+ voices)",
+        "Complete music library (100+ tracks)",
+        "Full ambience & SFX library",
+        "Unlimited voice recasting",
+        "Screenplay-style playback interface",
+        "Studio-quality audio (broadcast standard)",
+        "Clean audio exports (no watermark)",
+        "Download your audio (M4A format)"
+      ],
+      limitations: [
+        "7-day project storage",
+        "Only 1 script per month",
+        "No voice cloning",
+        "No premium voices",
+        "No priority processing",
+        "No commercial use rights",
+        "No collaboration features"
+      ],
+      ctaText: "Create Your First Script Free",
+      popular: false
+    },
+    {
+      id: "starter",
+      name: "Starter",
+      tagline: "Individual",
+      monthlyPrice: 30,
+      annualPrice: 288,
+      positioning: "For writers and actors who need reliable access",
+      features: [
+        "5 script uploads per month (up to 150 pages each)",
+        "Full standard AI voice library (50+ voices)",
+        "Complete music library (100+ tracks)",
+        "Full ambience & SFX library",
+        "Unlimited voice recasting",
+        "Clean audio exports (no watermark)",
+        "Studio-quality audio (broadcast standard)",
+        "Unlimited downloads (M4A format)",
+        "30-day project storage",
+        "Mobile & desktop access",
+        "Email support (48hr response)",
+        "Personal use & portfolio allowed"
+      ],
+      limitations: [
+        "No voice cloning",
+        "No premium voice library",
+        "No priority processing",
+        "No commercial licensing",
+        "No collaboration"
+      ],
+      ctaText: "Start 7-Day Free Trial",
+      popular: false
+    },
+    {
+      id: "pro",
+      name: "Pro",
+      tagline: "Professional",
+      monthlyPrice: 60,
+      annualPrice: 576,
+      positioning: "For working professionals bringing scripts to life",
+      features: [
+        "15 script uploads per month (up to 150 pages each)",
+        "Premium AI voice library (100+ voices)",
+        "Custom voice cloning (up to 3 cloned voices)",
+        "Premium music library (300+ tracks, genre-specific)",
+        "Advanced SFX library (500+ effects)",
+        "Priority processing (2x faster generation)",
+        "90-day project storage",
+        "WAV export option (uncompressed)",
+        "Commercial use rights",
+        "Collaboration sharing (up to 3 people)",
+        "Email support (24hr response)"
+      ],
+      limitations: [],
+      perfectFor: [
+        "Screenwriters pitching scripts to studios",
+        "Actors rehearsing and auditioning",
+        "Indie filmmakers in pre-production",
+        "Directors testing casting options"
+      ],
+      ctaText: "Start 7-Day Free Trial",
+      popular: true
+    },
+    {
+      id: "creator",
+      name: "Creator",
+      tagline: "Elite",
+      monthlyPrice: 100,
+      annualPrice: 960,
+      positioning: "Unlimited creative freedom for serious filmmakers",
+      features: [
+        "Unlimited script uploads (up to 150 pages each)",
+        "Full premium voice library (150+ voices)",
+        "Custom voice cloning (up to 10 cloned voices)",
+        "Exclusive voice marketplace access",
+        "Genre-specific sound packs (Horror, Sci-Fi, Romance, etc.)",
+        "Script collaboration rooms (real-time multi-user)",
+        "Casting simulation mode",
+        "Unlimited project storage",
+        "Multi-format exports (M4A, WAV, MP3)",
+        "White-label audio (your branding option)",
+        "Priority support (4hr response, phone available)",
+        "Early access to new features",
+        "Full commercial licensing"
+      ],
+      limitations: [],
+      perfectFor: [
+        "Professional filmmakers",
+        "Production companies (small teams)",
+        "Casting directors",
+        "Film school instructors",
+        "Prolific writers with multiple projects"
+      ],
+      ctaText: "Start 7-Day Free Trial",
+      popular: false
+    }
+  ];
+
   const addOnServices = {
-    comingSoon: [{
-      name: "Professional voice cloning",
-      price: "$500 per voice"
-    }, {
-      name: "Expanded music library",
-      price: "$200/month"
-    }, {
-      name: "Custom soundscape development",
-      price: "$1,000 per environment"
-    }, {
-      name: "Professional SFX library",
-      price: "$100/month"
-    }],
-    professional: [{
-      name: "Dedicated onboarding",
-      price: "$2,500 one-time"
-    }, {
-      name: "Voice coaching consultation",
-      price: "$200/hour"
-    }]
+    comingSoon: [
+      { name: "Professional voice cloning", price: "$500 per voice" },
+      { name: "Expanded music library", price: "$200/month" },
+      { name: "Custom soundscape development", price: "$1,000 per environment" },
+      { name: "Professional SFX library", price: "$100/month" }
+    ],
+    professional: [
+      { name: "Dedicated onboarding", price: "$2,500 one-time" },
+      { name: "Voice coaching consultation", price: "$200/hour" }
+    ]
   };
+
   const industryBenefits = {
     agencies: {
       title: "For Talent Agencies",
@@ -156,11 +207,27 @@ export default function Pricing() {
       benefits: ["Student portfolio tools", "Professor oversight features", "Curriculum alignment", "Academic collaboration tools"]
     }
   };
-  return <div className="min-h-screen bg-background">
+
+  const formatPrice = (tier: PricingTier) => {
+    if (tier.monthlyPrice === 0) return "$0";
+    if (isAnnual) {
+      const monthlyEquivalent = Math.floor(tier.annualPrice / 12);
+      return `$${monthlyEquivalent}`;
+    }
+    return `$${tier.monthlyPrice}`;
+  };
+
+  const getAnnualSavings = (tier: PricingTier) => {
+    if (tier.monthlyPrice === 0) return 0;
+    return (tier.monthlyPrice * 12) - tier.annualPrice;
+  };
+
+  return (
+    <div className="min-h-screen bg-background">
       <Header />
       
-      {/* New User Welcome Banner */}
-      {isNewUser && <section className="bg-gradient-to-r from-cinema-blue/10 to-cinema-gold/10 border-b border-cinema-gold/20">
+      {isNewUser && (
+        <section className="bg-gradient-to-r from-cinema-blue/10 to-cinema-gold/10 border-b border-cinema-gold/20">
           <div className="container mx-auto px-4 py-4">
             <div className="flex items-center justify-center gap-3 text-center">
               <Sparkles className="w-6 h-6 text-cinema-gold" />
@@ -169,81 +236,190 @@ export default function Pricing() {
               </p>
             </div>
           </div>
-        </section>}
+        </section>
+      )}
 
-      {/* Hero Section */}
       <section className="py-8 md:py-16">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl md:text-5xl font-bold text-foreground mb-6">
             Choose Your Story Magic Plan
           </h2>
-          <p className="text-xl text-muted-foreground mb-4 max-w-3xl mx-auto">
-        </p>
-          <p className="text-lg font-medium max-w-3xl mx-auto text-sky-500">From individual creators to major studios - stop reading scripts. Start experiencing them. Multitask while listening during commutes, workouts, meals, and more.</p>
-        </div>
-      </section>
-
-      {/* Pricing Cards */}
-      <section className="py-8 md:py-16">
-        <div className="container mx-auto px-4">
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
-            {pricingCards.map(card => <Card key={card.id} className={`relative ${card.popular ? 'border-cinema-gold shadow-glow' : ''}`}>
-                {card.popular && <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-cinema-gold text-primary-foreground">
-                    <Star className="w-3 h-3 mr-1" />
-                    Most Popular
-                  </Badge>}
-                
-                <CardHeader>
-                  <CardTitle className="text-2xl font-bold">{card.title}</CardTitle>
-                  <div className="space-y-2">
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-3xl font-bold text-cinema-gold">{card.price}</span>
-                      <span className="text-muted-foreground">{card.period}</span>
-                    </div>
-                    {card.perUser && <p className="text-sm text-muted-foreground">{card.perUser}</p>}
-                    <p className="text-sm text-muted-foreground">{card.billing}</p>
-                  </div>
-                  <CardDescription className="text-sm">{card.target}</CardDescription>
-                  {card.includes && <p className="text-sm font-medium text-cinema-gold">{card.includes}</p>}
-                </CardHeader>
-
-                <CardContent className="space-y-4">
-                  <ul className="space-y-2">
-                    {card.features?.map((feature, index) => <li key={index} className="flex items-start gap-2">
-                        <Check className="w-4 h-4 text-cinema-gold mt-0.5 flex-shrink-0" />
-                        <span className="text-sm">{feature}</span>
-                      </li>)}
-                    {card.options?.map((option, index) => <li key={index} className="flex items-start gap-2">
-                        <Check className="w-4 h-4 text-cinema-gold mt-0.5 flex-shrink-0" />
-                        <span className="text-sm">{option}</span>
-                      </li>)}
-                  </ul>
-                  
-                  {card.additionalUsers && <p className="text-xs text-muted-foreground border-t pt-2">
-                      Additional users: {card.additionalUsers}
-                    </p>}
-                  
-                  {card.baseFee && <p className="text-sm font-medium text-cinema-gold">{card.baseFee}</p>}
-                  
-                  {card.requirements && <p className="text-xs text-muted-foreground">{card.requirements}</p>}
-                </CardContent>
-
-                <CardFooter>
-                  {card.id === "individual" ? <Button variant={card.ctaVariant} className="w-full" onClick={handleIndividualTrial}>
-                      {card.ctaText}
-                    </Button> : card.id === "university" ? <Button variant={card.ctaVariant} className="w-full" onClick={handleAcademicPlan}>
-                      {card.ctaText}
-                    </Button> : <Button variant={card.ctaVariant} className="w-full" onClick={() => handleEnterprisePlan(card.title)}>
-                      {card.ctaText}
-                    </Button>}
-                </CardFooter>
-              </Card>)}
+          <p className="text-lg font-medium max-w-3xl mx-auto text-muted-foreground mb-8">
+            From hobbyists to professional filmmakers - stop reading scripts. Start experiencing them. 
+            Multitask while listening during commutes, workouts, meals, and more.
+          </p>
+          
+          <div className="flex items-center justify-center gap-4 mb-8">
+            <Label htmlFor="billing-toggle" className={`text-sm font-medium ${!isAnnual ? 'text-foreground' : 'text-muted-foreground'}`}>
+              Monthly
+            </Label>
+            <Switch
+              id="billing-toggle"
+              checked={isAnnual}
+              onCheckedChange={setIsAnnual}
+              data-testid="switch-billing-toggle"
+            />
+            <Label htmlFor="billing-toggle" className={`text-sm font-medium ${isAnnual ? 'text-foreground' : 'text-muted-foreground'}`}>
+              Annual
+            </Label>
+            {isAnnual && (
+              <Badge variant="secondary" className="bg-cinema-gold/20 text-cinema-gold border-cinema-gold/30">
+                Save 20% on paid plans
+              </Badge>
+            )}
           </div>
         </div>
       </section>
 
-      {/* Add-On Services */}
+      <section className="pb-16">
+        <div className="container mx-auto px-4">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
+            {pricingTiers.map((tier) => (
+              <Card 
+                key={tier.id} 
+                className={`relative flex flex-col ${tier.popular ? 'border-cinema-gold shadow-glow' : ''}`}
+                data-testid={`card-pricing-${tier.id}`}
+              >
+                {tier.popular && (
+                  <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-cinema-gold text-primary-foreground">
+                    <Star className="w-3 h-3 mr-1" />
+                    Most Popular
+                  </Badge>
+                )}
+                
+                <CardHeader className="pb-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <CardTitle className="text-xl font-bold">{tier.name}</CardTitle>
+                    <Badge variant="outline" className="text-xs">{tier.tagline}</Badge>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-4xl font-bold text-cinema-gold">{formatPrice(tier)}</span>
+                      <span className="text-muted-foreground">/month</span>
+                    </div>
+                    {isAnnual && tier.monthlyPrice > 0 && (
+                      <p className="text-sm text-cinema-gold">
+                        ${tier.annualPrice}/year (save ${getAnnualSavings(tier)})
+                      </p>
+                    )}
+                    {!isAnnual && tier.monthlyPrice > 0 && (
+                      <p className="text-sm text-muted-foreground">Billed monthly</p>
+                    )}
+                  </div>
+                  <CardDescription className="text-sm mt-2">{tier.positioning}</CardDescription>
+                </CardHeader>
+
+                <CardContent className="flex-1 space-y-4">
+                  <ul className="space-y-2">
+                    {tier.features.map((feature, index) => (
+                      <li key={index} className="flex items-start gap-2">
+                        <Check className="w-4 h-4 text-cinema-gold mt-0.5 flex-shrink-0" />
+                        <span className="text-sm">{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  
+                  {tier.limitations.length > 0 && (
+                    <div className="border-t pt-3">
+                      <p className="text-xs text-muted-foreground mb-2">Limitations:</p>
+                      <ul className="space-y-1">
+                        {tier.limitations.map((limitation, index) => (
+                          <li key={index} className="flex items-start gap-2">
+                            <X className="w-3 h-3 text-muted-foreground mt-0.5 flex-shrink-0" />
+                            <span className="text-xs text-muted-foreground">{limitation}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {tier.perfectFor && tier.perfectFor.length > 0 && (
+                    <div className="border-t pt-3">
+                      <p className="text-xs font-medium text-foreground mb-2">Perfect for:</p>
+                      <ul className="space-y-1">
+                        {tier.perfectFor.map((item, index) => (
+                          <li key={index} className="text-xs text-muted-foreground">
+                            {item}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </CardContent>
+
+                <CardFooter className="pt-4">
+                  <Button 
+                    variant={tier.popular ? "cinema" : "cinema-outline"} 
+                    className="w-full"
+                    onClick={() => handleGetStarted(tier.name)}
+                    data-testid={`button-cta-${tier.id}`}
+                  >
+                    {tier.ctaText}
+                  </Button>
+                </CardFooter>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
       <section className="py-16 bg-muted/30">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto">
+            <Card className="border-cinema-blue/30 bg-gradient-to-br from-cinema-blue/5 to-cinema-gold/5">
+              <CardHeader className="text-center">
+                <div className="flex justify-center mb-4">
+                  <div className="p-3 rounded-full bg-cinema-blue/10">
+                    <Building2 className="w-8 h-8 text-cinema-blue" />
+                  </div>
+                </div>
+                <CardTitle className="text-2xl font-bold">Need Enterprise Solutions?</CardTitle>
+                <CardDescription className="text-base max-w-2xl mx-auto">
+                  For large teams, talent agencies, production companies, and film studios that require 
+                  advanced collaboration, custom integrations, SSO, and dedicated support.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="text-center">
+                <div className="grid sm:grid-cols-3 gap-4 mb-6">
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-cinema-gold">10-200+</p>
+                    <p className="text-sm text-muted-foreground">Team members</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-cinema-gold">Custom</p>
+                    <p className="text-sm text-muted-foreground">Voice libraries</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-cinema-gold">24/7</p>
+                    <p className="text-sm text-muted-foreground">Priority support</p>
+                  </div>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <Button 
+                    variant="cinema" 
+                    size="lg"
+                    onClick={handleEnterpriseInquiry}
+                    data-testid="button-enterprise-contact"
+                  >
+                    <Mail className="w-4 h-4 mr-2" />
+                    Contact Sales
+                  </Button>
+                  <Button 
+                    variant="cinema-outline" 
+                    size="lg"
+                    onClick={() => setAcademicModalOpen(true)}
+                    data-testid="button-academic-inquiry"
+                  >
+                    Academic Pricing Available
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      <section className="py-16">
         <div className="container mx-auto px-4">
           <h3 className="text-3xl font-bold text-center mb-12">Enhance Your Experience</h3>
           
@@ -257,10 +433,12 @@ export default function Pricing() {
               </CardHeader>
               <CardContent>
                 <ul className="space-y-3">
-                  {addOnServices.comingSoon.map((service, index) => <li key={index} className="flex justify-between items-center">
+                  {addOnServices.comingSoon.map((service, index) => (
+                    <li key={index} className="flex justify-between items-center gap-4">
                       <span>{service.name}</span>
-                      <span className="font-medium text-cinema-gold">{service.price}</span>
-                    </li>)}
+                      <span className="font-medium text-cinema-gold whitespace-nowrap">{service.price}</span>
+                    </li>
+                  ))}
                 </ul>
               </CardContent>
             </Card>
@@ -274,10 +452,12 @@ export default function Pricing() {
               </CardHeader>
               <CardContent>
                 <ul className="space-y-3">
-                  {addOnServices.professional.map((service, index) => <li key={index} className="flex justify-between items-center">
+                  {addOnServices.professional.map((service, index) => (
+                    <li key={index} className="flex justify-between items-center gap-4">
                       <span>{service.name}</span>
-                      <span className="font-medium text-cinema-gold">{service.price}</span>
-                    </li>)}
+                      <span className="font-medium text-cinema-gold whitespace-nowrap">{service.price}</span>
+                    </li>
+                  ))}
                 </ul>
               </CardContent>
             </Card>
@@ -285,105 +465,149 @@ export default function Pricing() {
         </div>
       </section>
 
-      {/* Industry-Specific Benefits */}
-      <section className="py-16">
+      <section className="py-16 bg-muted/30">
         <div className="container mx-auto px-4">
           <h3 className="text-3xl font-bold text-center mb-12">Tailored for Your Industry</h3>
           
           <Tabs defaultValue="agencies" className="max-w-4xl mx-auto">
             <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="agencies">Agencies</TabsTrigger>
-              <TabsTrigger value="production">Production</TabsTrigger>
-              <TabsTrigger value="studios">Studios</TabsTrigger>
-              <TabsTrigger value="universities">Universities</TabsTrigger>
+              <TabsTrigger value="agencies" data-testid="tab-agencies">Agencies</TabsTrigger>
+              <TabsTrigger value="production" data-testid="tab-production">Production</TabsTrigger>
+              <TabsTrigger value="studios" data-testid="tab-studios">Studios</TabsTrigger>
+              <TabsTrigger value="universities" data-testid="tab-universities">Universities</TabsTrigger>
             </TabsList>
             
-            {Object.entries(industryBenefits).map(([key, industry]) => <TabsContent key={key} value={key} className="mt-8">
+            {Object.entries(industryBenefits).map(([key, industry]) => (
+              <TabsContent key={key} value={key} className="mt-8">
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-2xl">{industry.title}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <ul className="grid md:grid-cols-2 gap-4">
-                      {industry.benefits.map((benefit, index) => <li key={index} className="flex items-start gap-2">
+                      {industry.benefits.map((benefit, index) => (
+                        <li key={index} className="flex items-start gap-2">
                           <Check className="w-4 h-4 text-cinema-gold mt-0.5 flex-shrink-0" />
                           <span>{benefit}</span>
-                        </li>)}
+                        </li>
+                      ))}
                     </ul>
                   </CardContent>
                 </Card>
-              </TabsContent>)}
+              </TabsContent>
+            ))}
           </Tabs>
         </div>
       </section>
 
-      {/* FAQ Section */}
-      <section className="py-16 bg-muted/30">
+      <section className="py-16">
         <div className="container mx-auto px-4">
           <h3 className="text-3xl font-bold text-center mb-12">Frequently Asked Questions</h3>
           
           <Accordion type="single" collapsible className="max-w-3xl mx-auto">
             <AccordionItem value="item-1">
-              <AccordionTrigger>What's included in the free trial?</AccordionTrigger>
+              <AccordionTrigger>What's included in the Free tier?</AccordionTrigger>
               <AccordionContent>
-                The free trial includes full access to all Individual plan features for 14 days, including unlimited script uploads, the complete AI voice library, and all ambient soundscapes.
+                The Free tier gives you full access to create one cinematic audio production per month. 
+                You get access to our complete standard voice library (50+ voices), music library (100+ tracks), 
+                and all ambience and SFX. Projects are stored for 7 days, and you can download your audio in M4A format.
               </AccordionContent>
             </AccordionItem>
             
             <AccordionItem value="item-2">
-              <AccordionTrigger>Can I upgrade or downgrade my plan?</AccordionTrigger>
+              <AccordionTrigger>What's included in the free trial?</AccordionTrigger>
               <AccordionContent>
-                Yes, you can change your plan at any time. For enterprise plans, contact our sales team to discuss migration options and any applicable credits or adjustments.
+                The 7-day free trial on Starter, Pro, and Creator plans gives you full access to all features 
+                of that tier. You can cancel anytime during the trial without being charged.
               </AccordionContent>
             </AccordionItem>
             
             <AccordionItem value="item-3">
-              <AccordionTrigger>How does voice cloning work?</AccordionTrigger>
+              <AccordionTrigger>Can I upgrade or downgrade my plan?</AccordionTrigger>
               <AccordionContent>
-                Our AI voice cloning technology requires just a few minutes of audio sample to create a realistic voice clone. Professional and higher plans include custom voice cloning with dedicated support.
+                Yes, you can change your plan at any time. When upgrading, you'll get immediate access to new features 
+                and be charged a prorated amount. When downgrading, changes take effect at your next billing cycle.
               </AccordionContent>
             </AccordionItem>
             
             <AccordionItem value="item-4">
-              <AccordionTrigger>What file formats do you support?</AccordionTrigger>
+              <AccordionTrigger>How does voice cloning work?</AccordionTrigger>
               <AccordionContent>
-                We support all major screenplay formats including Final Draft (.fdx), Fountain (.fountain), PDF, and plain text files. Our AI automatically adapts to different formatting styles.
+                Voice cloning is available on Pro (3 voices) and Creator (10 voices) plans. Our AI technology 
+                requires just a few minutes of audio sample to create a realistic voice clone. All cloned voices 
+                are for your exclusive use.
               </AccordionContent>
             </AccordionItem>
             
             <AccordionItem value="item-5">
-              <AccordionTrigger>Is there enterprise-grade security?</AccordionTrigger>
+              <AccordionTrigger>What are commercial use rights?</AccordionTrigger>
               <AccordionContent>
-                Yes, Studio Enterprise and above include enterprise-grade security features like SSO, advanced compliance (SOC 2, GDPR), and dedicated infrastructure options for sensitive projects.
+                Commercial use rights (included in Pro and Creator plans) allow you to use your generated audio 
+                for commercial projects including films, advertisements, podcasts, and any monetized content. 
+                Free and Starter plans are for personal use and portfolio only.
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem value="item-6">
+              <AccordionTrigger>What file formats do you support?</AccordionTrigger>
+              <AccordionContent>
+                We support all major screenplay formats including Final Draft (.fdx), Fountain (.fountain), PDF, 
+                and plain text files. For exports, Free and Starter plans offer M4A format, Pro adds WAV, 
+                and Creator includes M4A, WAV, and MP3 options.
+              </AccordionContent>
+            </AccordionItem>
+            
+            <AccordionItem value="item-7">
+              <AccordionTrigger>Do you offer refunds?</AccordionTrigger>
+              <AccordionContent>
+                Yes, we offer a 30-day money-back guarantee on all paid plans. If you're not satisfied with 
+                Story Magic, contact our support team within 30 days of your purchase for a full refund.
               </AccordionContent>
             </AccordionItem>
           </Accordion>
         </div>
       </section>
 
-      {/* Contact CTA */}
       <section className="py-16 bg-gradient-accent">
         <div className="container mx-auto px-4 text-center">
           <h3 className="text-3xl font-bold text-primary-foreground mb-4">
             Ready to Transform Your Scripts?
           </h3>
           <p className="text-lg text-primary-foreground/90 mb-8 max-w-2xl mx-auto">
-            Join thousands of industry professionals who are already experiencing their scripts in a whole new way.
+            Join thousands of creators who are already experiencing their scripts in a whole new way.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button variant="cinema-outline" size="lg" asChild className="bg-white/10 border-white text-white hover:bg-white hover:text-primary">
-              <Link to="/auth">Start Free Trial</Link>
+            <Button 
+              variant="cinema-outline" 
+              size="lg" 
+              asChild 
+              className="bg-white/10 border-white text-white hover:bg-white hover:text-primary"
+            >
+              <Link to="/auth" data-testid="link-start-free">Start Free</Link>
             </Button>
-            <Button variant="cinema-outline" size="lg" asChild className="bg-white/10 border-white text-white hover:bg-white hover:text-primary">
-              <Link to="/auth">Contact Sales</Link>
+            <Button 
+              variant="cinema-outline" 
+              size="lg" 
+              className="bg-white/10 border-white text-white hover:bg-white hover:text-primary"
+              onClick={handleEnterpriseInquiry}
+              data-testid="link-contact-sales-footer"
+            >
+              Contact Sales
             </Button>
           </div>
         </div>
       </section>
 
-      {/* Modals */}
-      <EnterpriseContactModal isOpen={enterpriseModalOpen} onClose={() => setEnterpriseModalOpen(false)} planName={selectedEnterprisePlan} />
+      <EnterpriseContactModal 
+        isOpen={enterpriseModalOpen} 
+        onClose={() => setEnterpriseModalOpen(false)} 
+        planName={selectedEnterprisePlan} 
+      />
       
-      <AcademicVerificationModal isOpen={academicModalOpen} onClose={() => setAcademicModalOpen(false)} />
-    </div>;
+      <AcademicVerificationModal 
+        isOpen={academicModalOpen} 
+        onClose={() => setAcademicModalOpen(false)} 
+      />
+    </div>
+  );
 }
