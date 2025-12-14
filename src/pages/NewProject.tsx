@@ -9,11 +9,18 @@ import { toast } from "sonner";
 import ScreenplayPlayer from "@/features/scripts/components/ScreenplayPlayer";
 import AudioPlayer from "@/features/scripts/components/AudioPlayer";
 import { useScriptPlayerControls } from "@/features/scripts/hooks/useScriptPlayerControls";
+import { Input } from "@/components/ui/input";
+import { Pencil, Check } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function NewProject() {
   const navigate = useNavigate();
   const { data: currentUser, isLoading: authLoading } = useAuth();
   const [projectId, setProjectId] = useState<string | null>(null);
+  const [projectTitle, setProjectTitle] = useState<string>("Untitled Project");
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [editedTitle, setEditedTitle] = useState("");
 
   const { createProject, isCreating } = useNewProject();
   const production = useSimpleProduction();
@@ -43,6 +50,7 @@ export default function NewProject() {
       });
 
       setProjectId(project.id);
+      setProjectTitle(data.title);
 
       await production.processProduction(data.script, project.id);
     } catch (error) {
@@ -51,9 +59,36 @@ export default function NewProject() {
     }
   };
 
+  const handleTitleEdit = () => {
+    setEditedTitle(projectTitle);
+    setIsEditingTitle(true);
+  };
+
+  const handleTitleSave = async () => {
+    if (!projectId || !editedTitle.trim()) return;
+    
+    try {
+      const { error } = await supabase
+        .from('projects')
+        .update({ title: editedTitle.trim() })
+        .eq('id', projectId);
+      
+      if (error) throw error;
+      
+      setProjectTitle(editedTitle.trim());
+      setIsEditingTitle(false);
+      toast.success("Title updated");
+    } catch (error) {
+      console.error("Failed to update title:", error);
+      toast.error("Failed to update title");
+    }
+  };
+
   return (
     <div className="max-w-4xl mx-auto px-3 sm:px-6 py-6 sm:py-10">
-      <h1 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6">Create New Project</h1>
+      {!production.audioUrl && (
+        <h1 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6">Create New Project</h1>
+      )}
 
       {production.isProcessing && !production.audioUrl && (
         <div className="mb-6 p-4 bg-blue-900/20 border border-blue-700 rounded-lg">
@@ -66,9 +101,38 @@ export default function NewProject() {
       {production.audioUrl && (
         <div className="mb-6 space-y-4">
           <div className="p-4 bg-sky-900/20 border border-sky-700 rounded-lg">
-            <h2 className="font-semibold text-sky-300 mb-2">
-              Production Complete!
-            </h2>
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="font-semibold text-sky-300">
+                Production Complete!
+              </h2>
+            </div>
+            <div className="flex items-center gap-2 mb-3">
+              {isEditingTitle ? (
+                <>
+                  <Input
+                    value={editedTitle}
+                    onChange={(e) => setEditedTitle(e.target.value)}
+                    className="max-w-xs bg-background/50"
+                    data-testid="input-edit-title"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleTitleSave();
+                      if (e.key === 'Escape') setIsEditingTitle(false);
+                    }}
+                    autoFocus
+                  />
+                  <Button size="icon" variant="ghost" onClick={handleTitleSave} data-testid="button-save-title">
+                    <Check className="h-4 w-4" />
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <span className="text-lg font-medium text-foreground">{projectTitle}</span>
+                  <Button size="icon" variant="ghost" onClick={handleTitleEdit} data-testid="button-edit-title">
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                </>
+              )}
+            </div>
             <div className="flex gap-3 flex-wrap">
               <a
                 href={production.audioUrl}

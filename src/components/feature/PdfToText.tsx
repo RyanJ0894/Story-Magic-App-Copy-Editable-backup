@@ -12,7 +12,7 @@ GlobalWorkerOptions.workerSrc = new URL(
 ).href;
 
 type Props = {
-  onText: (txt: string, mode?: "replace" | "append") => void;
+  onText: (txt: string, mode?: "replace" | "append", filename?: string) => void;
 };
 
 export default function PdfToText({ onText }: Props) {
@@ -38,7 +38,8 @@ export default function PdfToText({ onText }: Props) {
         out += text + "\n\n";
       }
 
-      onText(out.trim(), mode);
+      const filename = file.name.replace(/\.pdf$/i, '');
+      onText(out.trim(), mode, filename);
     } catch (e: any) {
       console.error(e);
       setErr(e?.message || String(e));

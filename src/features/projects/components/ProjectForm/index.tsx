@@ -31,9 +31,12 @@ JOHN: Yeah, let's keep moving.`,
     onSubmit(data);
   };
 
-  const handlePdfText = (text: string, mode: "replace" | "append" = "replace") => {
+  const handlePdfText = (text: string, mode: "replace" | "append" = "replace", filename?: string) => {
     if (mode === "replace") {
       form.setValue("script", text);
+      if (filename) {
+        form.setValue("title", filename);
+      }
     } else {
       const currentScript = form.getValues("script");
       form.setValue("script", currentScript + "\n" + text);
@@ -43,20 +46,6 @@ JOHN: Yeah, let's keep moving.`,
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-        <FormField
-          control={form.control}
-          name="title"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Title</FormLabel>
-              <FormControl>
-                <Input placeholder="My Project" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
         {/* PDF upload helper */}
         <div className="mb-2">
           <PdfToText onText={handlePdfText} />
