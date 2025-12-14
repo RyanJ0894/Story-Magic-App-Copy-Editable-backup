@@ -17,7 +17,6 @@ export interface CreateProjectData {
 
 export interface ProjectWithDetails extends Project {
   ai_director_json?: any | null;
-  audio_url?: string | null;
 }
 
 export interface ProjectStatus {
