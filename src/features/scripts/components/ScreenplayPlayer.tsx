@@ -1,5 +1,5 @@
 import { useRef, useEffect, useMemo, useState } from 'react';
-import { Play, Pause, SkipBack, SkipForward, Users, ChevronDown, ChevronUp } from 'lucide-react';
+import { Play, Pause, SkipBack, SkipForward, Users, ChevronDown, ChevronUp, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
@@ -16,6 +16,8 @@ interface ScreenplayPlayerProps {
   onSeek: (time: number) => void;
   onPlayPause: (playing: boolean) => void;
   onVoiceChange?: (character: string, voiceId: string, voice: ElevenLabsVoice) => void;
+  onRegenerateAudio?: (voiceAssignments: Record<string, string>) => Promise<void>;
+  isRegenerating?: boolean;
 }
 
 interface DisplayLine {
@@ -148,11 +150,14 @@ export default function ScreenplayPlayer({
   onSeek,
   onPlayPause,
   onVoiceChange,
+  onRegenerateAudio,
+  isRegenerating = false,
 }: ScreenplayPlayerProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const activeLineRef = useRef<HTMLDivElement>(null);
   const [showCastPanel, setShowCastPanel] = useState(false);
   const [characterVoices, setCharacterVoices] = useState<Record<string, string>>({});
+  const [pendingChanges, setPendingChanges] = useState<Set<string>>(new Set());
   
   const { voices, loading: voicesLoading } = useElevenLabsVoices();
   
@@ -224,12 +229,39 @@ export default function ScreenplayPlayer({
   };
 
   const handleVoiceReassign = (characterName: string, voiceId: string, voice: ElevenLabsVoice) => {
+    const originalVoice = characters.find(c => c.name === characterName)?.voiceKey;
+    const isChange = voiceId !== originalVoice;
+    
     setCharacterVoices(prev => ({
       ...prev,
       [characterName]: voiceId
     }));
+    
+    setPendingChanges(prev => {
+      const updated = new Set(prev);
+      if (isChange) {
+        updated.add(characterName);
+      } else {
+        updated.delete(characterName);
+      }
+      return updated;
+    });
+    
     onVoiceChange?.(characterName, voiceId, voice);
     console.log(`Reassigned ${characterName} to voice: ${voice.name}`);
+  };
+
+  const handleRegenerateAudio = async () => {
+    if (!onRegenerateAudio || pendingChanges.size === 0) return;
+    
+    const changedVoices = { ...characterVoices };
+    
+    try {
+      await onRegenerateAudio(changedVoices);
+      setPendingChanges(new Set());
+    } catch (err) {
+      console.error('Failed to regenerate audio:', err);
+    }
   };
 
   const getVoiceName = (voiceKey: string): string => {
@@ -300,32 +332,67 @@ export default function ScreenplayPlayer({
               ) : voices.length === 0 ? (
                 <div className="text-sm text-slate-400 py-2">No voices available. Please check your ElevenLabs connection.</div>
               ) : (
-                characters.map((char) => (
-                  <div 
-                    key={char.name}
-                    className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 p-3 bg-slate-800/50 rounded-lg border border-slate-700"
-                    data-testid={`character-voice-row-${char.name}`}
-                  >
-                    <div className="flex items-center gap-2 min-w-0 flex-1">
-                      <span className="font-medium text-sm text-slate-200 truncate">
-                        {char.name}
-                      </span>
-                      <Badge variant="secondary" className="text-xs flex-shrink-0">
-                        {char.lineCount} {char.lineCount === 1 ? 'line' : 'lines'}
-                      </Badge>
+                <>
+                  {characters.map((char) => (
+                    <div 
+                      key={char.name}
+                      className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 p-3 bg-slate-800/50 rounded-lg border border-slate-700"
+                      data-testid={`character-voice-row-${char.name}`}
+                    >
+                      <div className="flex items-center gap-2 min-w-0 flex-1">
+                        <span className="font-medium text-sm text-slate-200 truncate">
+                          {char.name}
+                        </span>
+                        <Badge variant="secondary" className="text-xs flex-shrink-0">
+                          {char.lineCount} {char.lineCount === 1 ? 'line' : 'lines'}
+                        </Badge>
+                        {pendingChanges.has(char.name) && (
+                          <Badge variant="outline" className="text-xs flex-shrink-0 border-amber-500 text-amber-400">
+                            Changed
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="flex-shrink-0">
+                        <VoiceSelector
+                          voices={voices}
+                          selectedVoiceId={characterVoices[char.name] || ''}
+                          category={char.category || undefined}
+                          onVoiceChange={(voiceId, voice) => handleVoiceReassign(char.name, voiceId, voice)}
+                          showPreview={true}
+                          className="min-w-[200px]"
+                        />
+                      </div>
                     </div>
-                    <div className="flex-shrink-0">
-                      <VoiceSelector
-                        voices={voices}
-                        selectedVoiceId={characterVoices[char.name] || ''}
-                        category={char.category || undefined}
-                        onVoiceChange={(voiceId, voice) => handleVoiceReassign(char.name, voiceId, voice)}
-                        showPreview={true}
-                        className="min-w-[200px]"
-                      />
+                  ))}
+                  
+                  {onRegenerateAudio && (
+                    <div className="pt-3 border-t border-slate-700">
+                      <Button
+                        onClick={handleRegenerateAudio}
+                        disabled={pendingChanges.size === 0 || isRegenerating}
+                        className="w-full bg-amber-600 text-white"
+                        data-testid="button-regenerate-audio"
+                      >
+                        {isRegenerating ? (
+                          <>
+                            <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                            Regenerating Audio...
+                          </>
+                        ) : pendingChanges.size > 0 ? (
+                          <>
+                            <RefreshCw className="h-4 w-4 mr-2" />
+                            Regenerate Audio ({pendingChanges.size} voice{pendingChanges.size > 1 ? 's' : ''} changed)
+                          </>
+                        ) : (
+                          <>
+                            <RefreshCw className="h-4 w-4 mr-2" />
+                            Regenerate Audio
+                          </>
+                        )}
+                      </Button>
                     </div>
-                  </div>
-                ))
+                  )}
+                </>
               )}
             </div>
           )}

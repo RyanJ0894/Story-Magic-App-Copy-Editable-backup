@@ -96,21 +96,28 @@ export default function NewProject() {
         </div>
       )}
 
-      {production.audioUrl && (
+      {(production.audioUrl || (production.isProcessing && projectId)) && (
         <div className="mb-6 space-y-4">
           <div className="p-4 bg-sky-900/20 border border-sky-700 rounded-lg">
             <h2 className="font-semibold text-sky-300 mb-2">
-              Production Complete!
+              {production.isProcessing ? 'Regenerating Audio...' : 'Production Complete!'}
             </h2>
             <div className="flex gap-3 flex-wrap">
-              <a
-                href={production.audioUrl}
-                download
-                className="px-4 py-2 bg-sky-600 text-white rounded hover:bg-sky-700"
-                data-testid="link-download-audio"
-              >
-                Download Audio
-              </a>
+              {production.audioUrl && !production.isProcessing && (
+                <a
+                  href={production.audioUrl}
+                  download
+                  className="px-4 py-2 bg-sky-600 text-white rounded hover:bg-sky-700"
+                  data-testid="link-download-audio"
+                >
+                  Download Audio
+                </a>
+              )}
+              {production.isProcessing && (
+                <span className="px-4 py-2 bg-slate-600 text-slate-300 rounded">
+                  Processing...
+                </span>
+              )}
               <button
                 onClick={() => navigate("/dashboard")}
                 className="px-4 py-2 bg-slate-600 text-white rounded hover:bg-slate-700"
@@ -121,17 +128,19 @@ export default function NewProject() {
             </div>
           </div>
 
-          <AudioPlayer
-            audioUrl={production.audioUrl}
-            isPlaying={isPlaying}
-            currentTime={currentTime}
-            onTimeUpdate={handleTimeUpdate}
-            onDurationChange={handleDurationChange}
-            onPlayPause={handlePlayPause}
-            onEnded={handleEnded}
-          />
+          {production.audioUrl && (
+            <AudioPlayer
+              audioUrl={production.audioUrl}
+              isPlaying={isPlaying}
+              currentTime={currentTime}
+              onTimeUpdate={handleTimeUpdate}
+              onDurationChange={handleDurationChange}
+              onPlayPause={handlePlayPause}
+              onEnded={handleEnded}
+            />
+          )}
           
-          {production.chunks.length > 0 && (
+          {production.chunks.length > 0 && projectId && (
             <ScreenplayPlayer
               chunks={production.chunks}
               currentTime={currentTime}
@@ -139,6 +148,10 @@ export default function NewProject() {
               duration={duration}
               onSeek={handleSeek}
               onPlayPause={handlePlayPause}
+              onRegenerateAudio={async (voiceAssignments) => {
+                await production.regenerateWithVoices(projectId, voiceAssignments);
+              }}
+              isRegenerating={production.isProcessing}
             />
           )}
         </div>
