@@ -3,8 +3,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Users, Play, RotateCcw, Crown, Pause } from "lucide-react";
+import { Users, Play, RotateCcw, Crown, Pause, ChevronDown, ChevronUp } from "lucide-react";
 import { useElevenLabsVoices, type ElevenLabsVoice } from "@/hooks/useElevenLabsVoices";
+import { VoiceSelector } from "./VoiceSelector";
+import { type UserVoiceCategory } from "@/config/userCategories";
 
 interface CharacterVoice {
   id: string;
@@ -14,17 +16,27 @@ interface CharacterVoice {
   personality: string;
   avatar: string;
   voiceId: string;
+  voiceCategory: UserVoiceCategory;
   elevenlabsVoice?: ElevenLabsVoice;
 }
 
-const characterRoles = [
+const characterRoles: Array<{
+  id: string;
+  name: string;
+  role: string;
+  age: string;
+  personality: string;
+  avatar: string;
+  voiceCategory: UserVoiceCategory;
+}> = [
   {
     id: "1",
     name: "STACY",
     role: "Lead",
     age: "28-35",
     personality: "Determined entrepreneur",
-    avatar: "S"
+    avatar: "S",
+    voiceCategory: "Female 20s to 30s"
   },
   {
     id: "2", 
@@ -32,7 +44,8 @@ const characterRoles = [
     role: "Supporting",
     age: "28-35",
     personality: "Tech-savvy assistant",
-    avatar: "L"
+    avatar: "L",
+    voiceCategory: "Male 20s to 30s"
   },
   {
     id: "3",
@@ -40,7 +53,8 @@ const characterRoles = [
     role: "Supporting",
     age: "28-38",
     personality: "Deep, calm",
-    avatar: "C"
+    avatar: "C",
+    voiceCategory: "Male 20s to 30s"
   },
   {
     id: "4",
@@ -48,12 +62,14 @@ const characterRoles = [
     role: "Narrator",
     age: "40-45",
     personality: "Deep, authoritative",
-    avatar: "N"
+    avatar: "N",
+    voiceCategory: "Narrator"
   }
 ];
 
 export const VoiceCasting = () => {
   const [selectedCharacter, setSelectedCharacter] = useState<string | null>(null);
+  const [expandedCharacter, setExpandedCharacter] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null);
   const [playingVoiceId, setPlayingVoiceId] = useState<string | null>(null);
@@ -67,10 +83,10 @@ export const VoiceCasting = () => {
       console.log('=== VOICE DEBUG INFO ===');
       console.log('Available voices:', voices.map(v => ({ name: v.name, category: v.category, id: v.voice_id })));
       
-      const assignments = [];
+      const assignments: CharacterVoice[] = [];
       
       // Map exact voices - try both demo voice IDs AND name matching for compatibility
-      const voiceMap = {
+      const voiceMap: Record<string, ElevenLabsVoice | undefined> = {
         'STACY': voices.find(v => 
           v.voice_id === 'XhNlP8uwiH6XZSFnH1yL' || // Regular STACY voice (not African American)
           (v.name.toLowerCase().includes('stacy') && !v.name.toLowerCase().includes('african'))
@@ -90,7 +106,7 @@ export const VoiceCasting = () => {
       };
       
       // Create assignments for each character
-      characterRoles.forEach((character, index) => {
+      characterRoles.forEach((character) => {
         const voice = voiceMap[character.name];
         if (voice) {
           assignments.push({
@@ -100,7 +116,14 @@ export const VoiceCasting = () => {
           });
           console.log(`Assigned ${character.name} → ${voice.name} (${voice.category})`);
         } else {
-          console.log(`No voice found for ${character.name}`);
+          // If no matching voice found, try to find one in the same category
+          const categoryVoice = voices.find(v => v.category === character.voiceCategory);
+          assignments.push({
+            ...character,
+            voiceId: categoryVoice?.voice_id || '',
+            elevenlabsVoice: categoryVoice
+          });
+          console.log(`Assigned ${character.name} → ${categoryVoice?.name || 'None'} (fallback by category)`);
         }
       });
       
@@ -111,6 +134,23 @@ export const VoiceCasting = () => {
       setCharactersWithVoices([]);
     }
   }, [voices]);
+
+  // Handle voice reassignment for a character
+  const handleVoiceReassign = (characterId: string, voiceId: string, voice: ElevenLabsVoice) => {
+    setCharactersWithVoices(prev => 
+      prev.map(char => 
+        char.id === characterId 
+          ? { ...char, voiceId: voiceId, elevenlabsVoice: voice }
+          : char
+      )
+    );
+    console.log(`Reassigned character ${characterId} to voice ${voice.name}`);
+  };
+
+  // Toggle expanded state for voice selection
+  const toggleExpanded = (characterId: string) => {
+    setExpandedCharacter(prev => prev === characterId ? null : characterId);
+  };
 
   // Cleanup audio on unmount
   useEffect(() => {
@@ -314,12 +354,16 @@ export const VoiceCasting = () => {
                           className="px-2 py-1 h-auto text-xs"
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleRegenerateVoice(character.id);
+                            toggleExpanded(character.id);
                           }}
-                          disabled={isProcessing}
+                          data-testid={`button-change-voice-${character.id}`}
                         >
-                          <RotateCcw className="h-3 w-3" />
-                          <span className="hidden lg:inline ml-1">Regen</span>
+                          {expandedCharacter === character.id ? (
+                            <ChevronUp className="h-3 w-3" />
+                          ) : (
+                            <ChevronDown className="h-3 w-3" />
+                          )}
+                          <span className="hidden lg:inline ml-1">Change</span>
                         </Button>
                         <Button 
                           variant="ghost" 
@@ -340,6 +384,23 @@ export const VoiceCasting = () => {
                         </Button>
                       </div>
                     </div>
+                    
+                    {expandedCharacter === character.id && (
+                      <div className="mt-3 pt-3 border-t border-border">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                          <span className="text-sm text-muted-foreground">
+                            Select voice ({character.voiceCategory}):
+                          </span>
+                          <VoiceSelector
+                            voices={voices}
+                            selectedVoiceId={character.voiceId}
+                            category={character.voiceCategory}
+                            onVoiceChange={(voiceId, voice) => handleVoiceReassign(character.id, voiceId, voice)}
+                            showPreview={true}
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
                   ))}
                 </div>
