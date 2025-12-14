@@ -23,10 +23,7 @@ export const Header = () => {
           <Link to="/features" className="text-muted-foreground hover:text-foreground transition-colors">
             Features
           </Link>
-          <a href="#demo" className="text-muted-foreground hover:text-foreground transition-colors">
-            Demo
-          </a>
-          <Link to="/pricing" className="text-muted-foreground hover:text-foreground transition-colors">
+                    <Link to="/pricing" className="text-muted-foreground hover:text-foreground transition-colors">
             Pricing
           </Link>
           <a href="#voices" className="text-muted-foreground hover:text-foreground transition-colors">
@@ -69,11 +66,7 @@ export const Header = () => {
                       Features
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <a href="#demo" className="w-full">
-                      Demo
-                    </a>
-                  </DropdownMenuItem>
+                  
                   <DropdownMenuItem asChild>
                     <Link to="/pricing" className="w-full">
                       Pricing
@@ -116,11 +109,7 @@ export const Header = () => {
                       Features
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <a href="#demo" className="w-full">
-                      Demo
-                    </a>
-                  </DropdownMenuItem>
+                  
                   <DropdownMenuItem asChild>
                     <Link to="/pricing" className="w-full">
                       Pricing
