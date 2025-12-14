@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Check, X, Star, Users, Zap, Sparkles, Building2, Mail } from "lucide-react";
+import { Check, X, Star, Zap, Sparkles, Building2, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -176,18 +176,12 @@ export default function Pricing() {
     }
   ];
 
-  const addOnServices = {
-    comingSoon: [
-      { name: "Professional voice cloning", price: "$500 per voice" },
-      { name: "Expanded music library", price: "$200/month" },
-      { name: "Custom soundscape development", price: "$1,000 per environment" },
-      { name: "Professional SFX library", price: "$100/month" }
-    ],
-    professional: [
-      { name: "Dedicated onboarding", price: "$2,500 one-time" },
-      { name: "Voice coaching consultation", price: "$200/hour" }
-    ]
-  };
+  const addOnServices = [
+    { name: "More script uploads", price: "$20 for 5", note: "existing members only" },
+    { name: "Professional voice cloning", price: "$50 per voice" },
+    { name: "Expanded music library", price: "$50/month" },
+    { name: "Professional SFX library", price: "$50/month" }
+  ];
 
   const industryBenefits = {
     agencies: {
@@ -423,38 +417,24 @@ export default function Pricing() {
         <div className="container mx-auto px-4">
           <h3 className="text-3xl font-bold text-center mb-12">Enhance Your Experience</h3>
           
-          <div className="grid md:grid-cols-2 gap-12 max-w-6xl mx-auto">
+          <div className="max-w-2xl mx-auto">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Zap className="w-5 h-5 text-cinema-gold" />
-                  Coming Soon Add-Ons
+                  Available Add-Ons
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <ul className="space-y-3">
-                  {addOnServices.comingSoon.map((service, index) => (
+                  {addOnServices.map((service, index) => (
                     <li key={index} className="flex justify-between items-center gap-4">
-                      <span>{service.name}</span>
-                      <span className="font-medium text-cinema-gold whitespace-nowrap">{service.price}</span>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="w-5 h-5 text-cinema-gold" />
-                  Professional Services
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-3">
-                  {addOnServices.professional.map((service, index) => (
-                    <li key={index} className="flex justify-between items-center gap-4">
-                      <span>{service.name}</span>
+                      <span>
+                        {service.name}
+                        {service.note && (
+                          <span className="text-xs text-muted-foreground ml-2">({service.note})</span>
+                        )}
+                      </span>
                       <span className="font-medium text-cinema-gold whitespace-nowrap">{service.price}</span>
                     </li>
                   ))}
