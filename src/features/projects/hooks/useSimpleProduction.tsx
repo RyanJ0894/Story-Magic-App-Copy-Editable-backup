@@ -368,7 +368,6 @@ export const useSimpleProduction = () => {
         .upsert({ 
           project_id: projectId, 
           json_data: updatedDirectorJson,
-          updated_at: new Date().toISOString(),
         }, { onConflict: 'project_id' });
 
       if (updateError) {
