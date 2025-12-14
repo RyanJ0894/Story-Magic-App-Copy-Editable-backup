@@ -365,13 +365,11 @@ export const useSimpleProduction = () => {
 
       const { error: updateError } = await supabase
         .from('director_json')
-        .upsert({ 
-          project_id: projectId, 
-          json_data: updatedDirectorJson,
-        }, { onConflict: 'project_id' });
+        .update({ json_data: updatedDirectorJson })
+        .eq('project_id', projectId);
 
       if (updateError) {
-        throw new Error(`Failed to save voice changes: ${updateError.message}`);
+        console.warn('Failed to persist voice changes:', updateError.message);
       }
 
       setState(prev => ({ 
