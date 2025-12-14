@@ -1,8 +1,12 @@
-import { useRef, useEffect, useMemo } from 'react';
-import { Play, Pause, SkipBack, SkipForward } from 'lucide-react';
+import { useRef, useEffect, useMemo, useState } from 'react';
+import { Play, Pause, SkipBack, SkipForward, Users, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
+import { Badge } from '@/components/ui/badge';
 import type { ChunkProgressData } from '@/features/projects/project-chunk.type';
+import { VoiceSelector } from '@/components/feature/VoiceSelector';
+import { useElevenLabsVoices, type ElevenLabsVoice } from '@/hooks/useElevenLabsVoices';
+import type { UserVoiceCategory } from '@/config/userCategories';
 
 interface ScreenplayPlayerProps {
   chunks: ChunkProgressData[];
@@ -11,6 +15,7 @@ interface ScreenplayPlayerProps {
   duration: number;
   onSeek: (time: number) => void;
   onPlayPause: (playing: boolean) => void;
+  onVoiceChange?: (character: string, voiceId: string, voice: ElevenLabsVoice) => void;
 }
 
 interface DisplayLine {
@@ -23,6 +28,13 @@ interface DisplayLine {
   duration: number;
   end: number;
   sceneId: string;
+}
+
+interface CharacterInfo {
+  name: string;
+  voiceKey: string;
+  category: UserVoiceCategory | null;
+  lineCount: number;
 }
 
 function formatTime(seconds: number): string {
@@ -98,6 +110,36 @@ function extractDisplayLines(chunks: ChunkProgressData[]): DisplayLine[] {
   return lines;
 }
 
+function extractUniqueCharacters(chunks: ChunkProgressData[]): CharacterInfo[] {
+  const characterMap = new Map<string, CharacterInfo>();
+  
+  for (const chunk of chunks) {
+    if (!chunk.lines) continue;
+    
+    for (const line of chunk.lines) {
+      const charName = line.character || 'NARRATOR';
+      if (charName.toUpperCase() === 'NARRATOR') continue;
+      
+      if (!characterMap.has(charName)) {
+        characterMap.set(charName, {
+          name: charName,
+          voiceKey: line.voice_key || '',
+          category: (line as any).voice_category || null,
+          lineCount: 1,
+        });
+      } else {
+        const existing = characterMap.get(charName)!;
+        existing.lineCount++;
+        if (!existing.voiceKey && line.voice_key) {
+          existing.voiceKey = line.voice_key;
+        }
+      }
+    }
+  }
+  
+  return Array.from(characterMap.values()).sort((a, b) => b.lineCount - a.lineCount);
+}
+
 export default function ScreenplayPlayer({
   chunks,
   currentTime,
@@ -105,11 +147,29 @@ export default function ScreenplayPlayer({
   duration,
   onSeek,
   onPlayPause,
+  onVoiceChange,
 }: ScreenplayPlayerProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const activeLineRef = useRef<HTMLDivElement>(null);
+  const [showCastPanel, setShowCastPanel] = useState(false);
+  const [characterVoices, setCharacterVoices] = useState<Record<string, string>>({});
+  
+  const { voices, loading: voicesLoading } = useElevenLabsVoices();
   
   const displayLines = useMemo(() => extractDisplayLines(chunks), [chunks]);
+  const characters = useMemo(() => extractUniqueCharacters(chunks), [chunks]);
+  
+  useEffect(() => {
+    setCharacterVoices(prev => {
+      const updated = { ...prev };
+      characters.forEach(char => {
+        if (char.voiceKey && !updated[char.name]) {
+          updated[char.name] = char.voiceKey;
+        }
+      });
+      return updated;
+    });
+  }, [characters]);
   
   const currentLineId = useMemo(() => {
     for (let i = displayLines.length - 1; i >= 0; i--) {
@@ -162,6 +222,20 @@ export default function ScreenplayPlayer({
   const skipForward = () => {
     onSeek(Math.min(duration, currentTime + 10));
   };
+
+  const handleVoiceReassign = (characterName: string, voiceId: string, voice: ElevenLabsVoice) => {
+    setCharacterVoices(prev => ({
+      ...prev,
+      [characterName]: voiceId
+    }));
+    onVoiceChange?.(characterName, voiceId, voice);
+    console.log(`Reassigned ${characterName} to voice: ${voice.name}`);
+  };
+
+  const getVoiceName = (voiceKey: string): string => {
+    const voice = voices.find(v => v.voice_id === voiceKey);
+    return voice?.name || voiceKey || 'Not assigned';
+  };
   
   const getLineClassName = (line: DisplayLine): string => {
     const baseClasses = 'transition-all duration-200';
@@ -198,6 +272,66 @@ export default function ScreenplayPlayer({
   
   return (
     <div className="flex flex-col h-[70vh] sm:h-[80vh] border border-slate-700 rounded-lg bg-slate-900 overflow-hidden">
+      {characters.length > 0 && (
+        <div className="border-b border-slate-700 bg-slate-800/50">
+          <Button
+            variant="ghost"
+            onClick={() => setShowCastPanel(!showCastPanel)}
+            className="w-full flex items-center justify-between gap-2 px-4 py-3 rounded-none text-left"
+            data-testid="button-toggle-cast-panel"
+          >
+            <div className="flex items-center gap-2">
+              <Users className="h-4 w-4 text-sky-400" />
+              <span className="text-sm font-medium text-slate-200">
+                Voice Cast ({characters.length} characters)
+              </span>
+            </div>
+            {showCastPanel ? (
+              <ChevronUp className="h-4 w-4 text-slate-400" />
+            ) : (
+              <ChevronDown className="h-4 w-4 text-slate-400" />
+            )}
+          </Button>
+          
+          {showCastPanel && (
+            <div className="px-4 pb-4 space-y-3 max-h-[300px] overflow-y-auto">
+              {voicesLoading ? (
+                <div className="text-sm text-slate-400 py-2">Loading voices...</div>
+              ) : voices.length === 0 ? (
+                <div className="text-sm text-slate-400 py-2">No voices available. Please check your ElevenLabs connection.</div>
+              ) : (
+                characters.map((char) => (
+                  <div 
+                    key={char.name}
+                    className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 p-3 bg-slate-800/50 rounded-lg border border-slate-700"
+                    data-testid={`character-voice-row-${char.name}`}
+                  >
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                      <span className="font-medium text-sm text-slate-200 truncate">
+                        {char.name}
+                      </span>
+                      <Badge variant="secondary" className="text-xs flex-shrink-0">
+                        {char.lineCount} {char.lineCount === 1 ? 'line' : 'lines'}
+                      </Badge>
+                    </div>
+                    <div className="flex-shrink-0">
+                      <VoiceSelector
+                        voices={voices}
+                        selectedVoiceId={characterVoices[char.name] || ''}
+                        category={char.category || undefined}
+                        onVoiceChange={(voiceId, voice) => handleVoiceReassign(char.name, voiceId, voice)}
+                        showPreview={true}
+                        className="min-w-[200px]"
+                      />
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
       <div 
         ref={scrollContainerRef}
         className="flex-1 overflow-y-auto px-3 sm:px-8 py-4 sm:py-6"
