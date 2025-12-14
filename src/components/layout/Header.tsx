@@ -20,9 +20,9 @@ export const Header = () => {
         </Link>
         
         <nav className="hidden md:flex items-center gap-6">
-          <a href="#features" className="text-muted-foreground hover:text-foreground transition-colors">
+          <Link to="/features" className="text-muted-foreground hover:text-foreground transition-colors">
             Features
-          </a>
+          </Link>
           <a href="#demo" className="text-muted-foreground hover:text-foreground transition-colors">
             Demo
           </a>
@@ -65,9 +65,9 @@ export const Header = () => {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
                   <DropdownMenuItem asChild>
-                    <a href="#features" className="w-full">
+                    <Link to="/features" className="w-full">
                       Features
-                    </a>
+                    </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <a href="#demo" className="w-full">
@@ -112,9 +112,9 @@ export const Header = () => {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
                   <DropdownMenuItem asChild>
-                    <a href="#features" className="w-full">
+                    <Link to="/features" className="w-full">
                       Features
-                    </a>
+                    </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <a href="#demo" className="w-full">
