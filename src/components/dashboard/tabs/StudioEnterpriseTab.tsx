@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { 
   Eye, Trash2, AlertTriangle, Plus, Crown, Shield, 
@@ -7,6 +7,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   AlertDialog,
@@ -27,11 +28,55 @@ import { ROLE_PERMISSIONS } from "@/types/roles";
 interface StudioEnterpriseTabProps {
   projects: any[];
   onDeleteProject: (id: string, title: string) => void;
+  onBulkDeleteProjects?: (ids: string[]) => Promise<number>;
   deletingId: string | null;
+  isBulkDeleting?: boolean;
 }
 
-export function StudioEnterpriseTab({ projects, onDeleteProject, deletingId }: StudioEnterpriseTabProps) {
+export function StudioEnterpriseTab({ projects, onDeleteProject, onBulkDeleteProjects, deletingId, isBulkDeleting = false }: StudioEnterpriseTabProps) {
   const [activeTab, setActiveTab] = useState("overview");
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
+
+  useEffect(() => {
+    const projectIds = new Set(projects.map(p => p.id));
+    setSelectedIds(prev => {
+      const filtered = new Set([...prev].filter(id => projectIds.has(id)));
+      return filtered.size !== prev.size ? filtered : prev;
+    });
+  }, [projects]);
+
+  const toggleSelection = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === projects.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(projects.map(p => p.id)));
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (onBulkDeleteProjects && selectedIds.size > 0) {
+      try {
+        await onBulkDeleteProjects(Array.from(selectedIds));
+        setSelectedIds(new Set());
+        setBulkDeleteDialogOpen(false);
+      } catch {
+        setBulkDeleteDialogOpen(false);
+      }
+    }
+  };
   const { currentRole } = useUserRole();
   const permissions = currentRole ? ROLE_PERMISSIONS[currentRole] : ROLE_PERMISSIONS['Staff'];
 
@@ -271,9 +316,48 @@ export function StudioEnterpriseTab({ projects, onDeleteProject, deletingId }: S
 
         <TabsContent value="projects" className="space-y-6">
           <Card>
-            <CardHeader>
-              <CardTitle>Studio-Grade Project Management</CardTitle>
-              <CardDescription>Advanced workflow automation and production-level collaboration</CardDescription>
+            <CardHeader className="flex flex-row items-start justify-between gap-4">
+              <div>
+                <CardTitle>Studio-Grade Project Management</CardTitle>
+                <CardDescription>Advanced workflow automation and production-level collaboration</CardDescription>
+              </div>
+              {projects.length > 0 && selectedIds.size > 0 && (
+                <AlertDialog open={bulkDeleteDialogOpen} onOpenChange={setBulkDeleteDialogOpen}>
+                  <AlertDialogTrigger asChild>
+                    <Button 
+                      variant="destructive" 
+                      size="sm"
+                      disabled={isBulkDeleting}
+                      data-testid="button-bulk-delete"
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete {selectedIds.size} Selected
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle className="flex items-center gap-2">
+                        <AlertTriangle className="h-5 w-5 text-destructive" />
+                        Delete {selectedIds.size} Projects
+                      </AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Are you sure you want to delete {selectedIds.size} project{selectedIds.size !== 1 ? 's' : ''}? 
+                        This action cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction 
+                        onClick={handleBulkDelete} 
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        disabled={isBulkDeleting}
+                      >
+                        {isBulkDeleting ? "Deleting..." : "Delete Projects"}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
             </CardHeader>
             <CardContent>
               {projects.length === 0 ? (
@@ -285,23 +369,42 @@ export function StudioEnterpriseTab({ projects, onDeleteProject, deletingId }: S
                 </div>
               ) : (
                 <div className="space-y-3">
+                  <div className="flex items-center gap-3 pb-2 border-b">
+                    <Checkbox
+                      checked={selectedIds.size === projects.length && projects.length > 0}
+                      onCheckedChange={toggleSelectAll}
+                      data-testid="checkbox-select-all"
+                    />
+                    <span className="text-sm text-muted-foreground">
+                      {selectedIds.size === 0 
+                        ? "Select all" 
+                        : `${selectedIds.size} of ${projects.length} selected`}
+                    </span>
+                  </div>
                   {projects.map((project) => (
                     <div key={project.id} className="flex items-center justify-between p-4 border rounded-lg bg-gradient-to-r from-background to-muted/20">
-                      <div className="flex-1">
-                        <div className="font-medium flex items-center gap-2">
-                          {project.title || "Untitled Project"}
-                          <Badge variant="default">Studio</Badge>
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          {new Date(project.created_at).toLocaleDateString()} • Production Department • Automated Workflow
-                        </div>
-                        <div className="flex gap-2 mt-2">
-                          <Badge variant="outline">
-                            {project.ai_director_json ? (project.audio_url ? 'Complete' : 'Analyzed') : 'Draft'}
-                          </Badge>
-                          <Badge variant="secondary">Priority Processing</Badge>
-                          <Badge variant="outline">v3.2</Badge>
-                          <Badge variant="outline">White-Label Ready</Badge>
+                      <div className="flex items-center gap-3 flex-1">
+                        <Checkbox
+                          checked={selectedIds.has(project.id)}
+                          onCheckedChange={() => toggleSelection(project.id)}
+                          data-testid={`checkbox-project-${project.id}`}
+                        />
+                        <div className="flex-1">
+                          <div className="font-medium flex items-center gap-2">
+                            {project.title || "Untitled Project"}
+                            <Badge variant="default">Studio</Badge>
+                          </div>
+                          <div className="text-sm text-muted-foreground">
+                            {new Date(project.created_at).toLocaleDateString()} • Production Department • Automated Workflow
+                          </div>
+                          <div className="flex gap-2 mt-2">
+                            <Badge variant="outline">
+                              {project.ai_director_json ? (project.audio_url ? 'Complete' : 'Analyzed') : 'Draft'}
+                            </Badge>
+                            <Badge variant="secondary">Priority Processing</Badge>
+                            <Badge variant="outline">v3.2</Badge>
+                            <Badge variant="outline">White-Label Ready</Badge>
+                          </div>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
