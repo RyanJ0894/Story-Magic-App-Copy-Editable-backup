@@ -268,15 +268,11 @@ export default function ProjectDetail() {
           </div>
         )}
 
-        {/* Screenplay Player Section */}
-        {loadedChunks.length > 0 && (
-          <div className="space-y-4">
-            <h2 className="text-2xl font-bold">Script Playback</h2>
-            <p className="text-sm text-muted-foreground">
-              Click on any line to jump to that point in the audio
-            </p>
-
-            {generatedAudioUrl && (
+        {/* Saved Audio Section - Always show if audio exists */}
+        {generatedAudioUrl && (
+          <div className="p-6 border border-border rounded-lg bg-card">
+            <h2 className="text-xl font-semibold text-foreground mb-4">Project Audio</h2>
+            <div className="space-y-4">
               <AudioPlayer
                 audioUrl={generatedAudioUrl}
                 currentTime={currentTime}
@@ -286,7 +282,33 @@ export default function ProjectDetail() {
                 onPlayPause={handlePlayPause}
                 onEnded={handleEnded}
               />
-            )}
+              <div className="flex items-center gap-3 flex-wrap">
+                <a 
+                  href={generatedAudioUrl} 
+                  download
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium"
+                  data-testid="link-download-project-audio"
+                >
+                  <Download className="h-4 w-4" />
+                  Download Audio
+                </a>
+                <Link to="/dashboard">
+                  <Button variant="outline" data-testid="button-back-dashboard">
+                    Back to Dashboard
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Screenplay Player Section - Only if chunks available */}
+        {loadedChunks.length > 0 && (
+          <div className="space-y-4">
+            <h2 className="text-2xl font-bold">Script Playback</h2>
+            <p className="text-sm text-muted-foreground">
+              Click on any line to jump to that point in the audio
+            </p>
 
             <ScreenplayPlayer
               chunks={loadedChunks}
