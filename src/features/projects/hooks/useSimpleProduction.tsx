@@ -383,10 +383,12 @@ export const useSimpleProduction = () => {
         throw new Error(`Railway orchestration failed: ${result.error || 'Unknown error'}`);
       }
 
-      const publicUrl =
+      const baseUrl =
         result.public_url ||
         result.manifest?.public_url ||
         `https://bcuhyyyerxwgkrkbrqbs.supabase.co/storage/v1/object/public/audio/${projectId}/episode.m4a`;
+      
+      const publicUrl = `${baseUrl}?t=${Date.now()}`;
 
       const scenesArray = Array.isArray(updatedDirectorJson) ? updatedDirectorJson : (updatedDirectorJson.scenes || []);
       
