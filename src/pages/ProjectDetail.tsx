@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Loader2, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -131,10 +131,50 @@ function convertDirectorJsonToChunks(
   });
 }
 
+// Scale chunk timings to match actual audio duration
+function scaleChunksToAudioDuration(
+  chunks: ChunkProgressData[],
+  calculatedDuration: number,
+  actualAudioDuration: number
+): ChunkProgressData[] {
+  if (calculatedDuration <= 0 || actualAudioDuration <= 0) return chunks;
+  if (Math.abs(calculatedDuration - actualAudioDuration) < 0.5) return chunks;
+  
+  const scale = actualAudioDuration / calculatedDuration;
+  console.log(`🎯 Scaling timings: calculated=${calculatedDuration.toFixed(1)}s, actual=${actualAudioDuration.toFixed(1)}s, scale=${scale.toFixed(3)}`);
+  
+  return chunks.map(chunk => ({
+    ...chunk,
+    lines: chunk.lines.map(line => ({
+      ...line,
+      start: line.start * scale,
+      duration: line.duration * scale,
+    })),
+    audio_direction: {
+      music: chunk.audio_direction.music.map(m => ({
+        ...m,
+        start: m.start * scale,
+        duration: m.duration * scale,
+      })),
+      ambience: chunk.audio_direction.ambience.map(a => ({
+        ...a,
+        start: a.start * scale,
+        duration: a.duration * scale,
+      })),
+      sfx: chunk.audio_direction.sfx.map(s => ({
+        ...s,
+        start: s.start * scale,
+        duration: s.duration * scale,
+      })),
+    },
+  }));
+}
+
 export default function ProjectDetail() {
   const { id } = useParams<{ id: string }>();
   const [loadedChunks, setLoadedChunks] = useState<ChunkProgressData[]>([]);
-  const [duration, setDuration] = useState(30);
+  const [calculatedDuration, setCalculatedDuration] = useState(30);
+  const [actualAudioDuration, setActualAudioDuration] = useState<number | null>(null);
   const [generatedAudioUrl, setGeneratedAudioUrl] = useState<string | null>(null);
 
   // Audio generation mutation
@@ -213,7 +253,7 @@ export default function ProjectDetail() {
           console.log('✅ Loaded chunks from Director JSON:', chunks.length, 'with manifest:', !!manifestMap);
           setLoadedChunks(chunks);
           
-          // Calculate duration
+          // Calculate duration from chunks
           let maxEndTime = 0;
           chunks.forEach(chunk => {
             chunk.lines.forEach((line: any) => {
@@ -222,7 +262,7 @@ export default function ProjectDetail() {
             });
           });
           if (maxEndTime > 0) {
-            setDuration(Math.ceil(maxEndTime));
+            setCalculatedDuration(Math.ceil(maxEndTime));
           }
         } else {
           console.log('⚠️ No Director JSON found for project');
@@ -255,16 +295,33 @@ export default function ProjectDetail() {
       });
 
       if (maxEndTime > 0) {
-        setDuration(Math.ceil(maxEndTime));
+        setCalculatedDuration(Math.ceil(maxEndTime));
       }
     }
   };
+
+  // Create scaled chunks that match actual audio duration
+  const scaledChunks = useMemo(() => {
+    if (!actualAudioDuration || loadedChunks.length === 0) return loadedChunks;
+    return scaleChunksToAudioDuration(loadedChunks, calculatedDuration, actualAudioDuration);
+  }, [loadedChunks, calculatedDuration, actualAudioDuration]);
+
+  // Use actual audio duration when available, otherwise use calculated
+  const effectiveDuration = actualAudioDuration ?? calculatedDuration;
 
   const handleChunksComplete = (chunks: ChunkProgressData[]) => {
     toast.success("All chunks completed", {
       description: "All chunks have been completed",
     });
     console.log("All chunks completed:", chunks);
+  };
+
+  // Handle actual audio duration from audio element
+  const handleActualAudioDuration = (audioDuration: number) => {
+    if (audioDuration && !isNaN(audioDuration) && audioDuration > 0) {
+      console.log('🔊 Actual audio duration received:', audioDuration.toFixed(2), 's');
+      setActualAudioDuration(audioDuration);
+    }
   };
 
   // Script player controls hook
@@ -282,7 +339,7 @@ export default function ProjectDetail() {
     handleVolumeChange,
     handleSfxChange,
   } = useScriptPlayerControls({
-    initialDuration: duration,
+    initialDuration: effectiveDuration,
     onLineChange: (lineId: string) => {
       console.log("Active line changed:", lineId);
     },
@@ -475,7 +532,10 @@ export default function ProjectDetail() {
                 currentTime={currentTime}
                 isPlaying={isPlaying}
                 onTimeUpdate={handleTimeUpdate}
-                onDurationChange={handleDurationChange}
+                onDurationChange={(dur) => {
+                  handleDurationChange(dur);
+                  handleActualAudioDuration(dur);
+                }}
                 onPlayPause={handlePlayPause}
                 onEnded={handleEnded}
               />
@@ -508,10 +568,10 @@ export default function ProjectDetail() {
             </p>
 
             <ScreenplayPlayer
-              chunks={loadedChunks}
+              chunks={scaledChunks}
               currentTime={currentTime}
               isPlaying={isPlaying}
-              duration={playerDuration}
+              duration={effectiveDuration}
               onSeek={handleSeek}
               onPlayPause={handlePlayPause}
             />
