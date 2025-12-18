@@ -15,7 +15,17 @@ import { projectApi } from "@/features/projects/services/projectApi";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-function convertDirectorJsonToChunks(directorJson: any, projectId: string): ChunkProgressData[] {
+interface ManifestTiming {
+  scene_id: string;
+  offset: number;
+  duration: number;
+}
+
+function convertDirectorJsonToChunks(
+  directorJson: any, 
+  projectId: string,
+  manifestMap?: Map<string, ManifestTiming>
+): ChunkProgressData[] {
   const scenesArray = Array.isArray(directorJson) ? directorJson : (directorJson.scenes || []);
   
   let fallbackCumulativeTime = 0;
@@ -24,7 +34,10 @@ function convertDirectorJsonToChunks(directorJson: any, projectId: string): Chun
     const sceneDialogue = scene.dialogue || [];
     const sceneId = scene.scene_id || `scene_${sceneIndex + 1}`;
     
-    const sceneOffset = fallbackCumulativeTime;
+    // Use manifest timing if available, otherwise fallback to cumulative time
+    const manifestTiming = manifestMap?.get(sceneId);
+    const sceneOffset = manifestTiming?.offset ?? fallbackCumulativeTime;
+    const sceneDurationFromManifest = manifestTiming?.duration ?? 0;
     
     const sceneLines = Array.isArray(sceneDialogue) ? sceneDialogue.map((line: any, lineIndex: number) => {
       const lineText = line.text || '';
@@ -33,15 +46,30 @@ function convertDirectorJsonToChunks(directorJson: any, projectId: string): Chun
       const isNarrator = lineCharacter.toUpperCase() === 'NARRATOR';
       const lineType = isNarrator ? 'action' : 'dialogue';
       
+      // Calculate line timing based on character weight within scene
       const totalCharsInScene = sceneDialogue.reduce((sum: number, l: any) => sum + (l.text?.length || 0), 0);
       const lineWeight = lineText.length / Math.max(totalCharsInScene, 1);
-      const lineDuration = Math.max(2, Math.ceil(lineText.length / 15));
+      
+      // Use manifest duration for proportional timing, or fallback to heuristic
+      const lineDuration = sceneDurationFromManifest > 0 
+        ? lineWeight * sceneDurationFromManifest 
+        : Math.max(2, Math.ceil(lineText.length / 15));
       
       const priorChars = sceneDialogue.slice(0, lineIndex).reduce((sum: number, l: any) => sum + (l.text?.length || 0), 0);
       const priorWeight = priorChars / Math.max(totalCharsInScene, 1);
-      const lineStart = sceneOffset + (fallbackCumulativeTime - sceneOffset);
       
-      fallbackCumulativeTime += lineDuration;
+      // For line start: use proportional timing with manifest, or compute from prior lines' heuristic durations
+      let lineStart: number;
+      if (sceneDurationFromManifest > 0) {
+        lineStart = sceneOffset + (priorWeight * sceneDurationFromManifest);
+      } else {
+        // Calculate prior lines' total duration using heuristic
+        const priorDuration = sceneDialogue.slice(0, lineIndex).reduce((sum: number, l: any) => {
+          const text = l.text || '';
+          return sum + Math.max(2, Math.ceil(text.length / 15));
+        }, 0);
+        lineStart = sceneOffset + priorDuration;
+      }
       
       return {
         line_id: line.line_id || `line_${sceneIndex}_${lineIndex}`,
@@ -61,7 +89,10 @@ function convertDirectorJsonToChunks(directorJson: any, projectId: string): Chun
     }) : [];
     
     const computedSceneDuration = sceneLines.reduce((sum, line) => sum + line.duration, 0);
-    fallbackCumulativeTime = sceneOffset + computedSceneDuration;
+    const finalSceneDuration = sceneDurationFromManifest > 0 ? sceneDurationFromManifest : computedSceneDuration;
+    
+    // Always advance fallbackCumulativeTime so subsequent scenes start after this one
+    fallbackCumulativeTime = Math.max(fallbackCumulativeTime, sceneOffset + finalSceneDuration);
     
     return {
       chunk_id: String(sceneId),
@@ -75,7 +106,7 @@ function convertDirectorJsonToChunks(directorJson: any, projectId: string): Chun
           track_id: m.track_id || `music_${sceneIndex}_${idx}`,
           name: m.track_id || '',
           start: sceneOffset,
-          duration: computedSceneDuration,
+          duration: finalSceneDuration,
           volume: m.volume || 0.25,
           src: null,
         })) || [],
@@ -83,7 +114,7 @@ function convertDirectorJsonToChunks(directorJson: any, projectId: string): Chun
           track_id: a.track_id || `ambience_${sceneIndex}_${idx}`,
           name: a.track_id || '',
           start: sceneOffset,
-          duration: computedSceneDuration,
+          duration: finalSceneDuration,
           volume: a.volume || 0.28,
           src: null,
         })) || [],
@@ -129,19 +160,25 @@ export default function ProjectDetail() {
     const loadChunksFromDirectorJson = async () => {
       if (!id || !project?.audio_url || loadedChunks.length > 0) return;
       
-      console.log('📊 Fetching Director JSON for project:', id);
+      console.log('📊 Fetching Director JSON and manifest for project:', id);
       
       try {
-        // Try director_json table first
-        const { data: directorData, error: directorError } = await supabase
-          .from('director_json')
-          .select('json_data')
-          .eq('project_id', id)
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .maybeSingle();
+        // Fetch director_json and mix_manifests in parallel
+        const [directorResult, manifestResult] = await Promise.all([
+          supabase
+            .from('director_json')
+            .select('json_data')
+            .eq('project_id', id)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle(),
+          supabase
+            .from('mix_manifests')
+            .select('scene_id, mix_manifest_json')
+            .eq('project_id', id)
+        ]);
         
-        let directorJson = directorData?.json_data as Record<string, any> | null;
+        let directorJson = directorResult.data?.json_data as Record<string, any> | null;
         
         // Fallback to user_projects table
         if (!directorJson) {
@@ -154,9 +191,26 @@ export default function ProjectDetail() {
           directorJson = projectData?.ai_director_json as Record<string, any> | null;
         }
         
+        // Build manifest map from mix_manifests data
+        let manifestMap: Map<string, ManifestTiming> | undefined;
+        if (manifestResult.data && manifestResult.data.length > 0) {
+          manifestMap = new Map();
+          manifestResult.data.forEach((row: any) => {
+            const manifest = row.mix_manifest_json as any;
+            if (manifest && row.scene_id) {
+              manifestMap!.set(row.scene_id, {
+                scene_id: row.scene_id,
+                offset: manifest.offset ?? manifest.start ?? 0,
+                duration: manifest.duration ?? 0,
+              });
+            }
+          });
+          console.log('📋 Loaded manifest timing for', manifestMap.size, 'scenes');
+        }
+        
         if (directorJson?.scenes?.length) {
-          const chunks = convertDirectorJsonToChunks(directorJson, id);
-          console.log('✅ Loaded chunks from Director JSON:', chunks.length);
+          const chunks = convertDirectorJsonToChunks(directorJson, id, manifestMap);
+          console.log('✅ Loaded chunks from Director JSON:', chunks.length, 'with manifest:', !!manifestMap);
           setLoadedChunks(chunks);
           
           // Calculate duration
