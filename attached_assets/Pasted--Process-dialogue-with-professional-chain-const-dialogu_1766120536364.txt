@@ -1,0 +1,389 @@
+ // Process dialogue with professional chain
+  const dialogueProcessedPath = path.join(path.dirname(output), `dialogue-processed-${scene.scene_id}.wav`);
+  console.log('   🎙️  Applying dialogue processing chain...');
+  await execa(ffmpeg, [
+    '-i', dialoguePath,
+    '-af', buildDialogueProcessor(),
+    '-c:a', 'pcm_s16le',
+    '-ar', '48000',
+    dialogueProcessedPath
+  ]);
+
+  const dialogueDuration = await getAudioDuration(dialogueProcessedPath);
+  console.log(`   ✅ Processed dialogue duration: ${dialogueDuration.toFixed(2)}s`);
+
+  const timelineData = extractTimelineData(timeline, cues);
+  console.log('   🎼 Timeline data extracted:', timelineData);
+
+  const inputs = [{ path: dialogueProcessedPath, label: 'dialogue', index: 0 }];
+  let inputIndex = 1;
+
+  if (timelineData.music) {
+    const trackPath = getTrackPath(timelineData.music.cue_id);
+    if (trackPath) {
+      inputs.push({ path: trackPath, label: 'music', index: inputIndex, data: timelineData.music });
+      inputIndex++;
+      console.log(`   🎵 Music: ${timelineData.music.cue_id}`);
+    } else {
+      console.warn(`   ⚠️  Music track not found: ${timelineData.music.cue_id}`);
+      timelineData.music = null;
+    }
+  }
+
+  if (timelineData.ambience) {
+    const trackPath = getTrackPath(timelineData.ambience.cue_id);
+    if (trackPath) {
+      inputs.push({ path: trackPath, label: 'ambience', index: inputIndex, data: timelineData.ambience });
+      inputIndex++;
+      console.log(`   🌊 Ambience: ${timelineData.ambience.cue_id}`);
+    } else {
+      console.warn(`   ⚠️  Ambience track not found: ${timelineData.ambience.cue_id}`);
+      timelineData.ambience = null;
+    }
+  }
+
+  for (const sfx of timelineData.sfx) {
+    const trackPath = getTrackPath(sfx.cue_id);
+    if (trackPath) {
+      inputs.push({ path: trackPath, label: `sfx${sfx.index}`, index: inputIndex, data: sfx });
+      inputIndex++;
+      console.log(`   🔊 SFX ${sfx.index + 1}: ${sfx.cue_id} @ ${sfx.at}s`);
+    }
+  }
+
+  if (inputs.length === 1) {
+    console.log('   ℹ️  Dialogue-only (no background) - normalizing...');
+    await normalizeAudio(dialogueProcessedPath, output);
+    fs.unlinkSync(dialogueProcessedPath); // Cleanup
+    return;
+  }
+
+  console.log('   🔧 Building professional mix with EQ separation and adaptive ducking...');
+  const filterComplex = buildProfessionalMixFilter({
+    dialogueDuration,
+    inputs,
+    timelineData
+  });
+
+  const inputArgs = [];
+  for (const input of inputs) {
+    inputArgs.push('-i', input.path);
+  }
+
+  const tempMix = path.join(path.dirname(output), `temp-mix-${scene.scene_id}.wav`);
+  
+  const args = [
+    ...inputArgs,
+    '-filter_complex', filterComplex,
+    '-map', '[final]',
+    '-c:a', 'pcm_s16le',
+    '-ar', '48000',
+    '-y',
+    tempMix
+  ];
+
+  console.log('   🎬 Executing professional mix...');
+  
+  try {
+    await execa(ffmpeg, args);
+    
+    // Final loudness normalization
+    console.log('   📊 Normalizing to broadcast standards (-16 LUFS)...');
+    await normalizeAudio(tempMix, output);
+    
+    // Cleanup temp files
+    fs.unlinkSync(tempMix);
+    fs.unlinkSync(dialogueProcessedPath);
+    
+    console.log('   ✅ Professional mix complete');
+  } catch (error) {
+    console.error('❌ FFmpeg mixing error:', error.stderr || error.message);
+    console.log('   ⚠️  Falling back to processed dialogue');
+    await normalizeAudio(dialogueProcessedPath, output);
+    fs.unlinkSync(dialogueProcessedPath);
+  }
+}
+
+/**
+ * OPTIMIZED FILTER GRAPH - Film-standard mixing
+ */
+function buildProfessionalMixFilter({ dialogueDuration, inputs, timelineData }) {
+  const filters = [];
+  const layersToMix = [];
+
+  // Dialogue is already processed, just reference it
+  layersToMix.push('[0:a]');
+
+  // MUSIC with EQ separation and enhanced ducking
+  if (timelineData.music) {
+    const musicInput = inputs.find(i => i.label === 'music');
+    if (musicInput) {
+      const { start, end, fade_in, fade_out, gain_db } = timelineData.music;
+      const duration = end ? (end - start) : dialogueDuration;
+      
+      // CHANGED: Better gain staging - film standard is -22dB for music
+      const filmGain = gain_db || -22;
+
+      // EQ to separate music from dialogue frequencies
+      filters.push(
+        `[${musicInput.index}:a]` +
+        `aloop=loop=-1:size=2e+09,` +
+        `atrim=duration=${duration + (end ? fade_out : 0)},` +
+        (start > 0 ? `adelay=${start * 1000}|${start * 1000},` : '') +
+        `highpass=f=120,` +                                      // Clean low end
+        `equalizer=f=800:width_type=o:width=2:g=-4,` +           // Reduce dialogue fundamental range
+        `equalizer=f=2500:width_type=o:width=2:g=-3,` +          // Reduce dialogue presence range
+        `volume=${filmGain}dB` +
+        `[music_eq]`
+      );
+
+      // Apply fades
+      filters.push(
+        `[music_eq]` +
+        `afade=t=in:st=${start}:d=${fade_in}:curve=esin,` +     // Smoother exponential fade
+        `afade=t=out:st=${Math.max(start, (end || dialogueDuration) - fade_out)}:d=${fade_out}:curve=esin` +
+        `[music_faded]`
+      );
+
+      // IMPROVED DUCKING with better parameters
+      filters.push(
+        `[music_faded][0:a]sidechaincompress=` +
+        `threshold=0.015:` +        // CHANGED: More sensitive threshold
+        `ratio=8:` +                 // CHANGED: Stronger compression ratio
+        `attack=60:` +               // CHANGED: Faster attack for responsiveness
+        `release=300:` +             // CHANGED: Quicker release
+        `knee=4:` +                  // CHANGED: Softer knee for natural sound
+        `makeup=0:` +                // No makeup gain
+        `detection=rms:` +           // RMS detection for natural response
+        `mix=1` +                    // 100% wet (full ducking effect)
+        `[music_ducked]`
+      );
+
+      layersToMix.push('[music_ducked]');
+    }
+  }
+
+  // AMBIENCE with EQ and subtle ducking
+  if (timelineData.ambience) {
+    const ambienceInput = inputs.find(i => i.label === 'ambience');
+    if (ambienceInput) {
+      const { start, end, fade_in, fade_out, gain_db } = timelineData.ambience;
+      const duration = end ? (end - start) : dialogueDuration;
+      
+      // CHANGED: Lower ambience level - film standard is -24dB to -28dB
+      const filmGain = gain_db || -26;
+
+      // EQ for ambience - remove frequencies that compete with dialogue
+      filters.push(
+        `[${ambienceInput.index}:a]` +
+        `aloop=loop=-1:size=2e+09,` +
+        `atrim=duration=${duration + (end ? fade_out : 0)},` +
+        (start > 0 ? `adelay=${start * 1000}|${start * 1000},` : '') +
+        `highpass=f=60,` +                                       // Remove sub-bass
+        `lowpass=f=8000,` +                                      // Remove highs that mask dialogue
+        `equalizer=f=2000:width_type=o:width=3:g=-6,` +          // Deep cut in speech range
+        `volume=${filmGain}dB` +
+        `[ambience_eq]`
+      );
+
+      // Apply fades
+      filters.push(
+        `[ambience_eq]` +
+        `afade=t=in:st=${start}:d=${fade_in}:curve=esin,` +
+        `afade=t=out:st=${Math.max(start, (end || dialogueDuration) - fade_out)}:d=${fade_out}:curve=esin` +
+        `[ambience_faded]`
+      );
+
+      // Subtle ducking for ambience (less aggressive than music)
+      filters.push(
+        `[ambience_faded][0:a]sidechaincompress=` +
+        `threshold=0.025:` +
+        `ratio=5:` +
+        `attack=100:` +
+        `release=400:` +
+        `knee=3:` +
+        `mix=0.8` +                  // 80% wet for more subtle effect
+        `[ambience_ducked]`
+      );
+
+      layersToMix.push('[ambience_ducked]');
+    }
+  }
+
+  // SFX - No ducking, natural and punchy
+  for (const sfx of timelineData.sfx) {
+    const sfxInput = inputs.find(i => i.data && i.data.cue_id === sfx.cue_id && i.data.index === sfx.index);
+    if (sfxInput) {
+      // CHANGED: Better SFX gain - film standard is -10dB to -14dB
+      const sfxGain = sfx.gain_db || -12;
+      
+      filters.push(
+        `[${sfxInput.index}:a]` +
+        (sfx.duration ? `atrim=duration=${sfx.duration},` : '') +
+        (sfx.duration && sfx.fade_out ? 
+          `afade=t=out:st=${Math.max(0, sfx.duration - sfx.fade_out)}:d=${sfx.fade_out}:curve=esin,` : '') +
+        `adelay=${sfx.at * 1000}|${sfx.at * 1000},` +
+        `volume=${sfxGain}dB` +
+        `[sfx${sfx.index}]`
+      );
+      
+      layersToMix.push(`[sfx${sfx.index}]`);
+    }
+  }
+
+  // Final mix - dialogue first (highest priority)
+  // CHANGED: Use dropout_transition for smoother handling of missing inputs
+  const mixFilter = 
+    `${layersToMix.join('')}` +
+    `amix=inputs=${layersToMix.length}:duration=longest:dropout_transition=3:normalize=0:weights=${getMixWeights(layersToMix.length)}` +
+    `[final]`;
+  
+  filters.push(mixFilter);
+
+  return filters.join(';');
+}
+
+/**
+ * Generate mix weights for proper level balance
+ * Dialogue at 1.0 (full), background elements lower
+ */
+function getMixWeights(numInputs) {
+  // First input is always dialogue at full weight
+  const weights = [1.0];
+  
+  // Remaining inputs get lower weights
+  for (let i = 1; i < numInputs; i++) {
+    weights.push(0.7); // 70% for background elements
+  }
+  
+  return weights.join(' ');
+}
+
+/**
+ * Two-pass loudness normalization to broadcast standards
+ */
+async function normalizeAudio(inputPath, outputPath) {
+  const target_lufs = -16;
+  const true_peak = -1.5;
+  const lra = 8;
+  
+  // Pass 1: Measure
+  const { stderr: measure } = await execa(ffmpeg, [
+    '-i', inputPath,
+    '-af', `loudnorm=I=${target_lufs}:TP=${true_peak}:LRA=${lra}:print_format=json`,
+    '-f', 'null',
+    '-'
+  ], { reject: false });
+  
+  const txt = measure || '';
+  const rx = (k) => (txt.match(new RegExp(`"${k}"\\s*:\\s*"?(.*?)"?(,|\\s|$)`)) || [])[1];
+  
+  const measured_I = rx('input_i');
+  const measured_TP = rx('input_tp');
+  const measured_LRA = rx('input_lra');
+  const measured_thresh = rx('input_thresh');
+  const target_offset = rx('target_offset');
+  
+  // Pass 2: Apply
+  await execa(ffmpeg, [
+    '-i', inputPath,
+    '-af', `loudnorm=I=${target_lufs}:TP=${true_peak}:LRA=${lra}:measured_I=${measured_I}:measured_TP=${measured_TP}:measured_LRA=${measured_LRA}:measured_thresh=${measured_thresh}:offset=${target_offset}:linear=true`,
+    '-ar', '48000',
+    '-c:a', 'aac',
+    '-b:a', '256k',
+    '-y',
+    outputPath
+  ]);
+}
+
+async function concatenateDialogue(stems, outputPath) {
+  if (stems.length === 1) {
+    fs.copyFileSync(stems[0].path, outputPath);
+    return;
+  }
+
+  const concatList = stems.map(s => `file '${s.path}'`).join('\n');
+  const concatFilePath = path.join(path.dirname(outputPath), 'concat-list.txt');
+  fs.writeFileSync(concatFilePath, concatList);
+
+  try {
+    await execa(ffmpeg, [
+      '-f', 'concat',
+      '-safe', '0',
+      '-i', concatFilePath,
+      '-c:a', 'aac',
+      '-b:a', '192k',
+      '-ar', '48000',
+      '-y',
+      outputPath
+    ]);
+  } finally {
+    if (fs.existsSync(concatFilePath)) {
+      fs.unlinkSync(concatFilePath);
+    }
+  }
+}
+
+async function createSilence(outputPath, duration) {
+  await execa(ffmpeg, [
+    '-f', 'lavfi',
+    '-i', `anullsrc=r=48000:cl=stereo`,
+    '-t', duration.toString(),
+    '-c:a', 'aac',
+    '-b:a', '192k',
+    '-y',
+    outputPath
+  ]);
+}
+
+function extractTimelineData(timeline, cues) {
+  const data = {
+    music: null,
+    ambience: null,
+    sfx: []
+  };
+
+  if (!timeline || !timeline.events) {
+    return data;
+  }
+
+  const musicIn = timeline.events.find(e => e.type === 'music_in');
+  const musicOut = timeline.events.find(e => e.type === 'music_out');
+
+  if (musicIn && cues.music && cues.music.length > 0) {
+    data.music = {
+      cue_id: musicIn.cue_id || cues.music[0].cue_id,
+      start: musicIn.at || 0,
+      end: musicOut ? musicOut.at : null,
+      fade_in: musicIn.fade || 3,        // CHANGED: Longer default fade
+      fade_out: musicOut ? musicOut.fade : 4,  // CHANGED: Longer default fade
+      gain_db: musicIn.gain_db || -22,   // CHANGED: Film standard
+    };
+  }
+
+  const ambienceIn = timeline.events.find(e => e.type === 'ambience_in');
+  const ambienceOut = timeline.events.find(e => e.type === 'ambience_out');
+
+  if (ambienceIn && cues.ambience && cues.ambience.length > 0) {
+    data.ambience = {
+      cue_id: ambienceIn.cue_id || cues.ambience[0].cue_id,
+      start: ambienceIn.at || 0,
+      end: ambienceOut ? ambienceOut.at : null,
+      fade_in: ambienceIn.fade || 4,     // CHANGED: Longer default fade
+      fade_out: ambienceOut ? ambienceOut.fade : 4,
+      gain_db: ambienceIn.gain_db || -26 // CHANGED: Film standard
+    };
+  }
+
+  const sfxEvents = timeline.events.filter(e => e.type === 'sfx_at');
+  data.sfx = sfxEvents.map((event, index) => ({
+    cue_id: event.cue_id,
+    at: event.at || 0,
+    duration: event.duration || null,
+    gain_db: event.gain_db || -12,      // CHANGED: Film standard
+    fade_out: event.fade_out || 2,
+    index
+  }));
+
+  return data;
+}
