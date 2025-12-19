@@ -72,8 +72,10 @@ function convertDirectorJsonToChunks(
         // Use precise timing from manifest (ground truth from audio generation)
         lineStart = preciseTiming.start;
         lineDuration = preciseTiming.duration;
+        console.log(`🎯 Line ${lineId}: Using PRECISE timing (start: ${lineStart.toFixed(2)}s, dur: ${lineDuration.toFixed(2)}s)`);
       } else {
         // Fallback to character-weight heuristic
+        console.log(`📊 Line ${lineId}: Using HEURISTIC timing (no manifest data)`);
         const totalCharsInScene = sceneDialogue.reduce((sum: number, l: any) => sum + (l.text?.length || 0), 0);
         const lineWeight = lineText.length / Math.max(totalCharsInScene, 1);
         
@@ -262,8 +264,12 @@ export default function ProjectDetail() {
         let manifestMap: Map<string, ManifestTiming> | undefined;
         if (manifestResult.data && manifestResult.data.length > 0) {
           manifestMap = new Map();
+          console.log('🔍 Raw mix_manifests data:', JSON.stringify(manifestResult.data, null, 2));
+          
           manifestResult.data.forEach((row: any) => {
             const manifest = row.mix_manifest_json as any;
+            console.log(`🔍 Scene ${row.scene_id} manifest keys:`, manifest ? Object.keys(manifest) : 'null');
+            
             if (manifest && row.scene_id) {
               const timing: ManifestTiming = {
                 scene_id: row.scene_id,
@@ -278,13 +284,17 @@ export default function ProjectDetail() {
                   start: line.start,
                   duration: line.duration,
                 }));
-                console.log(`📍 Scene ${row.scene_id}: Found ${timing.lines.length} line timings from manifest`);
+                console.log(`✅ Scene ${row.scene_id}: Found ${timing.lines.length} line timings from manifest`);
+              } else {
+                console.log(`⚠️ Scene ${row.scene_id}: NO line timings in manifest (lines field: ${typeof manifest.lines})`);
               }
               
               manifestMap!.set(row.scene_id, timing);
             }
           });
           console.log('📋 Loaded manifest timing for', manifestMap.size, 'scenes');
+        } else {
+          console.log('⚠️ No mix_manifests data found for this project');
         }
         
         if (directorJson?.scenes?.length) {
