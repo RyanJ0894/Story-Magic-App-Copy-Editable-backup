@@ -190,29 +190,51 @@ export const useSimpleProduction = () => {
         const sceneOffset = manifestTiming?.offset ?? fallbackCumulativeTime;
         const sceneDurationFromManifest = manifestTiming?.duration ?? 0;
         
+        // Build a map of line-level timing from manifest if available
+        const lineTimingMap = new Map<string, { line_id: string; start: number; duration: number }>();
+        if (manifestTiming?.lines && Array.isArray(manifestTiming.lines)) {
+          manifestTiming.lines.forEach((lt: any) => {
+            lineTimingMap.set(lt.line_id, lt);
+          });
+        }
+        
         const sceneLines = Array.isArray(sceneDialogue) ? sceneDialogue.map((line: any, lineIndex: number) => {
           const lineText = line.text || '';
           const lineCharacter = line.character || 'NARRATOR';
+          const lineId = line.line_id || `line_${sceneIndex}_${lineIndex}`;
           
           const isNarrator = lineCharacter.toUpperCase() === 'NARRATOR';
           const lineType = isNarrator ? 'action' : 'dialogue';
           
-          const totalCharsInScene = sceneDialogue.reduce((sum: number, l: any) => sum + (l.text?.length || 0), 0);
-          const lineWeight = lineText.length / Math.max(totalCharsInScene, 1);
-          const lineDuration = sceneDurationFromManifest > 0 
-            ? lineWeight * sceneDurationFromManifest 
-            : Math.max(2, Math.ceil(lineText.length / 15));
+          // Check for precise line timing from manifest first
+          const preciseTiming = lineTimingMap.get(lineId);
           
-          const priorChars = sceneDialogue.slice(0, lineIndex).reduce((sum: number, l: any) => sum + (l.text?.length || 0), 0);
-          const priorWeight = priorChars / Math.max(totalCharsInScene, 1);
-          const lineStart = sceneOffset + (sceneDurationFromManifest > 0 ? priorWeight * sceneDurationFromManifest : fallbackCumulativeTime - sceneOffset);
+          let lineStart: number;
+          let lineDuration: number;
           
-          if (!manifestTiming) {
-            fallbackCumulativeTime += lineDuration;
+          if (preciseTiming) {
+            // Use precise timing from manifest (ground truth from audio generation)
+            lineStart = preciseTiming.start;
+            lineDuration = preciseTiming.duration;
+          } else {
+            // Fallback to character-weight heuristic
+            const totalCharsInScene = sceneDialogue.reduce((sum: number, l: any) => sum + (l.text?.length || 0), 0);
+            const lineWeight = lineText.length / Math.max(totalCharsInScene, 1);
+            lineDuration = sceneDurationFromManifest > 0 
+              ? lineWeight * sceneDurationFromManifest 
+              : Math.max(2, Math.ceil(lineText.length / 15));
+            
+            const priorChars = sceneDialogue.slice(0, lineIndex).reduce((sum: number, l: any) => sum + (l.text?.length || 0), 0);
+            const priorWeight = priorChars / Math.max(totalCharsInScene, 1);
+            lineStart = sceneOffset + (sceneDurationFromManifest > 0 ? priorWeight * sceneDurationFromManifest : fallbackCumulativeTime - sceneOffset);
+            
+            if (!manifestTiming) {
+              fallbackCumulativeTime += lineDuration;
+            }
           }
           
           return {
-            line_id: line.line_id || `line_${sceneIndex}_${lineIndex}`,
+            line_id: lineId,
             type: lineType as 'action' | 'dialogue',
             text: lineText,
             character: lineCharacter,
@@ -405,29 +427,51 @@ export const useSimpleProduction = () => {
         const sceneOffset = manifestTiming?.offset ?? fallbackCumulativeTime;
         const sceneDurationFromManifest = manifestTiming?.duration ?? 0;
         
+        // Build a map of line-level timing from manifest if available
+        const lineTimingMap = new Map<string, { line_id: string; start: number; duration: number }>();
+        if (manifestTiming?.lines && Array.isArray(manifestTiming.lines)) {
+          manifestTiming.lines.forEach((lt: any) => {
+            lineTimingMap.set(lt.line_id, lt);
+          });
+        }
+        
         const sceneLines = Array.isArray(sceneDialogue) ? sceneDialogue.map((line: any, lineIndex: number) => {
           const lineText = line.text || '';
           const lineCharacter = line.character || 'NARRATOR';
+          const lineId = line.line_id || `line_${sceneIndex}_${lineIndex}`;
           
           const isNarrator = lineCharacter.toUpperCase() === 'NARRATOR';
           const lineType = isNarrator ? 'action' : 'dialogue';
           
-          const totalCharsInScene = sceneDialogue.reduce((sum: number, l: any) => sum + (l.text?.length || 0), 0);
-          const lineWeight = lineText.length / Math.max(totalCharsInScene, 1);
-          const lineDuration = sceneDurationFromManifest > 0 
-            ? lineWeight * sceneDurationFromManifest 
-            : Math.max(2, Math.ceil(lineText.length / 15));
+          // Check for precise line timing from manifest first
+          const preciseTiming = lineTimingMap.get(lineId);
           
-          const priorChars = sceneDialogue.slice(0, lineIndex).reduce((sum: number, l: any) => sum + (l.text?.length || 0), 0);
-          const priorWeight = priorChars / Math.max(totalCharsInScene, 1);
-          const lineStart = sceneOffset + (sceneDurationFromManifest > 0 ? priorWeight * sceneDurationFromManifest : fallbackCumulativeTime - sceneOffset);
+          let lineStart: number;
+          let lineDuration: number;
           
-          if (!manifestTiming) {
-            fallbackCumulativeTime += lineDuration;
+          if (preciseTiming) {
+            // Use precise timing from manifest (ground truth from audio generation)
+            lineStart = preciseTiming.start;
+            lineDuration = preciseTiming.duration;
+          } else {
+            // Fallback to character-weight heuristic
+            const totalCharsInScene = sceneDialogue.reduce((sum: number, l: any) => sum + (l.text?.length || 0), 0);
+            const lineWeight = lineText.length / Math.max(totalCharsInScene, 1);
+            lineDuration = sceneDurationFromManifest > 0 
+              ? lineWeight * sceneDurationFromManifest 
+              : Math.max(2, Math.ceil(lineText.length / 15));
+            
+            const priorChars = sceneDialogue.slice(0, lineIndex).reduce((sum: number, l: any) => sum + (l.text?.length || 0), 0);
+            const priorWeight = priorChars / Math.max(totalCharsInScene, 1);
+            lineStart = sceneOffset + (sceneDurationFromManifest > 0 ? priorWeight * sceneDurationFromManifest : fallbackCumulativeTime - sceneOffset);
+            
+            if (!manifestTiming) {
+              fallbackCumulativeTime += lineDuration;
+            }
           }
           
           return {
-            line_id: line.line_id || `line_${sceneIndex}_${lineIndex}`,
+            line_id: lineId,
             type: lineType as 'action' | 'dialogue',
             text: lineText,
             character: lineCharacter,
