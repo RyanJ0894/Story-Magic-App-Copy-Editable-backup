@@ -15,10 +15,17 @@ import { projectApi } from "@/features/projects/services/projectApi";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
+interface LineTiming {
+  line_id: string;
+  start: number;
+  duration: number;
+}
+
 interface ManifestTiming {
   scene_id: string;
   offset: number;
   duration: number;
+  lines?: LineTiming[];
 }
 
 function convertDirectorJsonToChunks(
@@ -39,40 +46,60 @@ function convertDirectorJsonToChunks(
     const sceneOffset = manifestTiming?.offset ?? fallbackCumulativeTime;
     const sceneDurationFromManifest = manifestTiming?.duration ?? 0;
     
+    // Build a map of line-level timing from manifest if available
+    const lineTimingMap = new Map<string, LineTiming>();
+    if (manifestTiming?.lines) {
+      manifestTiming.lines.forEach(lt => {
+        lineTimingMap.set(lt.line_id, lt);
+      });
+    }
+    
     const sceneLines = Array.isArray(sceneDialogue) ? sceneDialogue.map((line: any, lineIndex: number) => {
       const lineText = line.text || '';
       const lineCharacter = line.character || 'NARRATOR';
+      const lineId = line.line_id || `line_${sceneIndex}_${lineIndex}`;
       
       const isNarrator = lineCharacter.toUpperCase() === 'NARRATOR';
       const lineType = isNarrator ? 'action' : 'dialogue';
       
-      // Calculate line timing based on character weight within scene
-      const totalCharsInScene = sceneDialogue.reduce((sum: number, l: any) => sum + (l.text?.length || 0), 0);
-      const lineWeight = lineText.length / Math.max(totalCharsInScene, 1);
+      // Check for precise line timing from manifest first
+      const preciseTiming = lineTimingMap.get(lineId);
       
-      // Use manifest duration for proportional timing, or fallback to heuristic
-      const lineDuration = sceneDurationFromManifest > 0 
-        ? lineWeight * sceneDurationFromManifest 
-        : Math.max(2, Math.ceil(lineText.length / 15));
-      
-      const priorChars = sceneDialogue.slice(0, lineIndex).reduce((sum: number, l: any) => sum + (l.text?.length || 0), 0);
-      const priorWeight = priorChars / Math.max(totalCharsInScene, 1);
-      
-      // For line start: use proportional timing with manifest, or compute from prior lines' heuristic durations
       let lineStart: number;
-      if (sceneDurationFromManifest > 0) {
-        lineStart = sceneOffset + (priorWeight * sceneDurationFromManifest);
+      let lineDuration: number;
+      
+      if (preciseTiming) {
+        // Use precise timing from manifest (ground truth from audio generation)
+        lineStart = preciseTiming.start;
+        lineDuration = preciseTiming.duration;
       } else {
-        // Calculate prior lines' total duration using heuristic
-        const priorDuration = sceneDialogue.slice(0, lineIndex).reduce((sum: number, l: any) => {
-          const text = l.text || '';
-          return sum + Math.max(2, Math.ceil(text.length / 15));
-        }, 0);
-        lineStart = sceneOffset + priorDuration;
+        // Fallback to character-weight heuristic
+        const totalCharsInScene = sceneDialogue.reduce((sum: number, l: any) => sum + (l.text?.length || 0), 0);
+        const lineWeight = lineText.length / Math.max(totalCharsInScene, 1);
+        
+        // Use manifest duration for proportional timing, or fallback to heuristic
+        lineDuration = sceneDurationFromManifest > 0 
+          ? lineWeight * sceneDurationFromManifest 
+          : Math.max(2, Math.ceil(lineText.length / 15));
+        
+        const priorChars = sceneDialogue.slice(0, lineIndex).reduce((sum: number, l: any) => sum + (l.text?.length || 0), 0);
+        const priorWeight = priorChars / Math.max(totalCharsInScene, 1);
+        
+        // For line start: use proportional timing with manifest, or compute from prior lines' heuristic durations
+        if (sceneDurationFromManifest > 0) {
+          lineStart = sceneOffset + (priorWeight * sceneDurationFromManifest);
+        } else {
+          // Calculate prior lines' total duration using heuristic
+          const priorDuration = sceneDialogue.slice(0, lineIndex).reduce((sum: number, l: any) => {
+            const text = l.text || '';
+            return sum + Math.max(2, Math.ceil(text.length / 15));
+          }, 0);
+          lineStart = sceneOffset + priorDuration;
+        }
       }
       
       return {
-        line_id: line.line_id || `line_${sceneIndex}_${lineIndex}`,
+        line_id: lineId,
         type: lineType as 'action' | 'dialogue',
         text: lineText,
         character: lineCharacter,
@@ -238,11 +265,23 @@ export default function ProjectDetail() {
           manifestResult.data.forEach((row: any) => {
             const manifest = row.mix_manifest_json as any;
             if (manifest && row.scene_id) {
-              manifestMap!.set(row.scene_id, {
+              const timing: ManifestTiming = {
                 scene_id: row.scene_id,
                 offset: manifest.offset ?? manifest.start ?? 0,
                 duration: manifest.duration ?? 0,
-              });
+              };
+              
+              // Extract line-level timing if available
+              if (manifest.lines && Array.isArray(manifest.lines)) {
+                timing.lines = manifest.lines.map((line: any) => ({
+                  line_id: line.line_id,
+                  start: line.start,
+                  duration: line.duration,
+                }));
+                console.log(`📍 Scene ${row.scene_id}: Found ${timing.lines.length} line timings from manifest`);
+              }
+              
+              manifestMap!.set(row.scene_id, timing);
             }
           });
           console.log('📋 Loaded manifest timing for', manifestMap.size, 'scenes');
