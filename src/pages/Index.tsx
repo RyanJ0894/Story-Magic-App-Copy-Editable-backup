@@ -293,24 +293,59 @@ JOHN: Yeah, let’s keep moving.`,
 
 const Index = () => {
   // Memoized shimmer particles for magical background
-  // Positioned on left (0-15%) and right (85-100%) edges to avoid centered content
+  // Manually positioned to frame content sections like the screenshot
   const shimmerParticles = useMemo(() => {
-    return Array.from({ length: 31 }, (_, i) => {
-      // Alternate between left edge (0-15%) and right edge (85-100%)
-      const isLeftSide = i % 2 === 0;
-      const x = isLeftSide 
-        ? (i * 3 + 2) % 15        // Left side: 0-15%
-        : 85 + ((i * 3 + 1) % 15); // Right side: 85-100%
+    // Define specific positions that frame the content areas
+    const positions = [
+      // Hero section area - scattered around edges
+      { x: 8, y: 5 },
+      { x: 92, y: 8 },
+      { x: 5, y: 12 },
+      { x: 95, y: 15 },
+      { x: 12, y: 18 },
       
-      return {
-        id: i,
-        x,
-        y: (i * 23 + 11) % 100,
-        delay: (i * 0.3) % 3,
-        duration: 1.5 + (i % 5) * 0.5,
-        opacity: 0.3 + (i % 7) * 0.1,
-      };
-    });
+      // Script Upload section (around 20-35% down the page)
+      { x: 6, y: 22 },
+      { x: 94, y: 25 },
+      { x: 10, y: 28 },
+      { x: 90, y: 30 },
+      { x: 4, y: 33 },
+      { x: 96, y: 35 },
+      
+      // Voice Casting section (around 35-50% down)
+      { x: 8, y: 38 },
+      { x: 92, y: 40 },
+      { x: 5, y: 43 },
+      { x: 95, y: 45 },
+      { x: 11, y: 48 },
+      { x: 89, y: 50 },
+      
+      // Audio Player section (around 50-70% down)
+      { x: 7, y: 53 },
+      { x: 93, y: 55 },
+      { x: 4, y: 58 },
+      { x: 96, y: 62 },
+      { x: 10, y: 65 },
+      { x: 90, y: 68 },
+      
+      // Feedback section (around 70-90% down)
+      { x: 6, y: 72 },
+      { x: 94, y: 75 },
+      { x: 9, y: 80 },
+      { x: 91, y: 83 },
+      { x: 5, y: 88 },
+      { x: 95, y: 92 },
+      { x: 8, y: 96 },
+    ];
+    
+    return positions.map((pos, i) => ({
+      id: i,
+      x: pos.x,
+      y: pos.y,
+      delay: (i * 0.3) % 3,
+      duration: 1.5 + (i % 5) * 0.5,
+      opacity: 0.4 + (i % 5) * 0.1,
+    }));
   }, []);
 
   return (
