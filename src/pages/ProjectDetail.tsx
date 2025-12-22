@@ -570,32 +570,34 @@ export default function ProjectDetail() {
         <div className="absolute top-1/3 -left-[50px] sm:left-auto sm:right-[5%] w-[300px] sm:w-[500px] h-[300px] sm:h-[500px] bg-blue-500/35 rounded-full blur-[80px] sm:blur-[100px]" />
         <div className="absolute bottom-1/4 -left-[80px] sm:left-[20%] w-[280px] sm:w-[450px] h-[280px] sm:h-[450px] bg-indigo-400/30 rounded-full blur-[90px] sm:blur-[110px]" />
         
-        {/* Shimmer particles - fixed positions */}
+        {/* Shimmer particles - fixed positions with glow */}
         {shimmerParticles.map((particle) => (
           <div
             key={particle.id}
-            className="absolute w-1 h-1 bg-white rounded-full animate-pulse"
+            className="absolute w-1.5 h-1.5 bg-white rounded-full animate-pulse"
             style={{
               left: `${particle.x}%`,
               top: `${particle.y}%`,
               animationDelay: `${particle.delay}s`,
               animationDuration: `${particle.duration}s`,
-              opacity: particle.opacity,
+              opacity: particle.opacity + 0.2,
+              boxShadow: '0 0 6px 2px rgba(255, 255, 255, 0.6)',
             }}
           />
         ))}
         
-        {/* Extra shimmer particles - mobile only */}
+        {/* Extra shimmer particles - mobile only with enhanced glow */}
         {mobileShimmerParticles.map((particle) => (
           <div
             key={particle.id}
-            className="absolute w-1 h-1 bg-white rounded-full animate-pulse sm:hidden"
+            className="absolute w-1.5 h-1.5 bg-white rounded-full animate-pulse sm:hidden"
             style={{
               left: `${particle.x}%`,
               top: `${particle.y}%`,
               animationDelay: `${particle.delay}s`,
               animationDuration: `${particle.duration}s`,
-              opacity: particle.opacity,
+              opacity: particle.opacity + 0.25,
+              boxShadow: '0 0 8px 3px rgba(255, 255, 255, 0.7)',
             }}
           />
         ))}
