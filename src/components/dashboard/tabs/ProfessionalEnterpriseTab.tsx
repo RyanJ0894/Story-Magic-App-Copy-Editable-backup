@@ -318,19 +318,20 @@ export function ProfessionalEnterpriseTab({ projects, onDeleteProject, onBulkDel
                     </span>
                   </div>
                   {projects.map((project) => (
-                    <div key={project.id} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex items-center gap-3 flex-1">
+                    <div key={project.id} className="flex flex-col gap-3 p-4 border rounded-lg">
+                      <div className="flex items-start gap-3">
                         <Checkbox
                           checked={selectedIds.has(project.id)}
                           onCheckedChange={() => toggleSelection(project.id)}
                           data-testid={`checkbox-project-${project.id}`}
+                          className="mt-1"
                         />
-                        <div className="flex-1">
+                        <div className="flex-1 min-w-0">
                           <div className="font-medium">{project.title || "Untitled Project"}</div>
                           <div className="text-sm text-muted-foreground">
                             {new Date(project.created_at).toLocaleDateString()} • Marketing Department
                           </div>
-                          <div className="flex gap-2 mt-2">
+                          <div className="flex flex-wrap gap-2 mt-2">
                             <Badge variant="outline">
                               {project.ai_director_json ? (project.audio_url ? 'Complete' : 'Analyzed') : 'Draft'}
                             </Badge>
@@ -339,7 +340,7 @@ export function ProfessionalEnterpriseTab({ projects, onDeleteProject, onBulkDel
                           </div>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap ml-7">
                         <Button variant="outline" size="sm">
                           <MessageSquare className="h-4 w-4 mr-2" />
                           Comments (3)
@@ -355,7 +356,7 @@ export function ProfessionalEnterpriseTab({ projects, onDeleteProject, onBulkDel
                           <AlertDialogTrigger asChild>
                             <Button 
                               variant="ghost" 
-                              size="sm"
+                              size="icon"
                               disabled={deletingId === project.id}
                               className="text-destructive hover:text-destructive hover:bg-destructive/10"
                             >

@@ -288,19 +288,20 @@ export function StarterEnterpriseTab({
                         : `${selectedIds.size} of ${projects.length} selected`}
                     </span>
                   </div>
-                  {projects.map(project => <div key={project.id} className="flex items-center justify-between p-3 border rounded-lg">
-                      <div className="flex items-center gap-3 flex-1">
+                  {projects.map(project => <div key={project.id} className="flex flex-col gap-3 p-3 border rounded-lg">
+                      <div className="flex items-start gap-3">
                         <Checkbox
                           checked={selectedIds.has(project.id)}
                           onCheckedChange={() => toggleSelection(project.id)}
                           data-testid={`checkbox-project-${project.id}`}
+                          className="mt-1"
                         />
-                        <div className="flex-1">
+                        <div className="flex-1 min-w-0">
                           <div className="font-medium">{project.title || "Untitled Project"}</div>
                           <div className="text-sm text-muted-foreground">
                             {new Date(project.created_at).toLocaleDateString()} • Shared with 2 members
                           </div>
-                          <div className="flex gap-2 mt-1">
+                          <div className="flex flex-wrap gap-2 mt-1">
                             <Badge variant="outline">
                               {project.ai_director_json ? project.audio_url ? 'Complete' : 'Analyzed' : 'Draft'}
                             </Badge>
@@ -308,7 +309,7 @@ export function StarterEnterpriseTab({
                           </div>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap ml-7">
                         <Button variant="outline" size="sm">
                           <MessageSquare className="h-4 w-4 mr-2" />
                           Comments
@@ -321,7 +322,7 @@ export function StarterEnterpriseTab({
                         </Link>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <Button variant="ghost" size="sm" disabled={deletingId === project.id} className="text-destructive hover:text-destructive hover:bg-destructive/10">
+                            <Button variant="ghost" size="icon" disabled={deletingId === project.id} className="text-destructive hover:text-destructive hover:bg-destructive/10">
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </AlertDialogTrigger>
