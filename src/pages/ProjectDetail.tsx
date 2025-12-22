@@ -595,7 +595,7 @@ export default function ProjectDetail() {
               Click on any line to jump to that point in the audio
             </p>
 
-            <div className="border-2 border-sky-500/60 rounded-lg overflow-hidden">
+            <div className="border-2 border-sky-400 rounded-lg overflow-hidden">
               <ScreenplayPlayer
                 chunks={scaledChunks}
                 currentTime={currentTime}
