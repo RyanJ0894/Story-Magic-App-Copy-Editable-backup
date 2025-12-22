@@ -401,10 +401,7 @@ export default function ScreenplayPlayer({
 
       <div 
         ref={scrollContainerRef}
-        className="flex-1 overflow-y-auto px-3 sm:px-8 py-4 sm:py-6"
-        style={{
-          scrollBehavior: 'smooth',
-        }}
+        className="flex-1 overflow-y-auto px-3 sm:px-8 py-4 sm:py-6 screenplay-scroll"
       >
         <div className="max-w-full sm:max-w-3xl mx-auto">
           {displayLines.length === 0 ? (
