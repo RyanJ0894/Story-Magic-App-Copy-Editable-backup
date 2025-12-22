@@ -234,7 +234,7 @@ export default function Pricing() {
       <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
         <div className="absolute -top-20 -left-[100px] sm:left-[10%] w-[350px] sm:w-[600px] h-[350px] sm:h-[600px] bg-amber-500/60 sm:bg-amber-500/50 rounded-full blur-[100px] sm:blur-[120px]" />
         <div className="absolute top-1/3 -right-[50px] sm:right-[5%] w-[300px] sm:w-[500px] h-[300px] sm:h-[500px] bg-blue-500/55 sm:bg-blue-500/45 rounded-full blur-[80px] sm:blur-[100px]" />
-        <div className="absolute bottom-1/4 -left-[80px] sm:left-[20%] w-[280px] sm:w-[450px] h-[280px] sm:h-[450px] bg-indigo-400/50 sm:bg-indigo-400/40 rounded-full blur-[90px] sm:blur-[110px]" />
+        <div className="absolute bottom-1/4 -left-[80px] sm:left-[20%] w-[280px] sm:w-[450px] h-[280px] sm:h-[450px] bg-blue-400/50 sm:bg-blue-400/40 rounded-full blur-[90px] sm:blur-[110px]" />
         
         {shimmerParticles.map((particle) => (
           <div
