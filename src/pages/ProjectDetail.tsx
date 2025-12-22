@@ -542,12 +542,11 @@ export default function ProjectDetail() {
       {/* Project Header */}
       <div className="mb-4">
         <div className="flex items-center justify-between mb-2">
-          <h1 className="text-3xl font-bold">{project.title || "Untitled Project"}</h1>
+          <h1 className="text-xl sm:text-3xl font-bold">{project.title || "Untitled Project"}</h1>
         </div>
 
-          <div className="flex items-center gap-4 text-muted-foreground">
-            <span>Created: {new Date(project.created_at).toLocaleString()}</span>
-            <span>•</span>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-xs sm:text-sm text-muted-foreground">
+            <span>Created: {new Date(project.created_at).toLocaleDateString()}</span>
           <span className={`font-medium ${getProjectStatus() === 'Complete' ? 'text-cu' :
             getProjectStatus() === 'Analyzed' ? 'text-yellow-600' :
               'text-gray-600'
