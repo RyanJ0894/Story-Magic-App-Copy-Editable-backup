@@ -366,6 +366,18 @@ export default function ProjectDetail() {
     }));
   }, []);
 
+  // Extra shimmer particles for mobile only
+  const mobileShimmerParticles = useMemo(() => {
+    return Array.from({ length: 25 }, (_, i) => ({
+      id: i + 100,
+      x: (i * 13 + 5) % 100,
+      y: (i * 19 + 8) % 100,
+      delay: (i * 0.25) % 2.5,
+      duration: 1.2 + (i % 4) * 0.4,
+      opacity: 0.4 + (i % 5) * 0.12,
+    }));
+  }, []);
+
   // Use actual audio duration when available, otherwise use calculated
   const effectiveDuration = actualAudioDuration ?? calculatedDuration;
 
@@ -563,6 +575,21 @@ export default function ProjectDetail() {
           <div
             key={particle.id}
             className="absolute w-1 h-1 bg-white rounded-full animate-pulse"
+            style={{
+              left: `${particle.x}%`,
+              top: `${particle.y}%`,
+              animationDelay: `${particle.delay}s`,
+              animationDuration: `${particle.duration}s`,
+              opacity: particle.opacity,
+            }}
+          />
+        ))}
+        
+        {/* Extra shimmer particles - mobile only */}
+        {mobileShimmerParticles.map((particle) => (
+          <div
+            key={particle.id}
+            className="absolute w-1 h-1 bg-white rounded-full animate-pulse sm:hidden"
             style={{
               left: `${particle.x}%`,
               top: `${particle.y}%`,
