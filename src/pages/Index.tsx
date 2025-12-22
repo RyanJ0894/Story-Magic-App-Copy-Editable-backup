@@ -320,24 +320,21 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background text-foreground relative">
-      {/* Magical Background Layer */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        {/* Shimmer particles - fixed positions with glow */}
-        {shimmerParticles.map((particle) => (
-          <div
-            key={particle.id}
-            className="absolute w-1.5 h-1.5 bg-white rounded-full animate-pulse"
-            style={{
-              left: `${particle.x}%`,
-              top: `${particle.y}%`,
-              animationDelay: `${particle.delay}s`,
-              animationDuration: `${particle.duration}s`,
-              opacity: particle.opacity + 0.2,
-              boxShadow: '0 0 6px 2px rgba(255, 255, 255, 0.6)',
-            }}
-          />
-        ))}
-      </div>
+      {/* Magical shimmer particles - fixed to viewport */}
+      {shimmerParticles.map((particle) => (
+        <div
+          key={particle.id}
+          className="fixed w-1.5 h-1.5 bg-white rounded-full animate-pulse pointer-events-none z-10"
+          style={{
+            left: `${particle.x}%`,
+            top: `${particle.y}%`,
+            animationDelay: `${particle.delay}s`,
+            animationDuration: `${particle.duration}s`,
+            opacity: particle.opacity + 0.2,
+            boxShadow: '0 0 6px 2px rgba(255, 255, 255, 0.6)',
+          }}
+        />
+      ))}
       
       <Header />
       <main>
