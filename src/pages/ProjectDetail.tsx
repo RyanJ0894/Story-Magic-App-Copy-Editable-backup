@@ -554,7 +554,7 @@ export default function ProjectDetail() {
       {/* Magical Background Layer */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         {/* Illuminated gradient spots */}
-        <div className="absolute -top-32 left-[10%] w-[600px] h-[600px] bg-purple-500/40 rounded-full blur-[120px]" />
+        <div className="absolute -top-32 left-[10%] w-[600px] h-[600px] bg-amber-500/40 rounded-full blur-[120px]" />
         <div className="absolute top-[20%] right-[5%] w-[500px] h-[500px] bg-blue-500/35 rounded-full blur-[100px]" />
         <div className="absolute bottom-[10%] left-[20%] w-[450px] h-[450px] bg-indigo-400/30 rounded-full blur-[110px]" />
         
