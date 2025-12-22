@@ -320,20 +320,67 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background text-foreground relative">
-      {/* Magical shimmer particles - fixed to viewport */}
+      {/* Magical star shimmer particles - fixed to viewport */}
       {shimmerParticles.map((particle) => (
         <div
           key={particle.id}
-          className="fixed w-1.5 h-1.5 bg-white rounded-full animate-pulse pointer-events-none z-10"
+          className="fixed pointer-events-none z-10 animate-pulse"
           style={{
             left: `${particle.x}%`,
             top: `${particle.y}%`,
             animationDelay: `${particle.delay}s`,
             animationDuration: `${particle.duration}s`,
-            opacity: particle.opacity + 0.2,
-            boxShadow: '0 0 6px 2px rgba(255, 255, 255, 0.6)',
           }}
-        />
+        >
+          {/* Star shape with cross beams */}
+          <div 
+            className="relative"
+            style={{
+              width: '6px',
+              height: '6px',
+            }}
+          >
+            {/* Horizontal beam */}
+            <div 
+              className="absolute bg-white"
+              style={{
+                width: '6px',
+                height: '1.5px',
+                top: '50%',
+                left: '0',
+                transform: 'translateY(-50%)',
+                opacity: particle.opacity + 0.3,
+                boxShadow: '0 0 4px 1px rgba(255, 255, 255, 0.8)',
+              }}
+            />
+            {/* Vertical beam */}
+            <div 
+              className="absolute bg-white"
+              style={{
+                width: '1.5px',
+                height: '6px',
+                left: '50%',
+                top: '0',
+                transform: 'translateX(-50%)',
+                opacity: particle.opacity + 0.3,
+                boxShadow: '0 0 4px 1px rgba(255, 255, 255, 0.8)',
+              }}
+            />
+            {/* Center glow */}
+            <div 
+              className="absolute rounded-full bg-white"
+              style={{
+                width: '3px',
+                height: '3px',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                opacity: particle.opacity + 0.4,
+                boxShadow: '0 0 8px 3px rgba(255, 255, 255, 0.9), 0 0 12px 5px rgba(200, 220, 255, 0.5)',
+              }}
+            />
+          </div>
+        </div>
       ))}
       
       <Header />
