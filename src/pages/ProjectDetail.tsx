@@ -538,7 +538,32 @@ export default function ProjectDetail() {
   }
 
   return (
-    <div className="container max-w-4xl mx-auto px-4 py-8">
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Magical Background */}
+      <div className="fixed inset-0 bg-slate-950 -z-10">
+        {/* Illuminated gradient spots */}
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-purple-600/20 rounded-full blur-3xl" />
+        <div className="absolute top-1/4 right-1/4 w-80 h-80 bg-blue-600/15 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/3 left-1/3 w-72 h-72 bg-indigo-500/10 rounded-full blur-3xl" />
+        
+        {/* Shimmer particles */}
+        <div className="absolute inset-0 overflow-hidden">
+          {[...Array(20)].map((_, i) => (
+            <div
+              key={i}
+              className="absolute w-1 h-1 bg-white/60 rounded-full animate-pulse"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                animationDelay: `${Math.random() * 3}s`,
+                animationDuration: `${2 + Math.random() * 2}s`,
+              }}
+            />
+          ))}
+        </div>
+      </div>
+      
+      <div className="container max-w-4xl mx-auto px-4 py-8 relative z-10">
       {/* Project Header */}
       <div className="mb-4">
         <div className="flex items-center justify-between mb-2">
@@ -627,6 +652,7 @@ export default function ProjectDetail() {
           </div>
         )}
 
+      </div>
       </div>
     </div>
   );
