@@ -583,12 +583,7 @@ export default function ProjectDetail() {
 
           <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-xs sm:text-sm text-muted-foreground">
             <span>Created: {new Date(project.created_at).toLocaleDateString()}</span>
-          <span className={`font-medium ${getProjectStatus() === 'Complete' ? 'text-cu' :
-            getProjectStatus() === 'Analyzed' ? 'text-yellow-600' :
-              'text-gray-600'
-            }`}>
-            Status: {getProjectStatus()}
-            </span>
+            <span>Status: {getProjectStatus()}</span>
           </div>
         </div>
 
