@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Upload, FileText, Play, Sparkles } from "lucide-react";
@@ -9,28 +9,6 @@ export const ScriptUpload = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadedScript, setUploadedScript] = useState<string | null>(null);
   const { toast } = useToast();
-
-  const shimmerParticles = useMemo(() => {
-    const positions = [
-      { x: 4, y: 8 },
-      { x: 96, y: 12 },
-      { x: 3, y: 35 },
-      { x: 97, y: 42 },
-      { x: 5, y: 65 },
-      { x: 95, y: 58 },
-      { x: 4, y: 85 },
-      { x: 96, y: 78 },
-    ];
-    
-    return positions.map((pos, i) => ({
-      id: i,
-      x: pos.x,
-      y: pos.y,
-      delay: (i * 0.5) % 3,
-      duration: 1.5 + (i % 4) * 0.5,
-      opacity: 0.5 + (i % 4) * 0.1,
-    }));
-  }, []);
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -64,61 +42,8 @@ export const ScriptUpload = () => {
   };
 
   return (
-    <section id="demo" className="py-8 md:py-20 bg-gradient-hero relative overflow-hidden">
-      {/* Magical star shimmer particles */}
-      {shimmerParticles.map((particle) => (
-        <div
-          key={particle.id}
-          className="absolute pointer-events-none z-10 animate-pulse"
-          style={{
-            left: `${particle.x}%`,
-            top: `${particle.y}%`,
-            animationDelay: `${particle.delay}s`,
-            animationDuration: `${particle.duration}s`,
-          }}
-        >
-          <div className="relative" style={{ width: '6px', height: '6px' }}>
-            <div 
-              className="absolute bg-white"
-              style={{
-                width: '6px',
-                height: '1.5px',
-                top: '50%',
-                left: '0',
-                transform: 'translateY(-50%)',
-                opacity: particle.opacity + 0.3,
-                boxShadow: '0 0 4px 1px rgba(255, 255, 255, 0.8)',
-              }}
-            />
-            <div 
-              className="absolute bg-white"
-              style={{
-                width: '1.5px',
-                height: '6px',
-                left: '50%',
-                top: '0',
-                transform: 'translateX(-50%)',
-                opacity: particle.opacity + 0.3,
-                boxShadow: '0 0 4px 1px rgba(255, 255, 255, 0.8)',
-              }}
-            />
-            <div 
-              className="absolute rounded-full bg-white"
-              style={{
-                width: '3px',
-                height: '3px',
-                top: '50%',
-                left: '50%',
-                transform: 'translate(-50%, -50%)',
-                opacity: particle.opacity + 0.4,
-                boxShadow: '0 0 8px 3px rgba(255, 255, 255, 0.9), 0 0 12px 5px rgba(200, 220, 255, 0.5)',
-              }}
-            />
-          </div>
-        </div>
-      ))}
-
-      <div className="container mx-auto px-4 relative z-20">
+    <section id="demo" className="py-8 md:py-20 bg-gradient-hero">
+      <div className="container mx-auto px-4">
         <div className="text-center mb-6 md:mb-12">
           <h2 className="text-3xl md:text-5xl font-bold mb-4">
             Experience the
