@@ -552,11 +552,11 @@ export default function ProjectDetail() {
   return (
     <div className="min-h-screen relative">
       {/* Magical Background Layer */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+      <div className="absolute inset-0 pointer-events-none overflow-hidden flex items-center justify-center sm:block">
         {/* Illuminated gradient spots - centered on mobile, positioned on desktop */}
-        <div className="absolute -top-32 left-1/2 -translate-x-1/2 sm:left-[10%] sm:translate-x-0 w-[400px] sm:w-[600px] h-[400px] sm:h-[600px] bg-amber-500/40 rounded-full blur-[120px]" />
-        <div className="absolute top-[30%] left-1/2 -translate-x-1/2 sm:left-auto sm:translate-x-0 sm:right-[5%] w-[350px] sm:w-[500px] h-[350px] sm:h-[500px] bg-blue-500/35 rounded-full blur-[100px]" />
-        <div className="absolute bottom-[20%] left-1/2 -translate-x-1/2 sm:left-[20%] sm:translate-x-0 w-[300px] sm:w-[450px] h-[300px] sm:h-[450px] bg-indigo-400/30 rounded-full blur-[110px]" />
+        <div className="absolute -top-20 inset-x-0 mx-auto sm:mx-0 sm:left-[10%] sm:right-auto w-[300px] sm:w-[600px] h-[300px] sm:h-[600px] bg-amber-500/40 rounded-full blur-[100px] sm:blur-[120px]" />
+        <div className="absolute top-1/3 inset-x-0 mx-auto sm:mx-0 sm:left-auto sm:right-[5%] w-[280px] sm:w-[500px] h-[280px] sm:h-[500px] bg-blue-500/35 rounded-full blur-[80px] sm:blur-[100px]" />
+        <div className="absolute bottom-1/4 inset-x-0 mx-auto sm:mx-0 sm:left-[20%] sm:right-auto w-[250px] sm:w-[450px] h-[250px] sm:h-[450px] bg-indigo-400/30 rounded-full blur-[90px] sm:blur-[110px]" />
         
         {/* Shimmer particles - fixed positions */}
         {shimmerParticles.map((particle) => (
