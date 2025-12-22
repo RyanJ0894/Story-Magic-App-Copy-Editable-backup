@@ -294,7 +294,7 @@ JOHN: Yeah, let’s keep moving.`,
 const Index = () => {
   // Memoized shimmer particles for magical background
   const shimmerParticles = useMemo(() => {
-    return Array.from({ length: 25 }, (_, i) => ({
+    return Array.from({ length: 31 }, (_, i) => ({
       id: i,
       x: (i * 17 + 7) % 100,
       y: (i * 23 + 11) % 100,
