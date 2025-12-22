@@ -354,6 +354,18 @@ export default function ProjectDetail() {
     return scaleChunksToAudioDuration(loadedChunks, calculatedDuration, actualAudioDuration);
   }, [loadedChunks, calculatedDuration, actualAudioDuration]);
 
+  // Memoized shimmer particles for magical background
+  const shimmerParticles = useMemo(() => {
+    return Array.from({ length: 35 }, (_, i) => ({
+      id: i,
+      x: (i * 17 + 7) % 100,
+      y: (i * 23 + 11) % 100,
+      delay: (i * 0.3) % 3,
+      duration: 1.5 + (i % 5) * 0.5,
+      opacity: 0.3 + (i % 7) * 0.1,
+    }));
+  }, []);
+
   // Use actual audio duration when available, otherwise use calculated
   const effectiveDuration = actualAudioDuration ?? calculatedDuration;
 
@@ -538,32 +550,31 @@ export default function ProjectDetail() {
   }
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
-      {/* Magical Background */}
-      <div className="fixed inset-0 bg-slate-950 -z-10">
+    <div className="min-h-screen relative">
+      {/* Magical Background Layer */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
         {/* Illuminated gradient spots */}
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-purple-600/20 rounded-full blur-3xl" />
-        <div className="absolute top-1/4 right-1/4 w-80 h-80 bg-blue-600/15 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/3 left-1/3 w-72 h-72 bg-indigo-500/10 rounded-full blur-3xl" />
+        <div className="absolute -top-32 left-[10%] w-[600px] h-[600px] bg-purple-500/40 rounded-full blur-[120px]" />
+        <div className="absolute top-[20%] right-[5%] w-[500px] h-[500px] bg-blue-500/35 rounded-full blur-[100px]" />
+        <div className="absolute bottom-[10%] left-[20%] w-[450px] h-[450px] bg-indigo-400/30 rounded-full blur-[110px]" />
         
-        {/* Shimmer particles */}
-        <div className="absolute inset-0 overflow-hidden">
-          {[...Array(20)].map((_, i) => (
-            <div
-              key={i}
-              className="absolute w-1 h-1 bg-white/60 rounded-full animate-pulse"
-              style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-                animationDelay: `${Math.random() * 3}s`,
-                animationDuration: `${2 + Math.random() * 2}s`,
-              }}
-            />
-          ))}
-        </div>
+        {/* Shimmer particles - fixed positions */}
+        {shimmerParticles.map((particle) => (
+          <div
+            key={particle.id}
+            className="absolute w-1 h-1 bg-white rounded-full animate-pulse"
+            style={{
+              left: `${particle.x}%`,
+              top: `${particle.y}%`,
+              animationDelay: `${particle.delay}s`,
+              animationDuration: `${particle.duration}s`,
+              opacity: particle.opacity,
+            }}
+          />
+        ))}
       </div>
       
-      <div className="container max-w-4xl mx-auto px-4 py-8 relative z-10">
+      <div className="container max-w-4xl mx-auto px-4 py-8 relative">
       {/* Project Header */}
       <div className="mb-4">
         <div className="flex items-center justify-between mb-2">
