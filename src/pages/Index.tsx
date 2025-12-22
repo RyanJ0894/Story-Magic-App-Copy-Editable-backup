@@ -294,10 +294,10 @@ JOHN: Yeah, let’s keep moving.`,
 const Index = () => {
   // Memoized shimmer particles for magical background
   const shimmerParticles = useMemo(() => {
-    return Array.from({ length: 25 }, (_, i) => ({
+    return Array.from({ length: 40 }, (_, i) => ({
       id: i,
       x: (i * 17 + 7) % 100,
-      y: (i * 31 + 5) % 300, // Spread across full page height
+      y: (i * 23 + 11) % 100,
       delay: (i * 0.3) % 3,
       duration: 1.5 + (i % 5) * 0.5,
       opacity: 0.3 + (i % 7) * 0.1,
@@ -306,8 +306,8 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background text-foreground relative">
-      {/* Magical shimmer particles - scroll with page */}
-      <div className="absolute inset-0 pointer-events-none overflow-visible z-10" style={{ height: '300%' }}>
+      {/* Magical shimmer particles */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-10">
         {shimmerParticles.map((particle) => (
           <div
             key={particle.id}
