@@ -4,7 +4,6 @@ import { Loader2, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useProjectDetail } from "@/features/projects/hooks/useProjectDetail";
 import { ChunkProgress } from "@/features/projects/components/ChunkProgress";
-import { ProjectDataViewer } from "@/features/projects/components/ProjectDataViewer";
 import ScreenplayPlayer from "@/features/scripts/components/ScreenplayPlayer";
 import AudioPlayer from "@/features/scripts/components/AudioPlayer";
 import { useScriptPlayerControls } from "@/features/scripts/hooks/useScriptPlayerControls";
@@ -571,24 +570,46 @@ export default function ProjectDetail() {
           </div>
         )}
 
-        {/* Saved Audio Section - Always show if audio exists */}
+        {/* Hidden Audio Player for playback control */}
         {generatedAudioUrl && (
-          <div className="p-6 border border-border rounded-lg bg-card">
-            <h2 className="text-xl font-semibold text-foreground mb-4">Project Audio</h2>
-            <div className="space-y-4">
-              <AudioPlayer
-                audioUrl={generatedAudioUrl}
+          <div className="hidden">
+            <AudioPlayer
+              audioUrl={generatedAudioUrl}
+              currentTime={currentTime}
+              isPlaying={isPlaying}
+              onTimeUpdate={handleTimeUpdate}
+              onDurationChange={(dur) => {
+                handleDurationChange(dur);
+                handleActualAudioDuration(dur);
+              }}
+              onPlayPause={handlePlayPause}
+              onEnded={handleEnded}
+            />
+          </div>
+        )}
+
+        {/* Screenplay Player Section - Only if chunks available */}
+        {loadedChunks.length > 0 && (
+          <div className="space-y-4">
+            <h2 className="text-2xl font-bold">Script Playback</h2>
+            <p className="text-sm text-muted-foreground">
+              Click on any line to jump to that point in the audio
+            </p>
+
+            <div className="border-2 border-sky-500/60 rounded-lg overflow-hidden">
+              <ScreenplayPlayer
+                chunks={scaledChunks}
                 currentTime={currentTime}
                 isPlaying={isPlaying}
-                onTimeUpdate={handleTimeUpdate}
-                onDurationChange={(dur) => {
-                  handleDurationChange(dur);
-                  handleActualAudioDuration(dur);
-                }}
+                duration={effectiveDuration}
+                onSeek={handleSeek}
                 onPlayPause={handlePlayPause}
-                onEnded={handleEnded}
               />
-              <div className="flex items-center gap-3 flex-wrap">
+            </div>
+            
+            {/* Action buttons below player */}
+            {generatedAudioUrl && (
+              <div className="flex items-center justify-center gap-3 flex-wrap pt-2">
                 <a 
                   href={generatedAudioUrl} 
                   download
@@ -604,95 +625,11 @@ export default function ProjectDetail() {
                   </Button>
                 </Link>
               </div>
-            </div>
-          </div>
-        )}
-
-        {/* Screenplay Player Section - Only if chunks available */}
-        {loadedChunks.length > 0 && (
-          <div className="space-y-4">
-            <h2 className="text-2xl font-bold">Script Playback</h2>
-            <p className="text-sm text-muted-foreground">
-              Click on any line to jump to that point in the audio
-            </p>
-
-            <ScreenplayPlayer
-              chunks={scaledChunks}
-              currentTime={currentTime}
-              isPlaying={isPlaying}
-              duration={effectiveDuration}
-              onSeek={handleSeek}
-              onPlayPause={handlePlayPause}
-            />
-          </div>
-        )}
-
-        {/* Project Data Viewer */}
-        <ProjectDataViewer
-          chunks={loadedChunks}
-          projectId={project?.id}
-          projectTitle={project?.title}
-          projectCreatedAt={project?.created_at}
-        />
-
-      </div>
-
-      {/* Generate Audio Section - Moved to bottom */}
-      {loadedChunks.length > 0 && (
-        <div className="mt-8 p-6 border border-border rounded-lg bg-card">
-          <div className="mb-6">
-            <h3 className="text-xl font-semibold text-foreground">Final Audio Generation</h3>
-            <p className="text-sm text-muted-foreground mt-1">
-              Generate the final combined audio file from all processed chunks
-            </p>
-          </div>
-
-          <div className="space-y-6">
-            {/* Generate Button */}
-            <div className="flex justify-start">
-              <Button
-                onClick={handleGenerateAudio}
-                disabled={isGeneratingAudio}
-                className="flex items-center gap-2"
-                size="lg"
-              >
-                <Download className="h-4 w-4" />
-                {isGeneratingAudio ? "Generating..." : "Generate Audio"}
-              </Button>
-            </div>
-            
-            {/* Generated Audio Section */}
-            {generatedAudioUrl && (
-              <div className="space-y-4">
-                {/* Audio Player - Full width */}
-                <div className="bg-muted/30 rounded-lg p-6">
-                  <h4 className="font-medium text-foreground mb-4">Generated Audio</h4>
-                  <audio 
-                    controls 
-                    className="w-full h-12"
-                    src={generatedAudioUrl}
-                  >
-                  Your browser does not support the audio element.
-                </audio>
-              </div>
-                
-                {/* Download Link */}
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground">Download:</span>
-                  <a 
-                    href={generatedAudioUrl} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="text-sm text-primary hover:text-primary/80 underline font-medium"
-                  >
-                    Download Audio File
-                  </a>
-                </div>
-              </div>
             )}
           </div>
-        </div>
-      )}
+        )}
+
+      </div>
     </div>
   );
 }
