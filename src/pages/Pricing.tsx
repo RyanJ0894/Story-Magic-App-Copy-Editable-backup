@@ -231,10 +231,10 @@ export default function Pricing() {
   return (
     <div className="min-h-screen bg-background relative">
       {/* Magical Background Layer */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute -top-20 left-[10%] w-[600px] h-[600px] bg-amber-500/40 rounded-full blur-[120px]" />
-        <div className="absolute top-1/3 right-[5%] w-[500px] h-[500px] bg-blue-500/35 rounded-full blur-[100px]" />
-        <div className="absolute bottom-1/4 left-[20%] w-[450px] h-[450px] bg-indigo-400/30 rounded-full blur-[110px]" />
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+        <div className="absolute -top-20 left-[10%] w-[600px] h-[600px] bg-amber-500/50 rounded-full blur-[120px]" />
+        <div className="absolute top-1/3 right-[5%] w-[500px] h-[500px] bg-blue-500/45 rounded-full blur-[100px]" />
+        <div className="absolute bottom-1/4 left-[20%] w-[450px] h-[450px] bg-indigo-400/40 rounded-full blur-[110px]" />
         
         {shimmerParticles.map((particle) => (
           <div
@@ -252,6 +252,7 @@ export default function Pricing() {
         ))}
       </div>
       
+      <div className="relative z-10">
       <Header />
       
       {isNewUser && (
@@ -611,6 +612,7 @@ export default function Pricing() {
           </div>
         </div>
       </section>
+      </div>
 
       <EnterpriseContactModal 
         isOpen={enterpriseModalOpen} 
