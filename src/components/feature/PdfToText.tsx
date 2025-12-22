@@ -3,13 +3,11 @@ import React, { useRef, useState } from "react";
 import {
   GlobalWorkerOptions,
   getDocument,
+  version,
 } from "pdfjs-dist";
 
-// Set worker source to use bundled version
-GlobalWorkerOptions.workerSrc = new URL(
-  'pdfjs-dist/build/pdf.worker.min.mjs',
-  import.meta.url,
-).href;
+// Set worker source to use CDN for production reliability
+GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${version}/pdf.worker.min.mjs`;
 
 type Props = {
   onText: (txt: string, mode?: "replace" | "append", filename?: string) => void;
