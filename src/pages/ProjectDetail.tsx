@@ -553,10 +553,10 @@ export default function ProjectDetail() {
     <div className="min-h-screen relative">
       {/* Magical Background Layer */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        {/* Illuminated gradient spots */}
-        <div className="absolute -top-32 left-[10%] w-[600px] h-[600px] bg-amber-500/40 rounded-full blur-[120px]" />
-        <div className="absolute top-[20%] right-[5%] w-[500px] h-[500px] bg-blue-500/35 rounded-full blur-[100px]" />
-        <div className="absolute bottom-[10%] left-[20%] w-[450px] h-[450px] bg-indigo-400/30 rounded-full blur-[110px]" />
+        {/* Illuminated gradient spots - centered on mobile, positioned on desktop */}
+        <div className="absolute -top-32 left-1/2 -translate-x-1/2 sm:left-[10%] sm:translate-x-0 w-[400px] sm:w-[600px] h-[400px] sm:h-[600px] bg-amber-500/40 rounded-full blur-[120px]" />
+        <div className="absolute top-[30%] left-1/2 -translate-x-1/2 sm:left-auto sm:translate-x-0 sm:right-[5%] w-[350px] sm:w-[500px] h-[350px] sm:h-[500px] bg-blue-500/35 rounded-full blur-[100px]" />
+        <div className="absolute bottom-[20%] left-1/2 -translate-x-1/2 sm:left-[20%] sm:translate-x-0 w-[300px] sm:w-[450px] h-[300px] sm:h-[450px] bg-indigo-400/30 rounded-full blur-[110px]" />
         
         {/* Shimmer particles - fixed positions */}
         {shimmerParticles.map((particle) => (
