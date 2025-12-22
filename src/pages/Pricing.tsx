@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Check, X, Star, Zap, Sparkles, Building2, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -33,6 +33,18 @@ export default function Pricing() {
   const [academicModalOpen, setAcademicModalOpen] = useState(false);
   const [selectedEnterprisePlan, setSelectedEnterprisePlan] = useState("");
   const { toast } = useToast();
+
+  // Shimmer particles for magical background
+  const shimmerParticles = useMemo(() => {
+    return Array.from({ length: 35 }, (_, i) => ({
+      id: i,
+      x: (i * 17 + 7) % 100,
+      y: (i * 23 + 11) % 100,
+      delay: (i * 0.3) % 3,
+      duration: 1.5 + (i % 5) * 0.5,
+      opacity: 0.3 + (i % 7) * 0.1,
+    }));
+  }, []);
 
   useEffect(() => {
     console.log("Pricing page loaded successfully");
@@ -217,7 +229,29 @@ export default function Pricing() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background relative">
+      {/* Magical Background Layer */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute -top-20 left-[10%] w-[600px] h-[600px] bg-amber-500/40 rounded-full blur-[120px]" />
+        <div className="absolute top-1/3 right-[5%] w-[500px] h-[500px] bg-blue-500/35 rounded-full blur-[100px]" />
+        <div className="absolute bottom-1/4 left-[20%] w-[450px] h-[450px] bg-indigo-400/30 rounded-full blur-[110px]" />
+        
+        {shimmerParticles.map((particle) => (
+          <div
+            key={particle.id}
+            className="absolute w-1.5 h-1.5 bg-white rounded-full animate-pulse"
+            style={{
+              left: `${particle.x}%`,
+              top: `${particle.y}%`,
+              animationDelay: `${particle.delay}s`,
+              animationDuration: `${particle.duration}s`,
+              opacity: particle.opacity + 0.2,
+              boxShadow: '0 0 6px 2px rgba(255, 255, 255, 0.6)',
+            }}
+          />
+        ))}
+      </div>
+      
       <Header />
       
       {isNewUser && (
