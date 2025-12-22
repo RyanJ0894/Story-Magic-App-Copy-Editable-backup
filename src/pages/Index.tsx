@@ -293,15 +293,24 @@ JOHN: Yeah, let’s keep moving.`,
 
 const Index = () => {
   // Memoized shimmer particles for magical background
+  // Positioned on left (0-15%) and right (85-100%) edges to avoid centered content
   const shimmerParticles = useMemo(() => {
-    return Array.from({ length: 31 }, (_, i) => ({
-      id: i,
-      x: (i * 17 + 7) % 100,
-      y: (i * 23 + 11) % 100,
-      delay: (i * 0.3) % 3,
-      duration: 1.5 + (i % 5) * 0.5,
-      opacity: 0.3 + (i % 7) * 0.1,
-    }));
+    return Array.from({ length: 31 }, (_, i) => {
+      // Alternate between left edge (0-15%) and right edge (85-100%)
+      const isLeftSide = i % 2 === 0;
+      const x = isLeftSide 
+        ? (i * 3 + 2) % 15        // Left side: 0-15%
+        : 85 + ((i * 3 + 1) % 15); // Right side: 85-100%
+      
+      return {
+        id: i,
+        x,
+        y: (i * 23 + 11) % 100,
+        delay: (i * 0.3) % 3,
+        duration: 1.5 + (i % 5) * 0.5,
+        opacity: 0.3 + (i % 7) * 0.1,
+      };
+    });
   }, []);
 
   return (
