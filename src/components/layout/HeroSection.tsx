@@ -2,7 +2,34 @@ import { Button } from "@/components/ui/button";
 import { Play, Upload, Mic } from "lucide-react";
 import heroImage from "@/assets/hero-cinema.jpg";
 import { Link } from "react-router-dom";
+import { useMemo } from "react";
+
 export const HeroSection = () => {
+  const shimmerParticles = useMemo(() => {
+    const positions = [
+      { x: 7, y: 11 },
+      { x: 49, y: 17 },
+      { x: 93, y: 11 },
+      { x: 25, y: 31 },
+      { x: 20, y: 47 },
+      { x: 25, y: 63 },
+      { x: 81, y: 27 },
+      { x: 86, y: 43 },
+      { x: 82, y: 58 },
+      { x: 86, y: 74 },
+      { x: 91, y: 90 },
+    ];
+    
+    return positions.map((pos, i) => ({
+      id: i,
+      x: pos.x,
+      y: pos.y,
+      delay: (i * 0.4) % 3,
+      duration: 1.5 + (i % 4) * 0.5,
+      opacity: 0.5 + (i % 4) * 0.1,
+    }));
+  }, []);
+
   return <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Background Image with Overlay */}
       <div className="absolute inset-0 bg-cover bg-center bg-no-repeat" style={{
@@ -10,6 +37,65 @@ export const HeroSection = () => {
     }}>
         <div className="absolute inset-0 bg-gradient-to-r from-cinema-dark/90 via-cinema-dark/70 to-transparent" />
       </div>
+      
+      {/* Magical star shimmer particles - attached to hero section */}
+      {shimmerParticles.map((particle) => (
+        <div
+          key={particle.id}
+          className="absolute pointer-events-none z-20 animate-pulse"
+          style={{
+            left: `${particle.x}%`,
+            top: `${particle.y}%`,
+            animationDelay: `${particle.delay}s`,
+            animationDuration: `${particle.duration}s`,
+          }}
+        >
+          <div 
+            className="relative"
+            style={{
+              width: '6px',
+              height: '6px',
+            }}
+          >
+            <div 
+              className="absolute bg-white"
+              style={{
+                width: '6px',
+                height: '1.5px',
+                top: '50%',
+                left: '0',
+                transform: 'translateY(-50%)',
+                opacity: particle.opacity + 0.3,
+                boxShadow: '0 0 4px 1px rgba(255, 255, 255, 0.8)',
+              }}
+            />
+            <div 
+              className="absolute bg-white"
+              style={{
+                width: '1.5px',
+                height: '6px',
+                left: '50%',
+                top: '0',
+                transform: 'translateX(-50%)',
+                opacity: particle.opacity + 0.3,
+                boxShadow: '0 0 4px 1px rgba(255, 255, 255, 0.8)',
+              }}
+            />
+            <div 
+              className="absolute rounded-full bg-white"
+              style={{
+                width: '3px',
+                height: '3px',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                opacity: particle.opacity + 0.4,
+                boxShadow: '0 0 8px 3px rgba(255, 255, 255, 0.9), 0 0 12px 5px rgba(200, 220, 255, 0.5)',
+              }}
+            />
+          </div>
+        </div>
+      ))}
       
       {/* Content */}
       <div className="relative z-10 container mx-auto px-4 text-center max-w-4xl">
