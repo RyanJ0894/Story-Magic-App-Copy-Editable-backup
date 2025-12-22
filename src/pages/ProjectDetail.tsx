@@ -540,7 +540,7 @@ export default function ProjectDetail() {
   return (
     <div className="container max-w-4xl mx-auto px-4 py-8">
       {/* Project Header */}
-      <div className="mb-8">
+      <div className="mb-4">
         <div className="flex items-center justify-between mb-2">
           <h1 className="text-3xl font-bold">{project.title || "Untitled Project"}</h1>
         </div>
@@ -557,7 +557,7 @@ export default function ProjectDetail() {
           </div>
         </div>
 
-        <div className="grid gap-6">
+        <div className="grid gap-4">
         {/* Chunk Processing Section */}
         {project && (
           <div className="space-y-6">
@@ -590,8 +590,7 @@ export default function ProjectDetail() {
 
         {/* Screenplay Player Section - Only if chunks available */}
         {loadedChunks.length > 0 && (
-          <div className="space-y-4">
-            <h2 className="text-2xl font-bold">Script Playback</h2>
+          <div className="space-y-2">
             <p className="text-sm text-muted-foreground">
               Click on any line to jump to that point in the audio
             </p>
