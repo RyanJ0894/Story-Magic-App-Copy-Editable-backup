@@ -39,8 +39,8 @@ export default function Dashboard() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      {/* Role Debug Panel */}
-      {currentRole && (
+      {/* Role Debug Panel - only visible in development */}
+      {import.meta.env.DEV && currentRole && (
         <div className="mb-6">
           <RoleDebugPanel 
             profile={{ ...(profile as any), role: currentRole }} 
