@@ -292,24 +292,20 @@ JOHN: Yeah, let’s keep moving.`,
 }
 
 const Index = () => {
-  // Memoized shimmer particles - positioned like the screenshot
+  // Memoized shimmer particles - exact positions from screenshot
   const shimmerParticles = useMemo(() => {
     const positions = [
-      // Upper left area
-      { x: 18, y: 8 },
-      // Upper right  
-      { x: 95, y: 12 },
-      // Left side of card area
-      { x: 22, y: 35 },
-      { x: 20, y: 55 },
-      // Right side of card area
-      { x: 94, y: 28 },
-      { x: 96, y: 42 },
-      { x: 93, y: 58 },
-      { x: 95, y: 72 },
-      // Bottom area
-      { x: 24, y: 85 },
-      { x: 92, y: 90 },
+      { x: 7, y: 11 },   // upper-left, left of logo
+      { x: 49, y: 17 },  // above hero headline
+      { x: 93, y: 11 },  // upper-right near Sign Out
+      { x: 25, y: 31 },  // left of card header
+      { x: 20, y: 47 },  // mid-left of card
+      { x: 25, y: 63 },  // lower-left of card
+      { x: 81, y: 27 },  // upper-right of card
+      { x: 86, y: 43 },  // mid-right of card
+      { x: 82, y: 58 },  // lower-mid-right of card
+      { x: 86, y: 74 },  // lower-right of card
+      { x: 91, y: 90 },  // bottom-right of viewport
     ];
     
     return positions.map((pos, i) => ({
