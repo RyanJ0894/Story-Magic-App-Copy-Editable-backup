@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { Lock, Crown, Users, Building, GraduationCap } from "lucide-react";
+import { Lock, Crown, Users, Building, GraduationCap, ChevronDown } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { PLAN_CONFIGS, PLAN_HIERARCHY, type PlanTier } from "@/types/plans";
 import { UpgradeModal } from "./UpgradeModal";
 import { IndividualTab } from "./tabs/IndividualTab";
@@ -78,10 +79,62 @@ export function DashboardTabs({ currentPlan, availablePackages, projects, onDele
     }
   };
 
+  const CurrentPlanIcon = TAB_ICONS[userCurrentPlan];
+  const currentPlanConfig = PLAN_CONFIGS[userCurrentPlan];
+
   return (
     <>
       <Tabs value={userCurrentPlan} className="w-full">
-        <TabsList className="grid grid-cols-2 md:grid-cols-6 w-full h-auto p-1 bg-muted">
+        {/* Mobile: Single dropdown for current plan */}
+        <div className="md:hidden mb-4">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button 
+                variant="outline" 
+                className="w-full justify-between gap-2 h-auto py-3"
+                data-testid="button-mobile-plan-selector"
+              >
+                <div className="flex items-center gap-2">
+                  <CurrentPlanIcon className="h-4 w-4" />
+                  <span>{currentPlanConfig.name}</span>
+                  <Badge variant="default" className="text-xs px-1.5 py-0">
+                    Current
+                  </Badge>
+                </div>
+                <ChevronDown className="h-4 w-4 opacity-50" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-[var(--radix-dropdown-menu-trigger-width)]">
+              {PLAN_HIERARCHY.map((planTier) => {
+                const config = PLAN_CONFIGS[planTier];
+                const Icon = TAB_ICONS[planTier];
+                const isUnlocked = isTabUnlocked(planTier);
+                const isCurrent = planTier === userCurrentPlan;
+                
+                return (
+                  <DropdownMenuItem
+                    key={planTier}
+                    onClick={() => handleTabClick(planTier)}
+                    className={`flex items-center gap-2 ${isCurrent ? 'bg-muted' : ''}`}
+                    data-testid={`menu-item-plan-${planTier}`}
+                  >
+                    <Icon className="h-4 w-4" />
+                    <span className="flex-1">{config.name}</span>
+                    {!isUnlocked && <Lock className="h-3 w-3 text-muted-foreground" />}
+                    {isCurrent && (
+                      <Badge variant="default" className="text-xs px-1.5 py-0">
+                        Current
+                      </Badge>
+                    )}
+                  </DropdownMenuItem>
+                );
+              })}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
+        {/* Desktop: Full tab grid */}
+        <TabsList className="hidden md:grid grid-cols-6 w-full h-auto p-1 bg-muted">
           {PLAN_HIERARCHY.map((planTier) => {
             const config = PLAN_CONFIGS[planTier];
             const Icon = TAB_ICONS[planTier];
