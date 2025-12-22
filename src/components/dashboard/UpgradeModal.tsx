@@ -46,8 +46,8 @@ export function UpgradeModal({ isOpen, onClose, currentPlan, targetPlan, onUpgra
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle className="flex items-center justify-between">
             {actionType} to {targetConfig.name}
             <Button variant="ghost" size="sm" onClick={onClose}>
@@ -56,7 +56,7 @@ export function UpgradeModal({ isOpen, onClose, currentPlan, targetPlan, onUpgra
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <div className="space-y-6 overflow-y-auto flex-1 pr-2">
           {/* Plan Comparison */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Current Plan */}
