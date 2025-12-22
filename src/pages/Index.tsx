@@ -292,8 +292,38 @@ JOHN: Yeah, let’s keep moving.`,
 }
 
 const Index = () => {
+  // Memoized shimmer particles for magical background
+  const shimmerParticles = useMemo(() => {
+    return Array.from({ length: 40 }, (_, i) => ({
+      id: i,
+      x: (i * 17 + 7) % 100,
+      y: (i * 23 + 11) % 100,
+      delay: (i * 0.3) % 3,
+      duration: 1.5 + (i % 5) * 0.5,
+      opacity: 0.3 + (i % 7) * 0.1,
+    }));
+  }, []);
+
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-background text-foreground relative">
+      {/* Magical shimmer particles */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-10">
+        {shimmerParticles.map((particle) => (
+          <div
+            key={particle.id}
+            className="absolute w-1.5 h-1.5 bg-white rounded-full animate-pulse"
+            style={{
+              left: `${particle.x}%`,
+              top: `${particle.y}%`,
+              animationDelay: `${particle.delay}s`,
+              animationDuration: `${particle.duration}s`,
+              opacity: particle.opacity + 0.2,
+              boxShadow: '0 0 6px 2px rgba(255, 255, 255, 0.6)',
+            }}
+          />
+        ))}
+      </div>
+      
       <Header />
       <main>
         <HeroSection />
