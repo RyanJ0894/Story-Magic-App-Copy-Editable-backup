@@ -15,7 +15,6 @@ type Props = {
 
 export default function PdfToText({ onText }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
-  const [mode, setMode] = useState<"replace" | "append">("replace");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string>("");
 
@@ -37,7 +36,7 @@ export default function PdfToText({ onText }: Props) {
       }
 
       const filename = file.name.replace(/\.pdf$/i, '');
-      onText(out.trim(), mode, filename);
+      onText(out.trim(), "replace", filename);
     } catch (e: any) {
       console.error(e);
       setErr(e?.message || String(e));
@@ -68,26 +67,6 @@ export default function PdfToText({ onText }: Props) {
       >
         {busy ? "Processing…" : "Upload PDF"}
       </button>
-
-      <label className="inline-flex items-center gap-2">
-        <input
-          type="radio"
-          name="pdf-mode"
-          checked={mode === "replace"}
-          onChange={() => setMode("replace")}
-        />
-        <span>Replace text</span>
-      </label>
-
-      <label className="inline-flex items-center gap-2">
-        <input
-          type="radio"
-          name="pdf-mode"
-          checked={mode === "append"}
-          onChange={() => setMode("append")}
-        />
-        <span>Append text</span>
-      </label>
 
       {err && <span className="text-red-400 text-sm">Error: {err}</span>}
     </div>

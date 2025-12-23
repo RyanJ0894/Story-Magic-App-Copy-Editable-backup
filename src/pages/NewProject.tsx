@@ -133,10 +133,6 @@ export default function NewProject() {
       </div>
       
       <div className="max-w-4xl mx-auto px-3 sm:px-6 py-6 sm:py-10 relative z-10">
-      {!production.audioUrl && (
-        <h1 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6">Create New Project</h1>
-      )}
-
       {production.isProcessing && !production.audioUrl && (
         <div className="mb-6 p-4 bg-blue-900/20 border border-blue-700 rounded-lg">
           <h2 className="font-semibold text-blue-300 mb-2">Processing...</h2>
