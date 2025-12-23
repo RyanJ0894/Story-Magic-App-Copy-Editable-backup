@@ -14,7 +14,7 @@ import {
   BarChart3,
   Music
 } from "lucide-react";
-import confessionAudio from "@assets/The_Confession_-_Cinematic_Audio_1766517815262.m4a";
+import confessionAudio from "../../../attached_assets/The_Confession_-_Cinematic_Audio_1766517815262.m4a";
 
 interface Scene {
   id: string;
