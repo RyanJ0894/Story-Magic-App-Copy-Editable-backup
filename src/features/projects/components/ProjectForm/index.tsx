@@ -49,7 +49,7 @@ export const ProjectForm = ({ onSubmit, isSubmitting = false }: ProjectFormProps
         <div className="text-center py-8">
           <div className="inline-flex items-center justify-center gap-3 mb-4">
             <Sparkles className="w-8 h-8 text-cinema-gold" />
-            <h2 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-cinema-gold to-amber-300 bg-clip-text text-transparent">
+            <h2 className="text-3xl sm:text-4xl font-bold text-blue-900 dark:text-blue-300">
               Let's Make Magic
             </h2>
             <Sparkles className="w-8 h-8 text-cinema-gold" />
