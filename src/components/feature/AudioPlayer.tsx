@@ -14,6 +14,7 @@ import {
   BarChart3,
   Music
 } from "lucide-react";
+import confessionAudio from "@assets/The_Confession_-_Cinematic_Audio_1766517815262.m4a";
 
 interface Scene {
   id: string;
@@ -54,37 +55,43 @@ const demoScenes: Scene[] = [
 export const AudioPlayer = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(450); // 7:30 total
+  const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState([75]);
   const [currentScene, setCurrentScene] = useState(0);
-  const intervalRef = useRef<NodeJS.Timeout>();
+  const audioRef = useRef<HTMLAudioElement>(null);
 
   useEffect(() => {
-    if (isPlaying) {
-      intervalRef.current = setInterval(() => {
-        setCurrentTime(prev => {
-          if (prev >= duration) {
-            setIsPlaying(false);
-            return 0;
-          }
-          return prev + 1;
-        });
-      }, 1000);
-    } else {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
+    if (audioRef.current) {
+      audioRef.current.volume = volume[0] / 100;
     }
-
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-    };
-  }, [isPlaying, duration]);
+  }, [volume]);
 
   const togglePlay = () => {
-    setIsPlaying(!isPlaying);
+    if (audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.pause();
+      } else {
+        audioRef.current.play();
+      }
+      setIsPlaying(!isPlaying);
+    }
+  };
+
+  const handleTimeUpdate = () => {
+    if (audioRef.current) {
+      setCurrentTime(Math.floor(audioRef.current.currentTime));
+    }
+  };
+
+  const handleLoadedMetadata = () => {
+    if (audioRef.current) {
+      setDuration(Math.floor(audioRef.current.duration));
+    }
+  };
+
+  const handleEnded = () => {
+    setIsPlaying(false);
+    setCurrentTime(0);
   };
 
   const formatTime = (seconds: number) => {
@@ -94,11 +101,21 @@ export const AudioPlayer = () => {
   };
 
   const handleSeek = (value: number[]) => {
-    setCurrentTime(value[0]);
+    if (audioRef.current) {
+      audioRef.current.currentTime = value[0];
+      setCurrentTime(value[0]);
+    }
   };
 
   return (
     <section className="py-8 md:py-20 bg-gradient-hero">
+      <audio
+        ref={audioRef}
+        src={confessionAudio}
+        onTimeUpdate={handleTimeUpdate}
+        onLoadedMetadata={handleLoadedMetadata}
+        onEnded={handleEnded}
+      />
       <div className="container mx-auto px-4">
         <div className="text-center mb-6 md:mb-12">
           <h2 className="text-3xl md:text-5xl font-bold mb-4">
@@ -119,7 +136,7 @@ export const AudioPlayer = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Headphones className="h-5 w-5 text-cinema-gold" />
-                "The Coffee Shop" - Cinematic Audio
+                "The Confession" - Cinematic Audio
               </CardTitle>
               <CardDescription>
                 Full production with AI voices, ambient audio, and adaptive music
