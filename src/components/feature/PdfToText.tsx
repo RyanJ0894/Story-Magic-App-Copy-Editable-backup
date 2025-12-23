@@ -65,7 +65,7 @@ export default function PdfToText({ onText }: Props) {
         className="rounded-md px-4 py-2 bg-yellow-400 text-black disabled:opacity-60 w-full sm:w-auto"
         disabled={busy}
       >
-        {busy ? "Processing…" : <><span className="sm:hidden">Upload Script</span><span className="hidden sm:inline">Upload PDF</span></>}
+        {busy ? "Processing…" : "Upload Script"}
       </button>
 
       {err && <span className="text-red-400 text-sm">Error: {err}</span>}
