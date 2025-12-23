@@ -48,11 +48,11 @@ export const ProjectForm = ({ onSubmit, isSubmitting = false }: ProjectFormProps
         {/* Inspirational Message */}
         <div className="text-center py-8">
           <div className="inline-flex items-center justify-center gap-3 mb-4">
-            <Sparkles className="w-8 h-8 text-cinema-gold" />
-            <h2 className="text-3xl sm:text-4xl font-bold text-blue-900 dark:text-blue-300">
+            <Sparkles className="w-8 h-8 text-slate-800 dark:text-slate-300" />
+            <h2 className="text-3xl sm:text-4xl font-bold text-slate-800 dark:text-slate-300">
               Let's Make Magic
             </h2>
-            <Sparkles className="w-8 h-8 text-cinema-gold" />
+            <Sparkles className="w-8 h-8 text-slate-800 dark:text-slate-300" />
           </div>
           <p className="text-muted-foreground text-lg max-w-md mx-auto">
             Upload your script and watch it transform into a cinematic audio experience
