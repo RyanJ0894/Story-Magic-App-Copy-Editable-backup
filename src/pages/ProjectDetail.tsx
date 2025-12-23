@@ -366,18 +366,6 @@ export default function ProjectDetail() {
     }));
   }, []);
 
-  // Extra shimmer particles for mobile only
-  const mobileShimmerParticles = useMemo(() => {
-    return Array.from({ length: 25 }, (_, i) => ({
-      id: i + 100,
-      x: (i * 13 + 5) % 100,
-      y: (i * 19 + 8) % 100,
-      delay: (i * 0.25) % 2.5,
-      duration: 1.2 + (i % 4) * 0.4,
-      opacity: 0.4 + (i % 5) * 0.12,
-    }));
-  }, []);
-
   // Use actual audio duration when available, otherwise use calculated
   const effectiveDuration = actualAudioDuration ?? calculatedDuration;
 
@@ -562,13 +550,13 @@ export default function ProjectDetail() {
   }
 
   return (
-    <div className="min-h-screen relative">
+    <div className="min-h-screen bg-background relative">
       {/* Magical Background Layer */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        {/* Illuminated gradient spots - gold on left, dark on right */}
-        <div className="absolute -top-20 -left-[100px] sm:left-[10%] w-[350px] sm:w-[600px] h-[350px] sm:h-[600px] bg-amber-500/40 rounded-full blur-[100px] sm:blur-[120px]" />
-        <div className="absolute top-1/3 -left-[50px] sm:left-auto sm:right-[5%] w-[300px] sm:w-[500px] h-[300px] sm:h-[500px] bg-blue-500/35 rounded-full blur-[80px] sm:blur-[100px]" />
-        <div className="absolute bottom-1/4 -left-[80px] sm:left-[20%] w-[280px] sm:w-[450px] h-[280px] sm:h-[450px] bg-indigo-400/30 rounded-full blur-[90px] sm:blur-[110px]" />
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+        {/* Illuminated gradient spots - gold on left, blue on right */}
+        <div className="absolute -top-20 -left-[100px] sm:left-[10%] w-[350px] sm:w-[600px] h-[350px] sm:h-[600px] bg-amber-500/60 sm:bg-amber-500/50 rounded-full blur-[100px] sm:blur-[120px]" />
+        <div className="absolute top-1/3 -right-[50px] sm:right-[5%] w-[300px] sm:w-[500px] h-[300px] sm:h-[500px] bg-blue-500/55 sm:bg-blue-500/45 rounded-full blur-[80px] sm:blur-[100px]" />
+        <div className="absolute bottom-1/4 -left-[80px] sm:left-[20%] w-[280px] sm:w-[450px] h-[280px] sm:h-[450px] bg-blue-400/50 sm:bg-blue-400/40 rounded-full blur-[90px] sm:blur-[110px]" />
         
         {/* Shimmer particles - fixed positions with glow */}
         {shimmerParticles.map((particle) => (
@@ -585,25 +573,9 @@ export default function ProjectDetail() {
             }}
           />
         ))}
-        
-        {/* Extra shimmer particles - mobile only with enhanced glow */}
-        {mobileShimmerParticles.map((particle) => (
-          <div
-            key={particle.id}
-            className="absolute w-1.5 h-1.5 bg-white rounded-full animate-pulse sm:hidden"
-            style={{
-              left: `${particle.x}%`,
-              top: `${particle.y}%`,
-              animationDelay: `${particle.delay}s`,
-              animationDuration: `${particle.duration}s`,
-              opacity: particle.opacity + 0.25,
-              boxShadow: '0 0 8px 3px rgba(255, 255, 255, 0.7)',
-            }}
-          />
-        ))}
       </div>
       
-      <div className="container max-w-4xl mx-auto px-4 py-8 relative">
+      <div className="container max-w-4xl mx-auto px-4 py-8 relative z-10">
       {/* Project Header */}
       <div className="mb-4">
         <div className="flex items-center justify-between mb-2">
