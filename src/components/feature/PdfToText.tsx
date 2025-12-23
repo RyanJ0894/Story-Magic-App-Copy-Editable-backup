@@ -62,10 +62,10 @@ export default function PdfToText({ onText }: Props) {
       <button
         type="button"
         onClick={() => fileRef.current?.click()}
-        className="rounded-md px-4 py-2 bg-yellow-400 text-black disabled:opacity-60"
+        className="rounded-md px-4 py-2 bg-yellow-400 text-black disabled:opacity-60 w-full sm:w-auto"
         disabled={busy}
       >
-        {busy ? "Processing…" : "Upload PDF"}
+        {busy ? "Processing…" : <><span className="sm:hidden">Upload Script</span><span className="hidden sm:inline">Upload PDF</span></>}
       </button>
 
       {err && <span className="text-red-400 text-sm">Error: {err}</span>}
