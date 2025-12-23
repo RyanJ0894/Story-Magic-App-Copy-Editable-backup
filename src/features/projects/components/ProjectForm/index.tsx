@@ -1,12 +1,11 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import PdfToText from "@/components/feature/PdfToText";
 import { projectFormSchema, ProjectFormData } from "./schema";
+import { Sparkles } from "lucide-react";
 
 interface ProjectFormProps {
   onSubmit: (data: ProjectFormData) => void;
@@ -18,14 +17,14 @@ export const ProjectForm = ({ onSubmit, isSubmitting = false }: ProjectFormProps
     resolver: zodResolver(projectFormSchema),
     defaultValues: {
       title: "Untitled Project",
-      script: `EXT. PARK – DAY
-NARRATOR: A gentle breeze moves through the trees as Mary and John walk.
-MARY: It's peaceful here.
-JOHN: Yeah, let's keep moving.`,
+      script: "",
       doDirector: true,
       doAudio: false,
     },
   });
+
+  const scriptValue = form.watch("script");
+  const hasScript = scriptValue && scriptValue.trim().length > 0;
 
   const handleSubmit = (data: ProjectFormData) => {
     onSubmit(data);
@@ -45,31 +44,37 @@ JOHN: Yeah, let's keep moving.`,
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-        {/* PDF upload helper */}
-        <div className="mb-2">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
+        {/* Inspirational Message */}
+        <div className="text-center py-8">
+          <div className="inline-flex items-center justify-center gap-3 mb-4">
+            <Sparkles className="w-8 h-8 text-cinema-gold" />
+            <h2 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-cinema-gold to-amber-300 bg-clip-text text-transparent">
+              Let's Make Magic
+            </h2>
+            <Sparkles className="w-8 h-8 text-cinema-gold" />
+          </div>
+          <p className="text-muted-foreground text-lg max-w-md mx-auto">
+            Upload your script and watch it transform into a cinematic audio experience
+          </p>
+        </div>
+
+        {/* PDF upload */}
+        <div className="flex justify-center">
           <PdfToText onText={handlePdfText} />
         </div>
 
-        <FormField
-          control={form.control}
-          name="script"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Script</FormLabel>
-              <FormControl>
-                <Textarea
-                  rows={14}
-                  placeholder="Paste your script here, or upload a PDF above…"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        {/* Hidden script field - populated by PDF upload */}
+        <input type="hidden" {...form.register("script")} />
 
-        <div className="flex items-center gap-6">
+        {/* Show confirmation when script is loaded */}
+        {hasScript && (
+          <div className="text-center p-4 bg-green-900/20 border border-green-700 rounded-lg">
+            <p className="text-green-300 font-medium">Script loaded successfully</p>
+          </div>
+        )}
+
+        <div className="flex items-center justify-center gap-6">
           <FormField
             control={form.control}
             name="doDirector"
@@ -107,9 +112,21 @@ JOHN: Yeah, let's keep moving.`,
           />
         </div>
 
-        <Button type="submit" disabled={isSubmitting} className="w-full">
+        <Button 
+          type="submit" 
+          disabled={isSubmitting || !hasScript} 
+          className="w-full"
+          variant="cinema"
+          size="lg"
+        >
           {isSubmitting ? "Creating Project..." : "Create Project"}
         </Button>
+
+        {!hasScript && (
+          <p className="text-center text-sm text-muted-foreground">
+            Upload a PDF script to get started
+          </p>
+        )}
       </form>
     </Form>
   );
