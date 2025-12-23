@@ -26,9 +26,9 @@ export const Header = () => {
                     <Link to="/pricing" className="text-muted-foreground hover:text-foreground transition-colors">
             Pricing
           </Link>
-          <a href="#voices" className="text-muted-foreground hover:text-foreground transition-colors">
+          <Link to="/voice-marketplace" className="text-muted-foreground hover:text-foreground transition-colors">
             Voice Marketplace
-          </a>
+          </Link>
         </nav>
 
         <div className="flex items-center gap-3">
@@ -73,9 +73,9 @@ export const Header = () => {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <a href="#voices" className="w-full">
+                    <Link to="/voice-marketplace" className="w-full">
                       Voice Marketplace
-                    </a>
+                    </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link to="/dashboard" className="w-full">
@@ -116,9 +116,9 @@ export const Header = () => {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <a href="#voices" className="w-full">
+                    <Link to="/voice-marketplace" className="w-full">
                       Voice Marketplace
-                    </a>
+                    </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link to="/signin" className="w-full">

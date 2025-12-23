@@ -8,6 +8,7 @@ import NewProject from "./pages/NewProject";
 import ProjectDetail from "./pages/ProjectDetail";
 import Pricing from "./pages/Pricing";
 import Features from "./pages/Features";
+import VoiceMarketplace from "./pages/VoiceMarketplace";
 import { AcceptInvitationView } from "./features/auth/views/AcceptInvitationView";
 import { ResetPasswordView } from "./features/auth/views/ResetPasswordView";
 import ShowAudio from "./pages/ShowAudio";
@@ -43,6 +44,7 @@ function App() {
         } />
         <Route path="/pricing" element={<Pricing />} />
         <Route path="/features" element={<Features />} />
+        <Route path="/voice-marketplace" element={<VoiceMarketplace />} />
         <Route path="/show-audio" element={<ShowAudio />} />
         <Route path="/script-demo" element={<ScriptPlayerDemo chunks={[]} isVisible={true} />} />
       </Routes>
