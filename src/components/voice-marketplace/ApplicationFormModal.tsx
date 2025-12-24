@@ -201,21 +201,6 @@ export function ApplicationFormModal({ open, onOpenChange }: ApplicationFormModa
       
       setShowSuccess(true);
       
-      setTimeout(() => {
-        onOpenChange(false);
-        setShowSuccess(false);
-        setFormData({
-          fullName: "",
-          email: "",
-          phone: "",
-          experience: "",
-          bio: "",
-          termsAccepted: false,
-          honeypot: ""
-        });
-        setFiles([]);
-      }, 3000);
-      
     } catch (error: any) {
       console.error('Submission error:', error);
       toast({
@@ -235,17 +220,35 @@ export function ApplicationFormModal({ open, onOpenChange }: ApplicationFormModa
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
+  const handleClose = () => {
+    onOpenChange(false);
+    setShowSuccess(false);
+    setFormData({
+      fullName: "",
+      email: "",
+      phone: "",
+      experience: "",
+      bio: "",
+      termsAccepted: false,
+      honeypot: ""
+    });
+    setFiles([]);
+  };
+
   if (showSuccess) {
     return (
-      <Dialog open={open} onOpenChange={onOpenChange}>
+      <Dialog open={open} onOpenChange={handleClose}>
         <DialogContent className="sm:max-w-md">
           <div className="flex flex-col items-center justify-center py-8 text-center">
             <div className="w-16 h-16 rounded-full bg-green-500/10 flex items-center justify-center mb-4">
               <CheckCircle className="w-8 h-8 text-green-500" />
             </div>
-            <h3 className="text-xl font-semibold mb-2">Thank you!</h3>
-            <p className="text-muted-foreground">
-              Your application has been submitted. We'll review your submission within 7-10 business days and contact you at {formData.email}.
+            <h3 className="text-xl font-semibold mb-2">Application Submitted!</h3>
+            <p className="text-muted-foreground mb-4">
+              Thank you for applying to the Story Magic Voice Marketplace. A confirmation email has been sent to {formData.email}.
+            </p>
+            <p className="text-sm text-muted-foreground">
+              We'll review your submission within 7-10 business days and reach out with next steps.
             </p>
           </div>
         </DialogContent>
