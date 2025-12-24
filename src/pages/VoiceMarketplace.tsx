@@ -14,7 +14,9 @@ import {
   Lock,
   Scale,
   Users,
-  Headphones
+  Headphones,
+  Star,
+  Music
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -330,6 +332,65 @@ export default function VoiceMarketplace() {
               </CardContent>
             </Card>
           </div>
+
+          {/* Spotify vs Story Magic Comparison */}
+          <Card className="mt-10 bg-gradient-to-r from-amber-500/10 via-background to-green-500/10 border-border shadow-cinematic" data-testid="card-earnings-comparison">
+            <CardHeader className="text-center pb-2">
+              <CardTitle className="text-xl">As a Comparison...</CardTitle>
+              <CardDescription>Spotify vs Story Magic for the same 150 uses</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid md:grid-cols-2 gap-6">
+                {/* Story Magic Side */}
+                <div className="p-6 rounded-lg bg-amber-500/10 border border-amber-500/30">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Star className="w-6 h-6 text-amber-500" />
+                    <h3 className="font-bold text-lg">Story Magic</h3>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">Voice uses</span>
+                      <span className="font-semibold">150 projects</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">Per-use rate</span>
+                      <span className="font-semibold">$2.50</span>
+                    </div>
+                    <div className="flex justify-between items-center pt-3 border-t border-amber-500/30">
+                      <span className="font-bold">Your Earnings</span>
+                      <span className="font-bold text-2xl text-amber-500">$375</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Spotify Side */}
+                <div className="p-6 rounded-lg bg-muted/50 border border-border">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Music className="w-6 h-6 text-muted-foreground" />
+                    <h3 className="font-bold text-lg text-muted-foreground">Spotify Equivalent</h3>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">Streams</span>
+                      <span className="font-semibold text-muted-foreground">150 streams</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">Per-stream rate</span>
+                      <span className="font-semibold text-muted-foreground">$0.004</span>
+                    </div>
+                    <div className="flex justify-between items-center pt-3 border-t border-border">
+                      <span className="font-bold text-muted-foreground">Your Earnings</span>
+                      <span className="font-bold text-2xl text-muted-foreground">$0.60</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <p className="text-center text-sm text-muted-foreground mt-6">
+                That's <span className="font-bold text-amber-500">625x more</span> earnings with Story Magic for the same amount of work.
+              </p>
+            </CardContent>
+          </Card>
+
           <div className="grid md:grid-cols-3 gap-6 mt-8">
             <Card className="bg-gradient-card border-border shadow-cinematic text-center p-6">
               <p className="text-sm text-muted-foreground mb-2">Minimum Payout</p>
