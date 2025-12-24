@@ -280,7 +280,7 @@ export const VoiceCasting = () => {
                 Voice Cast Assignment
               </CardTitle>
               <CardDescription>
-                AI-generated voice profiles for "The Coffee Shop" demo script
+                Standard AI-generated voice profiles in our voice database
               </CardDescription>
             </CardHeader>
             <CardContent>
