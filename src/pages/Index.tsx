@@ -5,6 +5,10 @@ import { ScriptUpload } from "@/components/feature/ScriptUpload";
 import { VoiceCasting } from "@/components/feature/VoiceCasting";
 import { AudioPlayer } from "@/components/feature/AudioPlayer";
 import { FeedbackForm } from "@/components/layout/FeedbackForm";
+import { Link } from "react-router-dom";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Mic, DollarSign, ArrowRight } from "lucide-react";
 import ChunkProgressDemo from "@/components/demo/ChunkProgressDemo";
 import ScriptPlayerDemo from "@/components/demo/ScriptPlayerDemo";
 import { supabase } from "../../supabase/client";
@@ -301,6 +305,47 @@ const Index = () => {
           <ScriptUpload />
           <VoiceCasting />
           <AudioPlayer />
+
+          {/* Voice Marketplace Advertisement */}
+          <div className="py-8" data-testid="section-voice-marketplace-ad">
+            <Card className="bg-gradient-to-r from-amber-500/10 via-background to-amber-500/5 border-amber-500/20 shadow-cinematic overflow-visible">
+              <CardContent className="py-10 px-6 md:px-10">
+                <div className="flex flex-col md:flex-row items-center gap-8">
+                  <div className="flex-shrink-0">
+                    <div className="w-20 h-20 rounded-full bg-amber-500/20 flex items-center justify-center">
+                      <Mic className="w-10 h-10 text-amber-500" />
+                    </div>
+                  </div>
+                  <div className="flex-1 text-center md:text-left">
+                    <h2 className="text-2xl md:text-3xl font-bold mb-3">Are You a Voice Actor?</h2>
+                    <p className="text-muted-foreground mb-4 max-w-2xl">
+                      Join the Story Magic Voice Marketplace and earn passive income every time your voice brings a screenplay to life. 
+                      Stop competing with AI—join the revolution while maintaining your artistic integrity.
+                    </p>
+                    <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-sm text-muted-foreground">
+                      <div className="flex items-center gap-2">
+                        <DollarSign className="w-4 h-4 text-amber-500" />
+                        <span>15% revenue share</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <DollarSign className="w-4 h-4 text-amber-500" />
+                        <span>$2.50 avg per use</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex-shrink-0">
+                    <Link to="/voice-marketplace">
+                      <Button className="bg-amber-500 hover:bg-amber-600 text-black font-semibold gap-2">
+                        Learn More
+                        <ArrowRight className="w-4 h-4" />
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
           <FeedbackForm />
 
           {/* Debug panel hidden from user view */}
