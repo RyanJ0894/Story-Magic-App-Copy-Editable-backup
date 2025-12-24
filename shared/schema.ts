@@ -61,3 +61,29 @@ export const insertProfileSchema = createInsertSchema(profiles).omit({
 });
 export type InsertProfile = z.infer<typeof insertProfileSchema>;
 export type Profile = typeof profiles.$inferSelect;
+
+// Voice Applications table for Voice Marketplace submissions
+export const voiceApplications = pgTable("voice_applications", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  fullName: text("full_name").notNull(),
+  email: text("email").notNull(),
+  phone: text("phone"),
+  experience: text("experience").notNull(),
+  bio: text("bio"),
+  audioUrls: jsonb("audio_urls").default([]),
+  fileInfo: jsonb("file_info").default([]),
+  status: text("status").notNull().default("pending"),
+  emailSent: boolean("email_sent").default(false),
+  emailError: text("email_error"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertVoiceApplicationSchema = createInsertSchema(voiceApplications).omit({
+  id: true,
+  createdAt: true,
+  status: true,
+  emailSent: true,
+  emailError: true,
+});
+export type InsertVoiceApplication = z.infer<typeof insertVoiceApplicationSchema>;
+export type VoiceApplication = typeof voiceApplications.$inferSelect;

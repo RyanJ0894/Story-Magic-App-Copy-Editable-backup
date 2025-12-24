@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { db } from "./db";
-import { projects, userProjects, insertUserProjectSchema } from "@shared/schema";
+import { projects, userProjects, insertUserProjectSchema, voiceApplications } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import { getUncachableResendClient } from "./resend";
 
@@ -101,13 +101,35 @@ export function registerRoutes(app: Express): Server {
 
   // Voice Marketplace Application endpoint
   app.post("/api/voice-application", async (req, res) => {
+    let applicationId: string | null = null;
+    
     try {
       const { fullName, email, phone, experience, bio, audioUrls, fileInfo } = req.body;
+      console.log('[VoiceApp] Received application:', { fullName, email, experience, filesCount: fileInfo?.length });
 
       if (!fullName || !email || !experience) {
         return res.status(400).json({ error: "Missing required fields" });
       }
 
+      // Step 1: Save to database FIRST (so we never lose applications)
+      console.log('[VoiceApp] Saving to database...');
+      const [savedApplication] = await db
+        .insert(voiceApplications)
+        .values({
+          fullName,
+          email,
+          phone: phone || null,
+          experience,
+          bio: bio || null,
+          audioUrls: audioUrls || [],
+          fileInfo: fileInfo || [],
+        })
+        .returning();
+      
+      applicationId = savedApplication.id;
+      console.log('[VoiceApp] Saved to database with ID:', applicationId);
+
+      // Step 2: Prepare and send email
       const experienceLabels: Record<string, string> = {
         'professional': 'Professional Voice Actor',
         'some-experience': 'Some Experience',
@@ -135,6 +157,7 @@ export function registerRoutes(app: Express): Server {
 
       const emailHtml = `
         <h2>New Voice Marketplace Application</h2>
+        <p style="color: #666;">Application ID: ${applicationId}</p>
         <hr />
         <p><strong>Full Name:</strong> ${fullName}</p>
         <p><strong>Email:</strong> ${email}</p>
@@ -147,21 +170,51 @@ export function registerRoutes(app: Express): Server {
         <hr />
         <p><em>Submitted at: ${new Date().toISOString()}</em></p>
         <p><em>Note: If audio files failed to upload, please reply to this email to request the files from the applicant.</em></p>
+        <p><em>This application has been saved to the database and can be viewed in Supabase.</em></p>
       `;
 
+      console.log('[VoiceApp] Getting Resend client...');
       const { client, fromEmail } = await getUncachableResendClient();
+      console.log('[VoiceApp] Resend client obtained, fromEmail:', fromEmail);
 
-      await client.emails.send({
+      console.log('[VoiceApp] Sending email to ryanj0894@gmail.com...');
+      const emailResult = await client.emails.send({
         from: fromEmail,
         to: 'ryanj0894@gmail.com',
         subject: `Voice Marketplace Application - ${fullName}`,
         html: emailHtml,
         replyTo: email
       });
+      console.log('[VoiceApp] Email send result:', JSON.stringify(emailResult));
 
-      res.json({ success: true });
+      // Update database to mark email as sent
+      await db
+        .update(voiceApplications)
+        .set({ emailSent: true })
+        .where(eq(voiceApplications.id, applicationId));
+      console.log('[VoiceApp] Database updated - email marked as sent');
+
+      res.json({ success: true, applicationId });
     } catch (error: any) {
-      console.error('Voice application error:', error);
+      console.error('[VoiceApp] Error:', error);
+      console.error('[VoiceApp] Error details:', JSON.stringify(error, null, 2));
+      
+      // If we saved to DB but email failed, update the error
+      if (applicationId) {
+        try {
+          await db
+            .update(voiceApplications)
+            .set({ emailSent: false, emailError: error.message })
+            .where(eq(voiceApplications.id, applicationId));
+          console.log('[VoiceApp] Database updated with email error');
+          
+          // Still return success since application is saved
+          return res.json({ success: true, applicationId, emailFailed: true });
+        } catch (dbError) {
+          console.error('[VoiceApp] Failed to update DB with error:', dbError);
+        }
+      }
+      
       res.status(500).json({ error: error.message });
     }
   });
