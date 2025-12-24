@@ -139,13 +139,20 @@ export function registerRoutes(app: Express): Server {
         'beginner': 'Beginner/No Experience'
       };
 
+      // Build base URL for audio files from request headers
+      const protocol = req.headers['x-forwarded-proto'] || 'https';
+      const host = req.headers['x-forwarded-host'] || req.headers.host || 'story-magic.replit.app';
+      const baseUrl = `${protocol}://${host}`;
+
       let audioSection = '';
       if (audioUrls && audioUrls.length > 0) {
         const audioLinksHtml = audioUrls.map((url: string, i: number) => {
           if (url.startsWith('[File:')) {
             return `<li>${url}</li>`;
           }
-          return `<li><a href="${url}">Audio File ${i + 1}</a></li>`;
+          // If URL is relative (starts with /), prepend the base URL
+          const fullUrl = url.startsWith('/') ? `${baseUrl}${url}` : url;
+          return `<li><a href="${fullUrl}">Audio File ${i + 1}</a></li>`;
         }).join('');
         audioSection = `<h3>Audio Submissions</h3><ul>${audioLinksHtml}</ul>`;
       }
