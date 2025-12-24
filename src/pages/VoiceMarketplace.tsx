@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { 
   Mic, 
   DollarSign, 
@@ -26,8 +26,10 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { ApplicationFormModal } from "@/components/voice-marketplace/ApplicationFormModal";
 
 export default function VoiceMarketplace() {
+  const [isApplicationOpen, setIsApplicationOpen] = useState(false);
   const shimmerParticles = useMemo(() => {
     return Array.from({ length: 35 }, (_, i) => ({
       id: i,
@@ -215,7 +217,12 @@ export default function VoiceMarketplace() {
           <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
             Join the Story Magic Voice Marketplace and earn passive income every time your AI voice brings a screenplay to life. We're building the future of audio production—and we're compensating voice actors fairly.
           </p>
-          <Button size="lg" className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white" data-testid="button-apply-hero">
+          <Button 
+            size="lg" 
+            className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white" 
+            data-testid="button-apply-hero"
+            onClick={() => setIsApplicationOpen(true)}
+          >
             <Mic className="w-5 h-5 mr-2" />
             Apply to Join the Marketplace
           </Button>
@@ -431,7 +438,12 @@ export default function VoiceMarketplace() {
                 The entertainment industry is evolving, and AI is creating new opportunities for voice talent. Story Magic is committed to fair compensation, transparent practices, and empowering voice actors.
               </p>
               <p className="text-lg font-medium mb-6">Ready to turn your voice into passive income?</p>
-              <Button size="lg" className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white mb-6" data-testid="button-apply-cta">
+              <Button 
+                size="lg" 
+                className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white mb-6" 
+                data-testid="button-apply-cta"
+                onClick={() => setIsApplicationOpen(true)}
+              >
                 <Mic className="w-5 h-5 mr-2" />
                 Apply to Join the Marketplace
               </Button>
@@ -445,6 +457,11 @@ export default function VoiceMarketplace() {
           </Card>
         </section>
       </main>
+
+      <ApplicationFormModal 
+        open={isApplicationOpen} 
+        onOpenChange={setIsApplicationOpen} 
+      />
     </div>
   );
 }

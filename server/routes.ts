@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { db } from "./db";
 import { projects, userProjects, insertUserProjectSchema } from "@shared/schema";
 import { eq } from "drizzle-orm";
+import { getUncachableResendClient } from "./resend";
 
 export function registerRoutes(app: Express): Server {
   // Health check endpoint
@@ -94,6 +95,57 @@ export function registerRoutes(app: Express): Server {
       
       res.status(204).send();
     } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Voice Marketplace Application endpoint
+  app.post("/api/voice-application", async (req, res) => {
+    try {
+      const { fullName, email, phone, experience, bio, audioUrls } = req.body;
+
+      if (!fullName || !email || !experience || !audioUrls || audioUrls.length === 0) {
+        return res.status(400).json({ error: "Missing required fields" });
+      }
+
+      const experienceLabels: Record<string, string> = {
+        'professional': 'Professional Voice Actor',
+        'some-experience': 'Some Experience',
+        'beginner': 'Beginner/No Experience'
+      };
+
+      const audioLinksHtml = audioUrls.map((url: string, i: number) => 
+        `<li><a href="${url}">Audio File ${i + 1}</a></li>`
+      ).join('');
+
+      const emailHtml = `
+        <h2>New Voice Marketplace Application</h2>
+        <hr />
+        <p><strong>Full Name:</strong> ${fullName}</p>
+        <p><strong>Email:</strong> ${email}</p>
+        <p><strong>Phone:</strong> ${phone || 'Not provided'}</p>
+        <p><strong>Experience:</strong> ${experienceLabels[experience] || experience}</p>
+        <p><strong>Bio:</strong> ${bio || 'Not provided'}</p>
+        <hr />
+        <h3>Audio Submissions</h3>
+        <ul>${audioLinksHtml}</ul>
+        <hr />
+        <p><em>Submitted at: ${new Date().toISOString()}</em></p>
+      `;
+
+      const { client, fromEmail } = await getUncachableResendClient();
+
+      await client.emails.send({
+        from: fromEmail,
+        to: 'ryanj0894@gmail.com',
+        subject: `Voice Marketplace Application - ${fullName}`,
+        html: emailHtml,
+        replyTo: email
+      });
+
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error('Voice application error:', error);
       res.status(500).json({ error: error.message });
     }
   });
