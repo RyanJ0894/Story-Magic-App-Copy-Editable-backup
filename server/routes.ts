@@ -177,9 +177,15 @@ export function registerRoutes(app: Express): Server {
       const { client, fromEmail } = await getUncachableResendClient();
       console.log('[VoiceApp] Resend client obtained, fromEmail:', fromEmail);
 
+      // Use Resend's test sender if fromEmail is from an unverified domain like gmail.com
+      const actualFromEmail = fromEmail.includes('gmail.com') || fromEmail.includes('yahoo.com') || fromEmail.includes('hotmail.com')
+        ? 'Story Magic <onboarding@resend.dev>'
+        : fromEmail;
+      console.log('[VoiceApp] Using fromEmail:', actualFromEmail);
+
       console.log('[VoiceApp] Sending email to ryanj0894@gmail.com...');
       const emailResult = await client.emails.send({
-        from: fromEmail,
+        from: actualFromEmail,
         to: 'ryanj0894@gmail.com',
         subject: `Voice Marketplace Application - ${fullName}`,
         html: emailHtml,
