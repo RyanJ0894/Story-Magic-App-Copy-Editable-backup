@@ -408,7 +408,7 @@ export const VoiceCasting = () => {
               
               <div className="mt-6 p-4 bg-cinema-surface/30 rounded-lg border border-cinema-gold/20">
                 <h4 className="font-medium mb-2 text-cinema-gold">
-                  Voice Marketplace Coming Soon
+                  Celebrity Voice Marketplace Expansion Coming Soon
                 </h4>
                 <p className="text-sm text-muted-foreground">
                   Access licensed SAG actor voices and celebrity AI voices for professional productions.
