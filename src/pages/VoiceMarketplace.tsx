@@ -166,40 +166,21 @@ export default function VoiceMarketplace() {
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
-      <div className="fixed inset-0 z-0 pointer-events-none">
-        <div 
-          className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full blur-3xl animate-pulse"
-          style={{
-            background: 'radial-gradient(circle, rgba(245, 158, 11, 0.15) 0%, rgba(217, 119, 6, 0.08) 50%, transparent 70%)',
-            animationDuration: '4s',
-          }}
-        />
-        <div 
-          className="absolute bottom-1/3 right-1/4 w-80 h-80 rounded-full blur-3xl animate-pulse"
-          style={{
-            background: 'radial-gradient(circle, rgba(59, 130, 246, 0.12) 0%, rgba(37, 99, 235, 0.06) 50%, transparent 70%)',
-            animationDuration: '5s',
-            animationDelay: '1s',
-          }}
-        />
-        <div 
-          className="absolute top-2/3 left-1/3 w-64 h-64 rounded-full blur-3xl animate-pulse"
-          style={{
-            background: 'radial-gradient(circle, rgba(245, 158, 11, 0.1) 0%, transparent 60%)',
-            animationDuration: '6s',
-            animationDelay: '2s',
-          }}
-        />
+      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
+        <div className="absolute -top-20 -left-[100px] sm:left-[10%] w-[350px] sm:w-[600px] h-[350px] sm:h-[600px] bg-amber-500/60 sm:bg-amber-500/50 rounded-full blur-[100px] sm:blur-[120px]" />
+        <div className="absolute top-1/3 -right-[50px] sm:right-[5%] w-[300px] sm:w-[500px] h-[300px] sm:h-[500px] bg-blue-500/55 sm:bg-blue-500/45 rounded-full blur-[80px] sm:blur-[100px]" />
+        <div className="absolute bottom-1/4 -left-[80px] sm:left-[20%] w-[280px] sm:w-[450px] h-[280px] sm:h-[450px] bg-blue-400/50 sm:bg-blue-400/40 rounded-full blur-[90px] sm:blur-[110px]" />
         {shimmerParticles.map((particle) => (
           <div
             key={particle.id}
-            className="absolute w-1 h-1 bg-amber-400 rounded-full animate-pulse"
+            className="absolute w-1.5 h-1.5 bg-white rounded-full animate-pulse"
             style={{
               left: `${particle.x}%`,
               top: `${particle.y}%`,
-              opacity: particle.opacity,
-              animationDuration: `${particle.duration}s`,
               animationDelay: `${particle.delay}s`,
+              animationDuration: `${particle.duration}s`,
+              opacity: particle.opacity + 0.2,
+              boxShadow: '0 0 6px 2px rgba(255, 255, 255, 0.6)',
             }}
           />
         ))}
