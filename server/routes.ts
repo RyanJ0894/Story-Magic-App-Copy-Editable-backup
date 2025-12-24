@@ -4,8 +4,11 @@ import { db } from "./db";
 import { projects, userProjects, insertUserProjectSchema, voiceApplications } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import { getUncachableResendClient } from "./resend";
+import { registerObjectStorageRoutes } from "./replit_integrations/object_storage";
 
 export function registerRoutes(app: Express): Server {
+  // Register object storage routes for file uploads
+  registerObjectStorageRoutes(app);
   // Health check endpoint
   app.get("/api/health", (_req, res) => {
     res.json({ status: "ok", timestamp: new Date().toISOString() });
@@ -192,6 +195,9 @@ export function registerRoutes(app: Express): Server {
         replyTo: email
       });
       console.log('[VoiceApp] Admin email send result:', JSON.stringify(emailResult));
+
+      // Wait 1 second to avoid Resend rate limiting (2 requests per second max)
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
       // Send confirmation email to applicant
       console.log('[VoiceApp] Sending confirmation email to applicant:', email);

@@ -9,7 +9,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Progress } from "@/components/ui/progress";
 import { Loader2, Upload, X, FileAudio, CheckCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 
 interface ApplicationFormModalProps {
   open: boolean;
@@ -116,41 +115,54 @@ export function ApplicationFormModal({ open, onOpenChange }: ApplicationFormModa
     
     for (let i = 0; i < files.length; i++) {
       const fileData = files[i];
-      const fileName = `voice-applications/${Date.now()}-${fileData.file.name}`;
       
       try {
         setFiles(prev => prev.map((f, idx) => 
           idx === i ? { ...f, progress: 10 } : f
         ));
 
-        const { data, error } = await supabase.storage
-          .from('voice-applications')
-          .upload(fileName, fileData.file, {
-            cacheControl: '3600',
-            upsert: false
-          });
+        // Step 1: Request presigned URL from backend
+        const urlResponse = await fetch('/api/uploads/request-url', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: fileData.file.name,
+            size: fileData.file.size,
+            contentType: fileData.file.type || 'audio/mpeg'
+          })
+        });
 
-        if (error) {
-          console.error('Storage upload error:', error);
-          uploadedUrls.push(`[File: ${fileData.file.name} - ${(fileData.file.size / (1024 * 1024)).toFixed(1)}MB - Upload failed, applicant should send via email]`);
-          setFiles(prev => prev.map((f, idx) => 
-            idx === i ? { ...f, progress: 100, uploaded: true } : f
-          ));
-          continue;
+        if (!urlResponse.ok) {
+          throw new Error('Failed to get upload URL');
         }
 
-        const { data: urlData } = supabase.storage
-          .from('voice-applications')
-          .getPublicUrl(fileName);
-
-        uploadedUrls.push(urlData.publicUrl);
+        const { uploadURL, objectPath } = await urlResponse.json();
         
         setFiles(prev => prev.map((f, idx) => 
-          idx === i ? { ...f, progress: 100, uploaded: true, url: urlData.publicUrl } : f
+          idx === i ? { ...f, progress: 30 } : f
+        ));
+
+        // Step 2: Upload file directly to presigned URL
+        const uploadResponse = await fetch(uploadURL, {
+          method: 'PUT',
+          body: fileData.file,
+          headers: { 'Content-Type': fileData.file.type || 'audio/mpeg' }
+        });
+
+        if (!uploadResponse.ok) {
+          throw new Error('Failed to upload file');
+        }
+
+        // Use the object path as the accessible URL
+        const fileUrl = objectPath;
+        uploadedUrls.push(fileUrl);
+        
+        setFiles(prev => prev.map((f, idx) => 
+          idx === i ? { ...f, progress: 100, uploaded: true, url: fileUrl } : f
         ));
       } catch (error: any) {
         console.error('Upload error:', error);
-        uploadedUrls.push(`[File: ${fileData.file.name} - ${(fileData.file.size / (1024 * 1024)).toFixed(1)}MB - Upload failed]`);
+        uploadedUrls.push(`[File: ${fileData.file.name} - ${(fileData.file.size / (1024 * 1024)).toFixed(1)}MB - Upload failed, please send via email]`);
         setFiles(prev => prev.map((f, idx) => 
           idx === i ? { ...f, progress: 100, uploaded: true } : f
         ));
