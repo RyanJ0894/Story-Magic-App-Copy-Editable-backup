@@ -63,7 +63,7 @@ export default function VoiceMarketplace() {
     {
       icon: <Wand2 className="w-6 h-6" />,
       title: "Join the Future",
-      description: "Be part of the AI revolution in entertainment. Your voice will help screenwriters, producers, and agencies evaluate scripts faster than ever before."
+      description: "Be part of the AI revolution in entertainment. Your voice will help actors, producers, and agencies evaluate scripts faster than ever before."
     }
   ];
 
@@ -97,11 +97,11 @@ export default function VoiceMarketplace() {
     },
     {
       title: "Professional audio quality",
-      description: "Clear, noise-free recordings. You don't need a professional studio, but your audio should be free from background noise, echo, and distortion."
+      description: "Clear, noise-free recordings. You don't need a professional studio, but your audio should be free from background noise, echo, and distortion. Most smart phone recorders will do."
     },
     {
       title: "Consistent performance",
-      description: "Natural delivery, good pacing, clear enunciation. We're looking for voices that sound professional and engaging."
+      description: "Natural delivery, good pacing, clear enunciation. We're looking for voices that sound unique, conversational, and real."
     },
     {
       title: "Legal rights confirmation",
@@ -116,7 +116,7 @@ export default function VoiceMarketplace() {
     },
     {
       question: "What equipment do I need?",
-      answer: "At minimum: a decent USB microphone (like a Blue Yeti or Audio-Technica AT2020) and a quiet recording space. Professional studio equipment is not required."
+      answer: "At minimum: a decent USB microphone (like a Blue Yeti or Audio-Technica AT2020) and a quiet recording space. Professional studio equipment is not required. Most smartphones can get the job done."
     },
     {
       question: "How long does the review process take?",
@@ -370,7 +370,7 @@ export default function VoiceMarketplace() {
                 <Badge variant="secondary">Professional voice actors</Badge>
                 <Badge variant="secondary">Aspiring voice talent</Badge>
                 <Badge variant="secondary">Actors with voice experience</Badge>
-                <Badge variant="secondary">Anyone with a great voice</Badge>
+                <Badge variant="secondary">Anyone with a unique voice</Badge>
               </div>
               <p className="text-center text-sm text-muted-foreground mt-6">
                 Please note: Not all submissions will be accepted. We evaluate each application individually to ensure our marketplace maintains high quality standards.
