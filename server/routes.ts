@@ -102,9 +102,9 @@ export function registerRoutes(app: Express): Server {
   // Voice Marketplace Application endpoint
   app.post("/api/voice-application", async (req, res) => {
     try {
-      const { fullName, email, phone, experience, bio, audioUrls } = req.body;
+      const { fullName, email, phone, experience, bio, audioUrls, fileInfo } = req.body;
 
-      if (!fullName || !email || !experience || !audioUrls || audioUrls.length === 0) {
+      if (!fullName || !email || !experience) {
         return res.status(400).json({ error: "Missing required fields" });
       }
 
@@ -114,9 +114,24 @@ export function registerRoutes(app: Express): Server {
         'beginner': 'Beginner/No Experience'
       };
 
-      const audioLinksHtml = audioUrls.map((url: string, i: number) => 
-        `<li><a href="${url}">Audio File ${i + 1}</a></li>`
-      ).join('');
+      let audioSection = '';
+      if (audioUrls && audioUrls.length > 0) {
+        const audioLinksHtml = audioUrls.map((url: string, i: number) => {
+          if (url.startsWith('[File:')) {
+            return `<li>${url}</li>`;
+          }
+          return `<li><a href="${url}">Audio File ${i + 1}</a></li>`;
+        }).join('');
+        audioSection = `<h3>Audio Submissions</h3><ul>${audioLinksHtml}</ul>`;
+      }
+
+      let fileInfoSection = '';
+      if (fileInfo && fileInfo.length > 0) {
+        const fileListHtml = fileInfo.map((f: { name: string; size: string }) => 
+          `<li>${f.name} (${f.size})</li>`
+        ).join('');
+        fileInfoSection = `<h3>Files Submitted</h3><ul>${fileListHtml}</ul>`;
+      }
 
       const emailHtml = `
         <h2>New Voice Marketplace Application</h2>
@@ -127,10 +142,11 @@ export function registerRoutes(app: Express): Server {
         <p><strong>Experience:</strong> ${experienceLabels[experience] || experience}</p>
         <p><strong>Bio:</strong> ${bio || 'Not provided'}</p>
         <hr />
-        <h3>Audio Submissions</h3>
-        <ul>${audioLinksHtml}</ul>
+        ${fileInfoSection}
+        ${audioSection}
         <hr />
         <p><em>Submitted at: ${new Date().toISOString()}</em></p>
+        <p><em>Note: If audio files failed to upload, please reply to this email to request the files from the applicant.</em></p>
       `;
 
       const { client, fromEmail } = await getUncachableResendClient();

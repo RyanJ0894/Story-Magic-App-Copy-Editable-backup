@@ -124,16 +124,23 @@ export function ApplicationFormModal({ open, onOpenChange }: ApplicationFormModa
         ));
 
         const { data, error } = await supabase.storage
-          .from('audio-files')
+          .from('voice-applications')
           .upload(fileName, fileData.file, {
             cacheControl: '3600',
             upsert: false
           });
 
-        if (error) throw error;
+        if (error) {
+          console.error('Storage upload error:', error);
+          uploadedUrls.push(`[File: ${fileData.file.name} - ${(fileData.file.size / (1024 * 1024)).toFixed(1)}MB - Upload failed, applicant should send via email]`);
+          setFiles(prev => prev.map((f, idx) => 
+            idx === i ? { ...f, progress: 100, uploaded: true } : f
+          ));
+          continue;
+        }
 
         const { data: urlData } = supabase.storage
-          .from('audio-files')
+          .from('voice-applications')
           .getPublicUrl(fileName);
 
         uploadedUrls.push(urlData.publicUrl);
@@ -143,7 +150,10 @@ export function ApplicationFormModal({ open, onOpenChange }: ApplicationFormModa
         ));
       } catch (error: any) {
         console.error('Upload error:', error);
-        throw new Error(`Failed to upload ${fileData.file.name}`);
+        uploadedUrls.push(`[File: ${fileData.file.name} - ${(fileData.file.size / (1024 * 1024)).toFixed(1)}MB - Upload failed]`);
+        setFiles(prev => prev.map((f, idx) => 
+          idx === i ? { ...f, progress: 100, uploaded: true } : f
+        ));
       }
     }
     
@@ -166,6 +176,11 @@ export function ApplicationFormModal({ open, onOpenChange }: ApplicationFormModa
     try {
       const audioUrls = await uploadFiles();
       
+      const fileInfo = files.map(f => ({
+        name: f.file.name,
+        size: `${(f.file.size / (1024 * 1024)).toFixed(1)}MB`
+      }));
+      
       const response = await fetch('/api/voice-application', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -175,7 +190,8 @@ export function ApplicationFormModal({ open, onOpenChange }: ApplicationFormModa
           phone: formData.phone,
           experience: formData.experience,
           bio: formData.bio,
-          audioUrls
+          audioUrls,
+          fileInfo
         })
       });
       
