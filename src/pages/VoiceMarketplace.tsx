@@ -232,9 +232,9 @@ export default function VoiceMarketplace() {
 
         <section className="mb-20" data-testid="section-benefits">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Get Paid What You Deserve</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">If You Can't Beat Them, Join Them</h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              The entertainment industry has always undervalued voice talent. We're changing that. Here's what makes Story Magic different:
+              Stop competing with AI and join the revolution, while maintaining your artistic integrity.
             </p>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
