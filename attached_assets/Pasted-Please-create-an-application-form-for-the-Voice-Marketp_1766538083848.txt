@@ -1,0 +1,58 @@
+Please create an application form for the Voice Marketplace that works as follows:
+WHEN USER CLICKS "Apply to Join the Marketplace" BUTTON:
+Open a modal popup (overlay) with the application form. Do not navigate to a new page - keep them on the Voice Marketplace page.
+APPLICATION FORM FIELDS:
+
+Full Name (required text field)
+Email Address (required email field)
+Phone Number (optional text field)
+Voice Acting Experience (dropdown menu):
+
+Professional Voice Actor
+Some Experience
+Beginner/No Experience
+
+
+Brief Bio (optional text area - 500 character limit) - "Tell us about yourself and your voice"
+Audio File Upload (required - allow multiple files):
+
+Accept formats: .mp3, .wav, .m4a
+Maximum file size: 500MB per file
+Show upload progress bar
+Allow multiple file uploads (since 30 minutes may require multiple files)
+
+
+Terms Checkbox (required):
+
+"I confirm that I own the rights to my voice and authorize Story Magic to create an AI voice model for marketplace licensing under non-exclusive terms."
+
+
+
+SUBMIT BUTTON: "Submit Application"
+FORM SUBMISSION BEHAVIOR:
+When the user clicks Submit:
+
+Validate all required fields are filled
+Show a loading spinner on the submit button
+Send form data AND uploaded audio files to: ryanj0894@gmail.com
+Email subject line should be: "Voice Marketplace Application - [Applicant Name]"
+Email should contain all form data in a clean format
+Audio files should be sent as email attachments
+After successful submission, show success message: "Thank you! Your application has been submitted. We'll review your submission within 7-10 business days and contact you at [their email]."
+Close the modal after 3 seconds
+If submission fails, show error message: "Oops! Something went wrong. Please try again or email us directly at voices@storymagicapp.net"
+
+TECHNICAL REQUIREMENTS:
+
+Use Supabase or your existing email service to send the form data to ryanj0894@gmail.com
+The user should never see my email address (ryanj0894@gmail.com) anywhere in the UI
+Make sure large audio files can be uploaded successfully (handle up to 500MB total)
+Form should be mobile responsive
+Add basic spam protection (honeypot field or similar)
+
+DESIGN:
+
+Match the existing Story Magic website design and color scheme
+Make the modal clean and professional
+Use clear error messages if validation fails
+Make sure the upload area shows file names after selection
