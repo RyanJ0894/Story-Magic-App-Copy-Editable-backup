@@ -206,36 +206,44 @@ export function registerRoutes(app: Express): Server {
       // Wait 1 second to avoid Resend rate limiting (2 requests per second max)
       await new Promise(resolve => setTimeout(resolve, 1000));
 
-      // Send confirmation email to applicant
-      console.log('[VoiceApp] Sending confirmation email to applicant:', email);
-      const confirmationHtml = `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #d97706;">Thank You for Applying to Story Magic!</h2>
-          <p>Hi ${fullName},</p>
-          <p>We've received your application for the Story Magic Voice Marketplace. Thank you for your interest in joining our community of voice talent!</p>
-          <h3 style="color: #374151;">What Happens Next?</h3>
-          <ul>
-            <li>Our team will review your application within 7-10 business days</li>
-            <li>We'll evaluate your audio samples and experience</li>
-            <li>You'll receive an email with our decision and next steps</li>
-          </ul>
-          <h3 style="color: #374151;">Your Application Details:</h3>
-          <p><strong>Application ID:</strong> ${applicationId}</p>
-          <p><strong>Experience Level:</strong> ${experienceLabels[experience] || experience}</p>
-          ${fileInfo && fileInfo.length > 0 ? `<p><strong>Files Submitted:</strong> ${fileInfo.length} audio file(s)</p>` : ''}
-          <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;" />
-          <p style="color: #6b7280; font-size: 14px;">If you have any questions, feel free to reply to this email or contact us at voices@storymagicapp.net</p>
-          <p style="color: #6b7280; font-size: 14px;">Best regards,<br/>The Story Magic Team</p>
-        </div>
-      `;
+      // Check if we can send to external recipients (only possible with verified domain)
+      const isUsingTestSender = actualFromEmail.includes('onboarding@resend.dev');
+      
+      if (isUsingTestSender) {
+        // Test sender can only send to the verified email, not to applicants
+        console.log('[VoiceApp] Using test sender - cannot send confirmation to applicant. Verify a domain at resend.com/domains to enable applicant emails.');
+      } else {
+        // Send confirmation email to applicant (only with verified domain)
+        console.log('[VoiceApp] Sending confirmation email to applicant:', email);
+        const confirmationHtml = `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #d97706;">Thank You for Applying to Story Magic!</h2>
+            <p>Hi ${fullName},</p>
+            <p>We've received your application for the Story Magic Voice Marketplace. Thank you for your interest in joining our community of voice talent!</p>
+            <h3 style="color: #374151;">What Happens Next?</h3>
+            <ul>
+              <li>Our team will review your application within 7-10 business days</li>
+              <li>We'll evaluate your audio samples and experience</li>
+              <li>You'll receive an email with our decision and next steps</li>
+            </ul>
+            <h3 style="color: #374151;">Your Application Details:</h3>
+            <p><strong>Application ID:</strong> ${applicationId}</p>
+            <p><strong>Experience Level:</strong> ${experienceLabels[experience] || experience}</p>
+            ${fileInfo && fileInfo.length > 0 ? `<p><strong>Files Submitted:</strong> ${fileInfo.length} audio file(s)</p>` : ''}
+            <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;" />
+            <p style="color: #6b7280; font-size: 14px;">If you have any questions, feel free to reply to this email or contact us at voices@storymagicapp.net</p>
+            <p style="color: #6b7280; font-size: 14px;">Best regards,<br/>The Story Magic Team</p>
+          </div>
+        `;
 
-      const confirmationResult = await client.emails.send({
-        from: actualFromEmail,
-        to: email,
-        subject: 'Story Magic Voice Marketplace - Application Received',
-        html: confirmationHtml
-      });
-      console.log('[VoiceApp] Confirmation email send result:', JSON.stringify(confirmationResult));
+        const confirmationResult = await client.emails.send({
+          from: actualFromEmail,
+          to: email,
+          subject: 'Story Magic Voice Marketplace - Application Received',
+          html: confirmationHtml
+        });
+        console.log('[VoiceApp] Confirmation email send result:', JSON.stringify(confirmationResult));
+      }
 
       // Update database to mark email as sent
       await db
