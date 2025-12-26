@@ -6,7 +6,7 @@ import { EmailVerificationView } from "@/features/auth/views/EmailVerificationVi
 import { useAuthPage } from "@/features/auth/hooks/useAuthPage";
 import heroImage from "@/assets/hero-cinema.jpg";
 import { useState } from "react";
-import storyMagicLogo from "@assets/Story_Magic_Logo_Concept_10.3_1766711462473.png";
+import storyMagicLogo from "@/assets/story-magic-logo.png";
 
 export const SignUpView = () => {
   const {
