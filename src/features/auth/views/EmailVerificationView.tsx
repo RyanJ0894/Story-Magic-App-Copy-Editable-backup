@@ -38,9 +38,9 @@ export const EmailVerificationView = ({
         <div className="text-center mb-[-1rem]">
           <Link to="/" className="inline-flex items-center gap-2 hover:opacity-80 transition-opacity">
             <img 
-              src="/lovable-uploads/2a81761c-efdc-4094-9e5d-f297e2f44571.png" 
+              src="/attached_assets/Story_Magic_Logo_Concept_10.3_1766711462473.png" 
               alt="Story Magic" 
-              className="h-56"
+              className="h-24"
             />
           </Link>
         </div>
