@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useState } from "react";
+import storyMagicLogo from "@assets/Story_Magic_Logo_Concept_10.3_1766711462473.png";
 
 export const Header = () => {
   const { user, signOut, loading } = useAuth();
@@ -13,7 +14,7 @@ export const Header = () => {
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
           <img 
-            src="/attached_assets/Story_Magic_Logo_Concept_10.3_1766711462473.png" 
+            src={storyMagicLogo} 
             alt="Story Magic" 
             className="h-12 md:h-14"
           />

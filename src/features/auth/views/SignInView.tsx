@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { SignInForm } from "@/features/auth/components/SignInForm";
 import { useAuthPage } from "@/features/auth/hooks/useAuthPage";
 import heroImage from "@/assets/hero-cinema.jpg";
+import storyMagicLogo from "@assets/Story_Magic_Logo_Concept_10.3_1766711462473.png";
 
 export const SignInView = () => {
   const {
@@ -28,7 +29,7 @@ export const SignInView = () => {
         <div className="text-center mb-[-1rem]">
           <Link to="/" className="inline-flex items-center gap-2 hover:opacity-80 transition-opacity">
             <img 
-              src="/attached_assets/Story_Magic_Logo_Concept_10.3_1766711462473.png" 
+              src={storyMagicLogo} 
               alt="Story Magic" 
               className="h-24"
             />

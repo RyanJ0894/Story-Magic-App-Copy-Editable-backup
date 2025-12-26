@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CheckCircle, Mail, Clock } from "lucide-react";
 import heroImage from "@/assets/hero-cinema.jpg";
+import storyMagicLogo from "@assets/Story_Magic_Logo_Concept_10.3_1766711462473.png";
 
 interface EmailVerificationViewProps {
   email: string;
@@ -38,7 +39,7 @@ export const EmailVerificationView = ({
         <div className="text-center mb-[-1rem]">
           <Link to="/" className="inline-flex items-center gap-2 hover:opacity-80 transition-opacity">
             <img 
-              src="/attached_assets/Story_Magic_Logo_Concept_10.3_1766711462473.png" 
+              src={storyMagicLogo} 
               alt="Story Magic" 
               className="h-24"
             />

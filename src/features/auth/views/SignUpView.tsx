@@ -6,6 +6,7 @@ import { EmailVerificationView } from "@/features/auth/views/EmailVerificationVi
 import { useAuthPage } from "@/features/auth/hooks/useAuthPage";
 import heroImage from "@/assets/hero-cinema.jpg";
 import { useState } from "react";
+import storyMagicLogo from "@assets/Story_Magic_Logo_Concept_10.3_1766711462473.png";
 
 export const SignUpView = () => {
   const {
@@ -46,7 +47,7 @@ export const SignUpView = () => {
         <div className="text-center mb-[-1rem]">
           <Link to="/" className="inline-flex items-center gap-2 hover:opacity-80 transition-opacity">
             <img 
-              src="/attached_assets/Story_Magic_Logo_Concept_10.3_1766711462473.png" 
+              src={storyMagicLogo} 
               alt="Story Magic" 
               className="h-24"
             />
