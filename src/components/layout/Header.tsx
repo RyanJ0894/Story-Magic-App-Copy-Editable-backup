@@ -13,9 +13,9 @@ export const Header = () => {
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
           <img 
-            src="/lovable-uploads/2a81761c-efdc-4094-9e5d-f297e2f44571.png" 
+            src="/attached_assets/Story_Magic_Logo_Concept_9.1_1766709882643.png" 
             alt="Story Magic" 
-            className="h-28"
+            className="h-12 md:h-14"
           />
         </Link>
         
