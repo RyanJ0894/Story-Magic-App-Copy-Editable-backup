@@ -13,7 +13,7 @@ export const Header = () => {
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
           <img 
-            src="/attached_assets/Story_Magic_Logo_Concept_9.1_1766710255734.png" 
+            src="/attached_assets/Story_Magic_Logo_Concept_9.1_1766710591485.png" 
             alt="Story Magic" 
             className="h-12 md:h-14"
           />
