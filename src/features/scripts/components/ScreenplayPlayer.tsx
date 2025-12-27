@@ -1,5 +1,5 @@
 import { useRef, useEffect, useMemo, useState } from 'react';
-import { Play, Pause, SkipBack, SkipForward, Users, ChevronDown, ChevronUp, RefreshCw, MessageSquare, X, StickyNote } from 'lucide-react';
+import { Play, Pause, SkipBack, SkipForward, Users, ChevronDown, ChevronUp, RefreshCw, MessageSquare, X, StickyNote, ThumbsUp, ThumbsDown, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
@@ -9,6 +9,8 @@ import type { ChunkProgressData } from '@/features/projects/project-chunk.type';
 import { VoiceSelector } from '@/components/feature/VoiceSelector';
 import { useElevenLabsVoices, type ElevenLabsVoice } from '@/hooks/useElevenLabsVoices';
 import type { UserVoiceCategory } from '@/config/userCategories';
+
+export type ReviewStatus = 'like' | 'pass' | 'undecided' | null;
 
 export interface ScriptNote {
   id: string;
@@ -32,6 +34,9 @@ interface ScreenplayPlayerProps {
   onNotesChange?: (notes: ScriptNote[]) => void;
   onSaveNote?: (lineId: string, text: string) => Promise<void>;
   onDeleteNote?: (noteId: string) => Promise<void>;
+  reviewStatus?: ReviewStatus;
+  onReviewStatusChange?: (status: ReviewStatus) => void;
+  isUpdatingRating?: boolean;
 }
 
 interface DisplayLine {
@@ -170,6 +175,9 @@ export default function ScreenplayPlayer({
   onNotesChange,
   onSaveNote,
   onDeleteNote,
+  reviewStatus,
+  onReviewStatusChange,
+  isUpdatingRating = false,
 }: ScreenplayPlayerProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const activeLineRef = useRef<HTMLDivElement>(null);
@@ -656,40 +664,98 @@ export default function ScreenplayPlayer({
             </span>
           </div>
           
-          <div className="flex items-center justify-center gap-1 sm:gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={skipBackward}
-              className="text-slate-300 hover:text-white"
-              data-testid="button-skip-backward"
-            >
-              <SkipBack className="h-4 w-4" />
-            </Button>
+          <div className="flex items-center justify-between gap-2">
+            {/* Rating buttons - left side */}
+            {onReviewStatusChange && (
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onReviewStatusChange(reviewStatus === 'like' ? null : 'like')}
+                  disabled={isUpdatingRating}
+                  className={`gap-1.5 ${
+                    reviewStatus === 'like' 
+                      ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/50' 
+                      : 'text-slate-400 hover:text-emerald-400'
+                  }`}
+                  data-testid="button-rating-like"
+                >
+                  <ThumbsUp className="h-4 w-4" />
+                  <span className="hidden sm:inline text-xs">Like</span>
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onReviewStatusChange(reviewStatus === 'pass' ? null : 'pass')}
+                  disabled={isUpdatingRating}
+                  className={`gap-1.5 ${
+                    reviewStatus === 'pass' 
+                      ? 'bg-red-500/20 text-red-400 border border-red-500/50' 
+                      : 'text-slate-400 hover:text-red-400'
+                  }`}
+                  data-testid="button-rating-pass"
+                >
+                  <ThumbsDown className="h-4 w-4" />
+                  <span className="hidden sm:inline text-xs">Pass</span>
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onReviewStatusChange(reviewStatus === 'undecided' ? null : 'undecided')}
+                  disabled={isUpdatingRating}
+                  className={`gap-1.5 ${
+                    reviewStatus === 'undecided' 
+                      ? 'bg-amber-500/20 text-amber-400 border border-amber-500/50' 
+                      : 'text-slate-400 hover:text-amber-400'
+                  }`}
+                  data-testid="button-rating-undecided"
+                >
+                  <HelpCircle className="h-4 w-4" />
+                  <span className="hidden sm:inline text-xs">Undecided</span>
+                </Button>
+              </div>
+            )}
+            {!onReviewStatusChange && <div />}
             
-            <Button
-              variant="default"
-              size="icon"
-              onClick={() => onPlayPause(!isPlaying)}
-              className="h-10 w-10 sm:h-12 sm:w-12 bg-sky-500 hover:bg-sky-600 text-white"
-              data-testid="button-play-pause"
-            >
-              {isPlaying ? (
-                <Pause className="h-4 w-4 sm:h-5 sm:w-5" />
-              ) : (
-                <Play className="h-4 w-4 sm:h-5 sm:w-5 ml-0.5" />
-              )}
-            </Button>
+            {/* Playback controls - center */}
+            <div className="flex items-center justify-center gap-1 sm:gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={skipBackward}
+                className="text-slate-300 hover:text-white"
+                data-testid="button-skip-backward"
+              >
+                <SkipBack className="h-4 w-4" />
+              </Button>
+              
+              <Button
+                variant="default"
+                size="icon"
+                onClick={() => onPlayPause(!isPlaying)}
+                className="h-10 w-10 sm:h-12 sm:w-12 bg-sky-500 hover:bg-sky-600 text-white"
+                data-testid="button-play-pause"
+              >
+                {isPlaying ? (
+                  <Pause className="h-4 w-4 sm:h-5 sm:w-5" />
+                ) : (
+                  <Play className="h-4 w-4 sm:h-5 sm:w-5 ml-0.5" />
+                )}
+              </Button>
+              
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={skipForward}
+                className="text-slate-300 hover:text-white"
+                data-testid="button-skip-forward"
+              >
+                <SkipForward className="h-4 w-4" />
+              </Button>
+            </div>
             
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={skipForward}
-              className="text-slate-300 hover:text-white"
-              data-testid="button-skip-forward"
-            >
-              <SkipForward className="h-4 w-4" />
-            </Button>
+            {/* Spacer for symmetry */}
+            <div className="hidden sm:block w-[180px]" />
           </div>
         </div>
       </div>

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Eye, Trash2, AlertTriangle, Plus, Users, Zap } from "lucide-react";
+import { Eye, Trash2, AlertTriangle, Plus, Users, Zap, ThumbsUp, ThumbsDown, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,6 +8,36 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { VoiceLibrary } from "@/components/feature/VoiceLibrary";
 import { useVoiceCount } from "@/hooks/useVoiceCount";
+
+function ReviewStatusBadge({ status }: { status: string | null | undefined }) {
+  if (!status) return null;
+  
+  switch (status) {
+    case 'like':
+      return (
+        <Badge variant="outline" className="bg-emerald-500/10 text-emerald-500 border-emerald-500/50 gap-1">
+          <ThumbsUp className="h-3 w-3" />
+          Like
+        </Badge>
+      );
+    case 'pass':
+      return (
+        <Badge variant="outline" className="bg-red-500/10 text-red-500 border-red-500/50 gap-1">
+          <ThumbsDown className="h-3 w-3" />
+          Pass
+        </Badge>
+      );
+    case 'undecided':
+      return (
+        <Badge variant="outline" className="bg-amber-500/10 text-amber-500 border-amber-500/50 gap-1">
+          <HelpCircle className="h-3 w-3" />
+          Undecided
+        </Badge>
+      );
+    default:
+      return null;
+  }
+}
 interface IndividualTabProps {
   projects: any[];
   onDeleteProject: (id: string, title: string) => void;
@@ -25,6 +55,31 @@ export function IndividualTab({
   const { count: voiceCount, loading: voiceCountLoading } = useVoiceCount();
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
+  const [projectRatings, setProjectRatings] = useState<Record<string, string | null>>({});
+
+  // Fetch ratings from local API for all projects
+  useEffect(() => {
+    const fetchRatings = async () => {
+      const ratings: Record<string, string | null> = {};
+      await Promise.all(
+        projects.map(async (project) => {
+          try {
+            const response = await fetch(`/api/projects/${project.id}`);
+            if (response.ok) {
+              const data = await response.json();
+              ratings[project.id] = data.reviewStatus || null;
+            }
+          } catch (error) {
+            console.error(`Failed to fetch rating for project ${project.id}:`, error);
+          }
+        })
+      );
+      setProjectRatings(ratings);
+    };
+    if (projects.length > 0) {
+      fetchRatings();
+    }
+  }, [projects]);
 
   useEffect(() => {
     const projectIds = new Set(projects.map(p => p.id));
@@ -197,9 +252,12 @@ export function IndividualTab({
                       <div className="text-sm text-muted-foreground">
                         {new Date(project.created_at).toLocaleDateString()}
                       </div>
-                      <Badge variant="outline" className="mt-1">
-                        {project.ai_director_json ? project.audio_url ? 'Complete' : 'Analyzed' : 'Draft'}
-                      </Badge>
+                      <div className="flex items-center gap-2 mt-1 flex-wrap">
+                        <Badge variant="outline">
+                          {project.ai_director_json ? project.audio_url ? 'Complete' : 'Analyzed' : 'Draft'}
+                        </Badge>
+                        <ReviewStatusBadge status={projectRatings[project.id]} />
+                      </div>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">

@@ -22,6 +22,10 @@ export const insertProjectSchema = createInsertSchema(projects).omit({
 export type InsertProject = z.infer<typeof insertProjectSchema>;
 export type Project = typeof projects.$inferSelect;
 
+// Review status enum type
+export const reviewStatusEnum = z.enum(['like', 'pass', 'undecided']);
+export type ReviewStatus = z.infer<typeof reviewStatusEnum>;
+
 // User projects table
 export const userProjects = pgTable("user_projects", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -30,6 +34,7 @@ export const userProjects = pgTable("user_projects", {
   script: text("script"),
   aiDirectorJson: jsonb("ai_director_json"),
   audioUrl: text("audio_url"),
+  reviewStatus: text("review_status"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at"),
 });

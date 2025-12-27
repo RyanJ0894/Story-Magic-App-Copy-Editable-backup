@@ -208,6 +208,8 @@ interface ScriptNoteDB {
   updatedAt: string;
 }
 
+type ReviewStatus = 'like' | 'pass' | 'undecided' | null;
+
 export default function ProjectDetail() {
   const { id } = useParams<{ id: string }>();
   const [loadedChunks, setLoadedChunks] = useState<ChunkProgressData[]>([]);
@@ -215,6 +217,8 @@ export default function ProjectDetail() {
   const [actualAudioDuration, setActualAudioDuration] = useState<number | null>(null);
   const [generatedAudioUrl, setGeneratedAudioUrl] = useState<string | null>(null);
   const [notes, setNotes] = useState<ScriptNoteDB[]>([]);
+  const [reviewStatus, setReviewStatus] = useState<ReviewStatus>(null);
+  const [isUpdatingRating, setIsUpdatingRating] = useState(false);
 
   // Audio generation mutation
   const { mutateAsync: generateAudio, isPending: isGeneratingAudio } = useGenerateProjectAudio();
@@ -292,6 +296,49 @@ export default function ProjectDetail() {
       console.log('📥 Loaded saved audio URL from project:', project.audio_url);
     }
   }, [project?.audio_url]);
+
+  // Load review status from local API when project loads
+  useEffect(() => {
+    const fetchRating = async () => {
+      if (!id) return;
+      try {
+        const response = await fetch(`/api/projects/${id}`);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.reviewStatus) {
+            setReviewStatus(data.reviewStatus as ReviewStatus);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch rating:', error);
+      }
+    };
+    fetchRating();
+  }, [id]);
+
+  // Handle review status change
+  const handleReviewStatusChange = async (status: ReviewStatus) => {
+    if (!id) return;
+    setIsUpdatingRating(true);
+    try {
+      const response = await fetch(`/api/projects/${id}/rating`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reviewStatus: status }),
+      });
+      if (response.ok) {
+        setReviewStatus(status);
+        toast.success(status ? `Marked as ${status}` : 'Rating cleared');
+      } else {
+        toast.error('Failed to update rating');
+      }
+    } catch (error) {
+      console.error('Failed to update rating:', error);
+      toast.error('Failed to update rating');
+    } finally {
+      setIsUpdatingRating(false);
+    }
+  };
 
   // Load chunks from Director JSON when viewing a completed project
   useEffect(() => {
@@ -707,6 +754,9 @@ export default function ProjectDetail() {
                 notes={notes.map(n => ({ id: n.id, lineId: n.lineId, text: n.text, createdAt: n.createdAt, updatedAt: n.updatedAt }))}
                 onSaveNote={handleSaveNote}
                 onDeleteNote={handleDeleteNote}
+                reviewStatus={reviewStatus}
+                onReviewStatusChange={handleReviewStatusChange}
+                isUpdatingRating={isUpdatingRating}
               />
             </div>
             

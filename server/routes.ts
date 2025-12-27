@@ -33,7 +33,8 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Get a single project by ID
+  // Get a single project by ID (for fetching local data like rating)
+  // Returns empty object if project doesn't exist in local DB (may exist in Supabase)
   app.get("/api/projects/:id", async (req, res) => {
     try {
       const { id } = req.params;
@@ -43,11 +44,8 @@ export function registerRoutes(app: Express): Server {
         .where(eq(userProjects.id, id))
         .limit(1);
       
-      if (project.length === 0) {
-        return res.status(404).json({ error: "Project not found" });
-      }
-      
-      res.json(project[0]);
+      // Return the project data or empty object (project may exist in Supabase but not locally)
+      res.json(project.length > 0 ? project[0] : { id, reviewStatus: null });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
@@ -97,6 +95,53 @@ export function registerRoutes(app: Express): Server {
         .where(eq(userProjects.id, id));
       
       res.status(204).send();
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Update project review status (Like/Pass/Undecided)
+  // Uses upsert pattern since project may exist in Supabase but not in local DB
+  app.patch("/api/projects/:id/rating", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { reviewStatus } = req.body;
+      
+      // Validate the review status
+      const validStatuses = ['like', 'pass', 'undecided', null];
+      if (!validStatuses.includes(reviewStatus)) {
+        return res.status(400).json({ error: "Invalid review status. Must be 'like', 'pass', 'undecided', or null" });
+      }
+
+      // Check if project exists in local DB
+      const existing = await db
+        .select()
+        .from(userProjects)
+        .where(eq(userProjects.id, id))
+        .limit(1);
+
+      let result;
+      if (existing.length > 0) {
+        // Update existing record
+        [result] = await db
+          .update(userProjects)
+          .set({ reviewStatus, updatedAt: new Date() })
+          .where(eq(userProjects.id, id))
+          .returning();
+      } else {
+        // Create new record with this ID (upsert pattern for Supabase projects)
+        [result] = await db
+          .insert(userProjects)
+          .values({ 
+            id, 
+            reviewStatus,
+            createdAt: new Date(),
+            updatedAt: new Date()
+          })
+          .returning();
+      }
+      
+      res.json(result);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
