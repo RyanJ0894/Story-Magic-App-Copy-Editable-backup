@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { ResetPasswordForm } from "@/features/auth/components/ResetPasswordForm";
 import { useAuthPage } from "@/features/auth/hooks/useAuthPage";
 import heroImage from "@/assets/hero-cinema.jpg";
+import storyMagicLogo from "@/assets/Story_Magic_Logo_Concept_10.5_1766873340720.png";
 
 export const ResetPasswordView = () => {
   const {
@@ -25,9 +26,9 @@ export const ResetPasswordView = () => {
         <div className="text-center mb-[-1rem]">
           <Link to="/" className="inline-flex items-center gap-2 hover:opacity-80 transition-opacity">
             <img 
-              src="/lovable-uploads/2a81761c-efdc-4094-9e5d-f297e2f44571.png" 
+              src={storyMagicLogo} 
               alt="Story Magic" 
-              className="h-56"
+              className="h-24"
             />
           </Link>
         </div>

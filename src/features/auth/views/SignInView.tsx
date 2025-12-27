@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { SignInForm } from "@/features/auth/components/SignInForm";
 import { useAuthPage } from "@/features/auth/hooks/useAuthPage";
 import heroImage from "@/assets/hero-cinema.jpg";
-import storyMagicLogo from "@/assets/story-magic-logo.png";
+import storyMagicLogo from "@/assets/Story_Magic_Logo_Concept_10.5_1766873340720.png";
 
 export const SignInView = () => {
   const {

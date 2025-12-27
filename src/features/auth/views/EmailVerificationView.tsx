@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CheckCircle, Mail, Clock } from "lucide-react";
 import heroImage from "@/assets/hero-cinema.jpg";
-import storyMagicLogo from "@/assets/story-magic-logo.png";
+import storyMagicLogo from "@/assets/Story_Magic_Logo_Concept_10.5_1766873340720.png";
 
 interface EmailVerificationViewProps {
   email: string;
