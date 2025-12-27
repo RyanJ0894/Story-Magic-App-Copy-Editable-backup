@@ -87,3 +87,21 @@ export const insertVoiceApplicationSchema = createInsertSchema(voiceApplications
 });
 export type InsertVoiceApplication = z.infer<typeof insertVoiceApplicationSchema>;
 export type VoiceApplication = typeof voiceApplications.$inferSelect;
+
+// Script Notes table for storing notes on script lines
+export const scriptNotes = pgTable("script_notes", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  projectId: uuid("project_id").notNull(),
+  lineId: text("line_id").notNull(),
+  text: text("text").notNull().default(""),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertScriptNoteSchema = createInsertSchema(scriptNotes).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertScriptNote = z.infer<typeof insertScriptNoteSchema>;
+export type ScriptNote = typeof scriptNotes.$inferSelect;

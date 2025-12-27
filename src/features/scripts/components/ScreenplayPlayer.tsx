@@ -30,6 +30,8 @@ interface ScreenplayPlayerProps {
   isRegenerating?: boolean;
   notes?: ScriptNote[];
   onNotesChange?: (notes: ScriptNote[]) => void;
+  onSaveNote?: (lineId: string, text: string) => Promise<void>;
+  onDeleteNote?: (noteId: string) => Promise<void>;
 }
 
 interface DisplayLine {
@@ -166,6 +168,8 @@ export default function ScreenplayPlayer({
   isRegenerating = false,
   notes: externalNotes,
   onNotesChange,
+  onSaveNote,
+  onDeleteNote,
 }: ScreenplayPlayerProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const activeLineRef = useRef<HTMLDivElement>(null);
@@ -188,51 +192,70 @@ export default function ScreenplayPlayer({
     return map;
   }, [notes]);
 
-  const handleAddNote = (lineId: string) => {
-    const newNote: ScriptNote = {
-      id: `note_${Date.now()}`,
-      lineId,
-      text: '',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    const updatedNotes = [...notes, newNote];
-    
-    // Update internal state or call external handler
-    if (onNotesChange) {
-      onNotesChange(updatedNotes);
+  const handleAddNote = async (lineId: string) => {
+    // If we have external save handler, use it (creates note in DB)
+    if (onSaveNote) {
+      await onSaveNote(lineId, '');
     } else {
-      setInternalNotes(updatedNotes);
+      // Fallback to internal state
+      const newNote: ScriptNote = {
+        id: `note_${Date.now()}`,
+        lineId,
+        text: '',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      const updatedNotes = [...notes, newNote];
+      
+      if (onNotesChange) {
+        onNotesChange(updatedNotes);
+      } else {
+        setInternalNotes(updatedNotes);
+      }
     }
-    setEditingNoteId(newNote.id);
     setEditingNoteText('');
     // Auto-open the popover for this line
     setOpenPopoverLineId(lineId);
   };
 
-  const handleUpdateNote = (noteId: string, text: string) => {
-    const updatedNotes = notes.map(note => 
-      note.id === noteId 
-        ? { ...note, text, updatedAt: new Date().toISOString() }
-        : note
-    );
-    
-    if (onNotesChange) {
-      onNotesChange(updatedNotes);
+  const handleUpdateNote = async (lineId: string, text: string) => {
+    // If we have external save handler, use it
+    if (onSaveNote) {
+      await onSaveNote(lineId, text);
     } else {
-      setInternalNotes(updatedNotes);
+      // Fallback to internal state
+      const existingNote = notes.find(n => n.lineId === lineId);
+      if (existingNote) {
+        const updatedNotes = notes.map(note => 
+          note.lineId === lineId 
+            ? { ...note, text, updatedAt: new Date().toISOString() }
+            : note
+        );
+        
+        if (onNotesChange) {
+          onNotesChange(updatedNotes);
+        } else {
+          setInternalNotes(updatedNotes);
+        }
+      }
     }
     setEditingNoteId(null);
     setEditingNoteText('');
   };
 
-  const handleDeleteNote = (noteId: string) => {
-    const updatedNotes = notes.filter(note => note.id !== noteId);
-    
-    if (onNotesChange) {
-      onNotesChange(updatedNotes);
+  const handleDeleteNoteById = async (noteId: string) => {
+    // If we have external delete handler, use it
+    if (onDeleteNote) {
+      await onDeleteNote(noteId);
     } else {
-      setInternalNotes(updatedNotes);
+      // Fallback to internal state
+      const updatedNotes = notes.filter(note => note.id !== noteId);
+      
+      if (onNotesChange) {
+        onNotesChange(updatedNotes);
+      } else {
+        setInternalNotes(updatedNotes);
+      }
     }
     setEditingNoteId(null);
     setEditingNoteText('');
@@ -554,7 +577,7 @@ export default function ScreenplayPlayer({
                                     size="icon"
                                     className="h-6 w-6 text-slate-400 hover:text-red-400"
                                     onClick={() => {
-                                      handleDeleteNote(lineNote.id);
+                                      handleDeleteNoteById(lineNote.id);
                                       setOpenPopoverLineId(null);
                                     }}
                                     data-testid={`button-delete-note-${line.id}`}
@@ -575,7 +598,7 @@ export default function ScreenplayPlayer({
                                   size="sm"
                                   className="w-full bg-amber-600 hover:bg-amber-700 text-white"
                                   onClick={() => {
-                                    handleUpdateNote(lineNote.id, editingNoteText);
+                                    handleUpdateNote(lineNote.lineId, editingNoteText);
                                     setOpenPopoverLineId(null);
                                   }}
                                   data-testid={`button-save-note-${line.id}`}

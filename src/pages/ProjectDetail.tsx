@@ -198,15 +198,85 @@ function scaleChunksToAudioDuration(
   }));
 }
 
+// Note type for database-persisted notes
+interface ScriptNoteDB {
+  id: string;
+  projectId: string;
+  lineId: string;
+  text: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export default function ProjectDetail() {
   const { id } = useParams<{ id: string }>();
   const [loadedChunks, setLoadedChunks] = useState<ChunkProgressData[]>([]);
   const [calculatedDuration, setCalculatedDuration] = useState(30);
   const [actualAudioDuration, setActualAudioDuration] = useState<number | null>(null);
   const [generatedAudioUrl, setGeneratedAudioUrl] = useState<string | null>(null);
+  const [notes, setNotes] = useState<ScriptNoteDB[]>([]);
 
   // Audio generation mutation
   const { mutateAsync: generateAudio, isPending: isGeneratingAudio } = useGenerateProjectAudio();
+
+  // Fetch notes when project loads
+  useEffect(() => {
+    const fetchNotes = async () => {
+      if (!id) return;
+      try {
+        const response = await fetch(`/api/projects/${id}/notes`);
+        if (response.ok) {
+          const data = await response.json();
+          setNotes(data);
+          console.log('📝 Loaded', data.length, 'notes for project');
+        }
+      } catch (error) {
+        console.error('Failed to fetch notes:', error);
+      }
+    };
+    fetchNotes();
+  }, [id]);
+
+  // Save/update note handler
+  const handleSaveNote = async (lineId: string, text: string) => {
+    if (!id) return;
+    try {
+      const response = await fetch(`/api/projects/${id}/notes`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lineId, text }),
+      });
+      if (response.ok) {
+        const savedNote = await response.json();
+        setNotes(prev => {
+          const exists = prev.find(n => n.lineId === lineId);
+          if (exists) {
+            return prev.map(n => n.lineId === lineId ? savedNote : n);
+          }
+          return [...prev, savedNote];
+        });
+        console.log('💾 Note saved for line:', lineId);
+      }
+    } catch (error) {
+      console.error('Failed to save note:', error);
+    }
+  };
+
+  // Delete note handler
+  const handleDeleteNote = async (noteId: string) => {
+    if (!id) return;
+    try {
+      const response = await fetch(`/api/projects/${id}/notes/${noteId}`, {
+        method: 'DELETE',
+      });
+      if (response.ok) {
+        setNotes(prev => prev.filter(n => n.id !== noteId));
+        console.log('🗑️ Note deleted:', noteId);
+      }
+    } catch (error) {
+      console.error('Failed to delete note:', error);
+    }
+  };
 
   const {
     project,
@@ -634,6 +704,9 @@ export default function ProjectDetail() {
                 duration={effectiveDuration}
                 onSeek={handleSeek}
                 onPlayPause={handlePlayPause}
+                notes={notes.map(n => ({ id: n.id, lineId: n.lineId, text: n.text, createdAt: n.createdAt, updatedAt: n.updatedAt }))}
+                onSaveNote={handleSaveNote}
+                onDeleteNote={handleDeleteNote}
               />
             </div>
             

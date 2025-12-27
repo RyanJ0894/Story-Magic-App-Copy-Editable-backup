@@ -1,8 +1,8 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { db } from "./db";
-import { projects, userProjects, insertUserProjectSchema, voiceApplications } from "@shared/schema";
-import { eq } from "drizzle-orm";
+import { projects, userProjects, insertUserProjectSchema, voiceApplications, scriptNotes, insertScriptNoteSchema } from "@shared/schema";
+import { eq, and } from "drizzle-orm";
 import { getUncachableResendClient } from "./resend";
 import { registerObjectStorageRoutes } from "./replit_integrations/object_storage";
 
@@ -95,6 +95,76 @@ export function registerRoutes(app: Express): Server {
       await db
         .delete(userProjects)
         .where(eq(userProjects.id, id));
+      
+      res.status(204).send();
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Get all notes for a project
+  app.get("/api/projects/:projectId/notes", async (req, res) => {
+    try {
+      const { projectId } = req.params;
+      const notes = await db
+        .select()
+        .from(scriptNotes)
+        .where(eq(scriptNotes.projectId, projectId));
+      
+      res.json(notes);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Create or update a note
+  app.post("/api/projects/:projectId/notes", async (req, res) => {
+    try {
+      const { projectId } = req.params;
+      const { lineId, text } = req.body;
+      
+      if (!lineId) {
+        return res.status(400).json({ error: "lineId is required" });
+      }
+
+      // Check if note already exists for this line
+      const existing = await db
+        .select()
+        .from(scriptNotes)
+        .where(and(
+          eq(scriptNotes.projectId, projectId),
+          eq(scriptNotes.lineId, lineId)
+        ))
+        .limit(1);
+
+      if (existing.length > 0) {
+        // Update existing note
+        const [updatedNote] = await db
+          .update(scriptNotes)
+          .set({ text: text || "", updatedAt: new Date() })
+          .where(eq(scriptNotes.id, existing[0].id))
+          .returning();
+        res.json(updatedNote);
+      } else {
+        // Create new note
+        const [newNote] = await db
+          .insert(scriptNotes)
+          .values({ projectId, lineId, text: text || "" })
+          .returning();
+        res.status(201).json(newNote);
+      }
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Delete a note
+  app.delete("/api/projects/:projectId/notes/:noteId", async (req, res) => {
+    try {
+      const { noteId } = req.params;
+      await db
+        .delete(scriptNotes)
+        .where(eq(scriptNotes.id, noteId));
       
       res.status(204).send();
     } catch (error: any) {
