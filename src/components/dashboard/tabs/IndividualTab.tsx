@@ -1,13 +1,24 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Eye, Trash2, AlertTriangle, Plus, Users, Zap, ThumbsUp, ThumbsDown, HelpCircle } from "lucide-react";
+import { Eye, Trash2, AlertTriangle, Plus, Users, Zap, ThumbsUp, ThumbsDown, HelpCircle, StickyNote } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { VoiceLibrary } from "@/components/feature/VoiceLibrary";
 import { useVoiceCount } from "@/hooks/useVoiceCount";
+
+interface ProjectNote {
+  id: string;
+  projectId: string;
+  lineId: string;
+  text: string;
+  createdAt: string;
+  updatedAt: string;
+}
 
 function ReviewStatusBadge({ status }: { status: string | null | undefined }) {
   if (!status) return null;
@@ -56,29 +67,41 @@ export function IndividualTab({
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
   const [projectRatings, setProjectRatings] = useState<Record<string, string | null>>({});
+  const [projectNotes, setProjectNotes] = useState<Record<string, ProjectNote[]>>({});
   const [updatingRating, setUpdatingRating] = useState<string | null>(null);
 
-  // Fetch ratings from local API for all projects
+  // Fetch ratings and notes from local API for all projects
   useEffect(() => {
-    const fetchRatings = async () => {
+    const fetchProjectData = async () => {
       const ratings: Record<string, string | null> = {};
+      const notes: Record<string, ProjectNote[]> = {};
+      
       await Promise.all(
         projects.map(async (project) => {
           try {
-            const response = await fetch(`/api/projects/${project.id}`);
-            if (response.ok) {
-              const data = await response.json();
+            // Fetch rating
+            const ratingResponse = await fetch(`/api/projects/${project.id}`);
+            if (ratingResponse.ok) {
+              const data = await ratingResponse.json();
               ratings[project.id] = data.reviewStatus || null;
             }
+            
+            // Fetch notes
+            const notesResponse = await fetch(`/api/projects/${project.id}/notes`);
+            if (notesResponse.ok) {
+              const notesData = await notesResponse.json();
+              notes[project.id] = notesData;
+            }
           } catch (error) {
-            console.error(`Failed to fetch rating for project ${project.id}:`, error);
+            console.error(`Failed to fetch data for project ${project.id}:`, error);
           }
         })
       );
       setProjectRatings(ratings);
+      setProjectNotes(notes);
     };
     if (projects.length > 0) {
-      fetchRatings();
+      fetchProjectData();
     }
   }, [projects]);
 
@@ -314,6 +337,41 @@ export function IndividualTab({
                         <HelpCircle className="h-4 w-4" />
                       </Button>
                     </div>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" size="sm" className="relative" data-testid={`button-notes-${project.id}`}>
+                          <StickyNote className="h-4 w-4 mr-2" />
+                          Notes
+                          {(projectNotes[project.id]?.length || 0) > 0 && (
+                            <Badge variant="secondary" className="ml-2 bg-yellow-500/20 text-yellow-600 dark:text-yellow-400">
+                              {projectNotes[project.id].length}
+                            </Badge>
+                          )}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-80" align="start">
+                        <div className="space-y-2">
+                          <h4 className="font-medium text-sm">Script Notes</h4>
+                          {(projectNotes[project.id]?.length || 0) === 0 ? (
+                            <p className="text-sm text-muted-foreground">No notes yet. Add notes from the player page.</p>
+                          ) : (
+                            <ScrollArea className="h-[200px]">
+                              <div className="space-y-2 pr-2">
+                                {projectNotes[project.id].map((note) => (
+                                  <div key={note.id} className="p-2 bg-yellow-500/10 border border-yellow-500/20 rounded-md">
+                                    <div className="flex items-center gap-2 mb-1">
+                                      <StickyNote className="h-3 w-3 text-yellow-600 dark:text-yellow-400" />
+                                      <span className="text-xs text-muted-foreground">{note.lineId}</span>
+                                    </div>
+                                    <p className="text-sm">{note.text}</p>
+                                  </div>
+                                ))}
+                              </div>
+                            </ScrollArea>
+                          )}
+                        </div>
+                      </PopoverContent>
+                    </Popover>
                     <Link to={`/projects/${project.id}`}>
                       <Button variant="outline" size="sm" data-testid={`button-view-project-${project.id}`}>
                         <Eye className="h-4 w-4 mr-2" />
