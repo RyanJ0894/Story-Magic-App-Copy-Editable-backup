@@ -548,10 +548,11 @@ export default function ScreenplayPlayer({
                         ) : (
                           <button
                             type="button"
-                            className="invisible group-hover:visible p-1.5 rounded text-slate-400 hover:text-amber-400 hover:bg-slate-700/50 transition-colors"
+                            className="opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto p-1.5 rounded text-slate-400 hover:text-amber-400 hover:bg-slate-700/50 transition-all relative z-10"
                             onClick={(e) => {
                               e.stopPropagation();
                               e.preventDefault();
+                              console.log('Add note clicked for line:', line.id);
                               handleAddNote(line.id);
                             }}
                             data-testid={`button-add-note-${line.id}`}
