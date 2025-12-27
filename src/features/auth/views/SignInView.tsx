@@ -16,7 +16,7 @@ export const SignInView = () => {
   } = useAuthPage();
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center p-4 overflow-hidden">
+    <div className="relative min-h-screen flex items-start md:items-center justify-center p-4 pt-12 md:pt-4 overflow-hidden">
       {/* Background Image with Overlay */}
       <div className="absolute inset-0 bg-cover bg-left bg-no-repeat" style={{
         backgroundImage: `url(${heroImage})`
