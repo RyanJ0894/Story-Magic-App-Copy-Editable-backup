@@ -174,6 +174,7 @@ export default function ScreenplayPlayer({
   const [pendingChanges, setPendingChanges] = useState<Set<string>>(new Set());
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
   const [editingNoteText, setEditingNoteText] = useState('');
+  const [openPopoverLineId, setOpenPopoverLineId] = useState<string | null>(null);
   
   // Internal notes state - used when parent doesn't control notes
   const [internalNotes, setInternalNotes] = useState<ScriptNote[]>([]);
@@ -205,6 +206,8 @@ export default function ScreenplayPlayer({
     }
     setEditingNoteId(newNote.id);
     setEditingNoteText('');
+    // Auto-open the popover for this line
+    setOpenPopoverLineId(lineId);
   };
 
   const handleUpdateNote = (noteId: string, text: string) => {
@@ -513,7 +516,18 @@ export default function ScreenplayPlayer({
                     {canAddNote && (
                       <div className="flex-shrink-0 flex items-center gap-1">
                         {hasNote ? (
-                          <Popover>
+                          <Popover 
+                            open={openPopoverLineId === line.id} 
+                            onOpenChange={(open) => {
+                              if (open) {
+                                setOpenPopoverLineId(line.id);
+                                setEditingNoteText(lineNote.text);
+                                setEditingNoteId(lineNote.id);
+                              } else {
+                                setOpenPopoverLineId(null);
+                              }
+                            }}
+                          >
                             <PopoverTrigger asChild>
                               <button
                                 type="button"
@@ -521,7 +535,6 @@ export default function ScreenplayPlayer({
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   e.preventDefault();
-                                  setEditingNoteText(lineNote.text);
                                 }}
                                 data-testid={`button-view-note-${line.id}`}
                               >
@@ -540,16 +553,18 @@ export default function ScreenplayPlayer({
                                     variant="ghost"
                                     size="icon"
                                     className="h-6 w-6 text-slate-400 hover:text-red-400"
-                                    onClick={() => handleDeleteNote(lineNote.id)}
+                                    onClick={() => {
+                                      handleDeleteNote(lineNote.id);
+                                      setOpenPopoverLineId(null);
+                                    }}
                                     data-testid={`button-delete-note-${line.id}`}
                                   >
                                     <X className="h-3.5 w-3.5" />
                                   </Button>
                                 </div>
                                 <Textarea
-                                  value={editingNoteId === lineNote.id ? editingNoteText : lineNote.text}
+                                  value={editingNoteText}
                                   onChange={(e) => {
-                                    setEditingNoteId(lineNote.id);
                                     setEditingNoteText(e.target.value);
                                   }}
                                   placeholder="Add your note..."
@@ -559,7 +574,10 @@ export default function ScreenplayPlayer({
                                 <Button
                                   size="sm"
                                   className="w-full bg-amber-600 hover:bg-amber-700 text-white"
-                                  onClick={() => handleUpdateNote(lineNote.id, editingNoteId === lineNote.id ? editingNoteText : lineNote.text)}
+                                  onClick={() => {
+                                    handleUpdateNote(lineNote.id, editingNoteText);
+                                    setOpenPopoverLineId(null);
+                                  }}
                                   data-testid={`button-save-note-${line.id}`}
                                 >
                                   Save Note
