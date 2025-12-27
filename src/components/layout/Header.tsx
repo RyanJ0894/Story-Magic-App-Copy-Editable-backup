@@ -4,7 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useState } from "react";
-import storyMagicLogo from "@/assets/story-magic-logo.png";
+import storyMagicLogo from "@/assets/Story_Magic_Logo_Concept_10.4_1766873084220.png";
 
 export const Header = () => {
   const { user, signOut, loading } = useAuth();
