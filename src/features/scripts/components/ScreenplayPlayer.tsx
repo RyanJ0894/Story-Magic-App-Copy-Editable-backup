@@ -164,7 +164,7 @@ export default function ScreenplayPlayer({
   onVoiceChange,
   onRegenerateAudio,
   isRegenerating = false,
-  notes = [],
+  notes: externalNotes,
   onNotesChange,
 }: ScreenplayPlayerProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -174,6 +174,12 @@ export default function ScreenplayPlayer({
   const [pendingChanges, setPendingChanges] = useState<Set<string>>(new Set());
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
   const [editingNoteText, setEditingNoteText] = useState('');
+  
+  // Internal notes state - used when parent doesn't control notes
+  const [internalNotes, setInternalNotes] = useState<ScriptNote[]>([]);
+  
+  // Use external notes if provided, otherwise use internal state
+  const notes = externalNotes ?? internalNotes;
   
   const notesByLineId = useMemo(() => {
     const map = new Map<string, ScriptNote>();
@@ -190,7 +196,13 @@ export default function ScreenplayPlayer({
       updatedAt: new Date().toISOString(),
     };
     const updatedNotes = [...notes, newNote];
-    onNotesChange?.(updatedNotes);
+    
+    // Update internal state or call external handler
+    if (onNotesChange) {
+      onNotesChange(updatedNotes);
+    } else {
+      setInternalNotes(updatedNotes);
+    }
     setEditingNoteId(newNote.id);
     setEditingNoteText('');
   };
@@ -201,14 +213,24 @@ export default function ScreenplayPlayer({
         ? { ...note, text, updatedAt: new Date().toISOString() }
         : note
     );
-    onNotesChange?.(updatedNotes);
+    
+    if (onNotesChange) {
+      onNotesChange(updatedNotes);
+    } else {
+      setInternalNotes(updatedNotes);
+    }
     setEditingNoteId(null);
     setEditingNoteText('');
   };
 
   const handleDeleteNote = (noteId: string) => {
     const updatedNotes = notes.filter(note => note.id !== noteId);
-    onNotesChange?.(updatedNotes);
+    
+    if (onNotesChange) {
+      onNotesChange(updatedNotes);
+    } else {
+      setInternalNotes(updatedNotes);
+    }
     setEditingNoteId(null);
     setEditingNoteText('');
   };
