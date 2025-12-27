@@ -493,18 +493,18 @@ export default function ScreenplayPlayer({
                         {hasNote ? (
                           <Popover>
                             <PopoverTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-6 w-6 text-amber-400 hover:text-amber-300"
+                              <button
+                                type="button"
+                                className="p-1.5 rounded text-amber-400 hover:text-amber-300 hover:bg-slate-700/50 transition-colors"
                                 onClick={(e) => {
                                   e.stopPropagation();
+                                  e.preventDefault();
                                   setEditingNoteText(lineNote.text);
                                 }}
                                 data-testid={`button-view-note-${line.id}`}
                               >
-                                <StickyNote className="h-3.5 w-3.5" />
-                              </Button>
+                                <StickyNote className="h-4 w-4" />
+                              </button>
                             </PopoverTrigger>
                             <PopoverContent 
                               className="w-72 bg-slate-800 border-slate-600" 
@@ -546,18 +546,18 @@ export default function ScreenplayPlayer({
                             </PopoverContent>
                           </Popover>
                         ) : (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-6 w-6 opacity-0 group-hover:opacity-100 text-slate-400 hover:text-amber-400 transition-opacity"
+                          <button
+                            type="button"
+                            className="invisible group-hover:visible p-1.5 rounded text-slate-400 hover:text-amber-400 hover:bg-slate-700/50 transition-colors"
                             onClick={(e) => {
                               e.stopPropagation();
+                              e.preventDefault();
                               handleAddNote(line.id);
                             }}
                             data-testid={`button-add-note-${line.id}`}
                           >
-                            <MessageSquare className="h-3.5 w-3.5" />
-                          </Button>
+                            <MessageSquare className="h-4 w-4" />
+                          </button>
                         )}
                       </div>
                     )}
