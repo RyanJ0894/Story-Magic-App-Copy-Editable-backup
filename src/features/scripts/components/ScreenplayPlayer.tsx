@@ -557,7 +557,10 @@ export default function ScreenplayPlayer({
                                 className="p-1.5 rounded text-amber-400 hover:text-amber-300 hover:bg-slate-700/50 transition-colors"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  e.preventDefault();
+                                  // Open the popover manually to ensure it works
+                                  setOpenPopoverLineId(line.id);
+                                  setEditingNoteText(lineNote.text);
+                                  setEditingNoteId(lineNote.id);
                                 }}
                                 data-testid={`button-view-note-${line.id}`}
                               >
