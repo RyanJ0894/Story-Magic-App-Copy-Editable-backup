@@ -1,12 +1,22 @@
 import { useRef, useEffect, useMemo, useState } from 'react';
-import { Play, Pause, SkipBack, SkipForward, Users, ChevronDown, ChevronUp, RefreshCw } from 'lucide-react';
+import { Play, Pause, SkipBack, SkipForward, Users, ChevronDown, ChevronUp, RefreshCw, MessageSquare, X, StickyNote } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Textarea } from '@/components/ui/textarea';
 import type { ChunkProgressData } from '@/features/projects/project-chunk.type';
 import { VoiceSelector } from '@/components/feature/VoiceSelector';
 import { useElevenLabsVoices, type ElevenLabsVoice } from '@/hooks/useElevenLabsVoices';
 import type { UserVoiceCategory } from '@/config/userCategories';
+
+export interface ScriptNote {
+  id: string;
+  lineId: string;
+  text: string;
+  createdAt: string;
+  updatedAt: string;
+}
 
 interface ScreenplayPlayerProps {
   chunks: ChunkProgressData[];
@@ -18,6 +28,8 @@ interface ScreenplayPlayerProps {
   onVoiceChange?: (character: string, voiceId: string, voice: ElevenLabsVoice) => void;
   onRegenerateAudio?: (voiceAssignments: Record<string, string>) => Promise<void>;
   isRegenerating?: boolean;
+  notes?: ScriptNote[];
+  onNotesChange?: (notes: ScriptNote[]) => void;
 }
 
 interface DisplayLine {
@@ -152,12 +164,54 @@ export default function ScreenplayPlayer({
   onVoiceChange,
   onRegenerateAudio,
   isRegenerating = false,
+  notes = [],
+  onNotesChange,
 }: ScreenplayPlayerProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const activeLineRef = useRef<HTMLDivElement>(null);
   const [showCastPanel, setShowCastPanel] = useState(false);
   const [characterVoices, setCharacterVoices] = useState<Record<string, string>>({});
   const [pendingChanges, setPendingChanges] = useState<Set<string>>(new Set());
+  const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
+  const [editingNoteText, setEditingNoteText] = useState('');
+  
+  const notesByLineId = useMemo(() => {
+    const map = new Map<string, ScriptNote>();
+    notes.forEach(note => map.set(note.lineId, note));
+    return map;
+  }, [notes]);
+
+  const handleAddNote = (lineId: string) => {
+    const newNote: ScriptNote = {
+      id: `note_${Date.now()}`,
+      lineId,
+      text: '',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    const updatedNotes = [...notes, newNote];
+    onNotesChange?.(updatedNotes);
+    setEditingNoteId(newNote.id);
+    setEditingNoteText('');
+  };
+
+  const handleUpdateNote = (noteId: string, text: string) => {
+    const updatedNotes = notes.map(note => 
+      note.id === noteId 
+        ? { ...note, text, updatedAt: new Date().toISOString() }
+        : note
+    );
+    onNotesChange?.(updatedNotes);
+    setEditingNoteId(null);
+    setEditingNoteText('');
+  };
+
+  const handleDeleteNote = (noteId: string) => {
+    const updatedNotes = notes.filter(note => note.id !== noteId);
+    onNotesChange?.(updatedNotes);
+    setEditingNoteId(null);
+    setEditingNoteText('');
+  };
   
   const { voices, loading: voicesLoading } = useElevenLabsVoices();
   
@@ -412,12 +466,15 @@ export default function ScreenplayPlayer({
             displayLines.map((line) => {
               const isActive = line.id === currentLineId;
               const isClickable = line.type === 'dialogue' || line.type === 'action';
+              const lineNote = notesByLineId.get(line.id);
+              const hasNote = !!lineNote;
+              const canAddNote = line.type === 'dialogue' || line.type === 'action' || line.type === 'character';
               
               return (
                 <div
                   key={line.id}
                   ref={isActive ? activeLineRef : null}
-                  className={getLineClassName(line)}
+                  className={`group relative ${getLineClassName(line)} ${hasNote ? 'bg-amber-500/10 border-l-2 border-amber-400 pl-2' : ''}`}
                   onClick={() => {
                     if (isClickable) {
                       onSeek(line.start);
@@ -428,7 +485,83 @@ export default function ScreenplayPlayer({
                   }}
                   data-testid={`screenplay-line-${line.id}`}
                 >
-                  {line.text}
+                  <div className="flex items-start gap-2">
+                    <span className="flex-1">{line.text}</span>
+                    
+                    {canAddNote && (
+                      <div className="flex-shrink-0 flex items-center gap-1">
+                        {hasNote ? (
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6 text-amber-400 hover:text-amber-300"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setEditingNoteText(lineNote.text);
+                                }}
+                                data-testid={`button-view-note-${line.id}`}
+                              >
+                                <StickyNote className="h-3.5 w-3.5" />
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent 
+                              className="w-72 bg-slate-800 border-slate-600" 
+                              align="end"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <div className="space-y-3">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-sm font-medium text-slate-200">Note</span>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-6 w-6 text-slate-400 hover:text-red-400"
+                                    onClick={() => handleDeleteNote(lineNote.id)}
+                                    data-testid={`button-delete-note-${line.id}`}
+                                  >
+                                    <X className="h-3.5 w-3.5" />
+                                  </Button>
+                                </div>
+                                <Textarea
+                                  value={editingNoteId === lineNote.id ? editingNoteText : lineNote.text}
+                                  onChange={(e) => {
+                                    setEditingNoteId(lineNote.id);
+                                    setEditingNoteText(e.target.value);
+                                  }}
+                                  placeholder="Add your note..."
+                                  className="min-h-[80px] bg-slate-700 border-slate-600 text-slate-200 text-sm"
+                                  data-testid={`textarea-note-${line.id}`}
+                                />
+                                <Button
+                                  size="sm"
+                                  className="w-full bg-amber-600 hover:bg-amber-700 text-white"
+                                  onClick={() => handleUpdateNote(lineNote.id, editingNoteId === lineNote.id ? editingNoteText : lineNote.text)}
+                                  data-testid={`button-save-note-${line.id}`}
+                                >
+                                  Save Note
+                                </Button>
+                              </div>
+                            </PopoverContent>
+                          </Popover>
+                        ) : (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6 opacity-0 group-hover:opacity-100 text-slate-400 hover:text-amber-400 transition-opacity"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleAddNote(line.id);
+                            }}
+                            data-testid={`button-add-note-${line.id}`}
+                          >
+                            <MessageSquare className="h-3.5 w-3.5" />
+                          </Button>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
               );
             })
