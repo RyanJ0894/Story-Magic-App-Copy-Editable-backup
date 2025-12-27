@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Eye, Trash2, AlertTriangle, Plus, Users, Mail, BarChart3, Share2, MessageSquare, Settings } from "lucide-react";
+import { Eye, Trash2, AlertTriangle, Plus, Users, Mail, BarChart3, Share2, MessageSquare, Settings, ThumbsUp, ThumbsDown, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -31,6 +31,53 @@ export function StarterEnterpriseTab({
   const [activeTeamTab, setActiveTeamTab] = useState("overview");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
+  const [projectRatings, setProjectRatings] = useState<Record<string, string | null>>({});
+  const [updatingRating, setUpdatingRating] = useState<string | null>(null);
+
+  // Fetch ratings from local API for all projects
+  useEffect(() => {
+    const fetchRatings = async () => {
+      const ratings: Record<string, string | null> = {};
+      await Promise.all(
+        projects.map(async (project) => {
+          try {
+            const response = await fetch(`/api/projects/${project.id}`);
+            if (response.ok) {
+              const data = await response.json();
+              ratings[project.id] = data.reviewStatus || null;
+            }
+          } catch (error) {
+            console.error(`Failed to fetch rating for project ${project.id}:`, error);
+          }
+        })
+      );
+      setProjectRatings(ratings);
+    };
+    if (projects.length > 0) {
+      fetchRatings();
+    }
+  }, [projects]);
+
+  const handleRatingChange = async (projectId: string, rating: 'like' | 'pass' | 'undecided') => {
+    const currentRating = projectRatings[projectId];
+    const newRating = currentRating === rating ? null : rating;
+    
+    setUpdatingRating(projectId);
+    try {
+      const response = await fetch(`/api/projects/${projectId}/rating`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reviewStatus: newRating })
+      });
+      if (response.ok) {
+        setProjectRatings(prev => ({ ...prev, [projectId]: newRating }));
+      }
+    } catch (error) {
+      console.error('Failed to update rating:', error);
+    } finally {
+      setUpdatingRating(null);
+    }
+  };
 
   useEffect(() => {
     const projectIds = new Set(projects.map(p => p.id));
@@ -310,6 +357,38 @@ export function StarterEnterpriseTab({
                         </div>
                       </div>
                       <div className="flex items-center gap-2 flex-wrap ml-7">
+                        <div className="flex items-center gap-1 mr-2">
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            disabled={updatingRating === project.id}
+                            className={`toggle-elevate ${projectRatings[project.id] === 'like' ? 'toggle-elevated bg-emerald-500/20 text-emerald-500' : 'text-muted-foreground'}`}
+                            onClick={() => handleRatingChange(project.id, 'like')}
+                            data-testid={`button-like-${project.id}`}
+                          >
+                            <ThumbsUp className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            disabled={updatingRating === project.id}
+                            className={`toggle-elevate ${projectRatings[project.id] === 'pass' ? 'toggle-elevated bg-red-500/20 text-red-500' : 'text-muted-foreground'}`}
+                            onClick={() => handleRatingChange(project.id, 'pass')}
+                            data-testid={`button-pass-${project.id}`}
+                          >
+                            <ThumbsDown className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            disabled={updatingRating === project.id}
+                            className={`toggle-elevate ${projectRatings[project.id] === 'undecided' ? 'toggle-elevated bg-amber-500/20 text-amber-500' : 'text-muted-foreground'}`}
+                            onClick={() => handleRatingChange(project.id, 'undecided')}
+                            data-testid={`button-undecided-${project.id}`}
+                          >
+                            <HelpCircle className="h-4 w-4" />
+                          </Button>
+                        </div>
                         <Button variant="outline" size="sm">
                           <MessageSquare className="h-4 w-4 mr-2" />
                           Comments
