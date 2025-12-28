@@ -31,7 +31,7 @@ export const SignInView = () => {
             <img 
               src={storyMagicLogo} 
               alt="Story Magic" 
-              className="h-24"
+              className="h-28"
             />
           </Link>
         </div>
