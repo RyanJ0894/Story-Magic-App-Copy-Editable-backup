@@ -16,7 +16,7 @@ export const Header = () => {
           <img 
             src={storyMagicLogo} 
             alt="Story Magic" 
-            className="h-14 md:h-16"
+            className="h-[60px] md:h-[68px]"
           />
         </Link>
         

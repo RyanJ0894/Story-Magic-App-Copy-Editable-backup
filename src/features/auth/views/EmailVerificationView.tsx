@@ -41,7 +41,7 @@ export const EmailVerificationView = ({
             <img 
               src={storyMagicLogo} 
               alt="Story Magic" 
-              className="h-28"
+              className="h-[118px]"
             />
           </Link>
         </div>
