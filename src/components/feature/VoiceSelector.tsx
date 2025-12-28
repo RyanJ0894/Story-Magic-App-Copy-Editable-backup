@@ -115,14 +115,20 @@ export const VoiceSelector = ({
         disabled={disabled}
       >
         <SelectTrigger 
-          className="min-w-[180px]" 
+          className="min-w-[140px] sm:min-w-[180px]" 
           data-testid="select-voice-trigger"
         >
           <SelectValue placeholder="Select a voice">
             {selectedVoice?.name || "Select a voice"}
           </SelectValue>
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent 
+          position="popper" 
+          side="bottom" 
+          align="end"
+          sideOffset={4}
+          className="max-h-[200px] min-w-[180px] max-w-[280px]"
+        >
           {filteredVoices.length === 0 ? (
             <div className="py-2 px-3 text-sm text-muted-foreground">
               No voices available{category ? ` for ${category}` : ""}
