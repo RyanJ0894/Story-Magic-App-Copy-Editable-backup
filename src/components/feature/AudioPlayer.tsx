@@ -13,7 +13,7 @@ import {
   BarChart3,
   Music
 } from "lucide-react";
-import confessionAudio from "../../../attached_assets/The_Confession_-_Cinematic_Audio_1766517815262.m4a";
+import confessionAudio from "../../../attached_assets/episode_(24)_1766984817495.m4a";
 
 export const AudioPlayer = () => {
   const [isPlaying, setIsPlaying] = useState(false);
