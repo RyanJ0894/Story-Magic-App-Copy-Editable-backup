@@ -466,7 +466,6 @@ export default function ScreenplayPlayer({
                         <VoiceSelector
                           voices={voices}
                           selectedVoiceId={characterVoices[char.name] || ''}
-                          category={char.category || undefined}
                           onVoiceChange={(voiceId, voice) => handleVoiceReassign(char.name, voiceId, voice)}
                           showPreview={true}
                           className="min-w-[200px]"
