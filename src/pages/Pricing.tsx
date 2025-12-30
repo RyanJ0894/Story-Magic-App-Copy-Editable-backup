@@ -442,6 +442,15 @@ export default function Pricing() {
                     Academic Pricing Available
                   </Button>
                 </div>
+                <div className="mt-4">
+                  <Link 
+                    to="/enterprise-packages" 
+                    className="text-cinema-gold hover:text-cinema-gold/80 underline underline-offset-4 transition-colors"
+                    data-testid="link-enterprise-packages"
+                  >
+                    Packages
+                  </Link>
+                </div>
               </CardContent>
             </Card>
           </div>

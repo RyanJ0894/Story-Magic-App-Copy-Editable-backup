@@ -12,6 +12,7 @@ import VoiceMarketplace from "./pages/VoiceMarketplace";
 import { AcceptInvitationView } from "./features/auth/views/AcceptInvitationView";
 import { ResetPasswordView } from "./features/auth/views/ResetPasswordView";
 import ShowAudio from "./pages/ShowAudio";
+import EnterprisePackages from "./pages/EnterprisePackages";
 import ScriptPlayerDemo from "./features/scripts/components/ScriptPlayerDemo";
 import { MainLayout } from "./components/layout/MainLayout";
 
@@ -46,6 +47,7 @@ function App() {
         <Route path="/features" element={<Features />} />
         <Route path="/voice-marketplace" element={<VoiceMarketplace />} />
         <Route path="/show-audio" element={<ShowAudio />} />
+        <Route path="/enterprise-packages" element={<EnterprisePackages />} />
         <Route path="/script-demo" element={<ScriptPlayerDemo chunks={[]} isVisible={true} />} />
       </Routes>
       <Toaster />
