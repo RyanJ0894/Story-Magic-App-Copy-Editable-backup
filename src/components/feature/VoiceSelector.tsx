@@ -3,13 +3,15 @@ import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { USER_VOICE_CATEGORIES, type UserVoiceCategory } from "@/config/userCategories";
 import { Play, Pause } from "lucide-react";
 import { type ElevenLabsVoice } from "@/hooks/useElevenLabsVoices";
-import { type UserVoiceCategory } from "@/config/userCategories";
 
 interface VoiceSelectorProps {
   voices: ElevenLabsVoice[];
@@ -127,29 +129,69 @@ export const VoiceSelector = ({
           side="bottom" 
           align="end"
           sideOffset={4}
-          className="max-h-[200px] min-w-[180px] max-w-[280px]"
+          className="max-h-[280px] min-w-[180px] max-w-[280px]"
         >
           {filteredVoices.length === 0 ? (
             <div className="py-2 px-3 text-sm text-muted-foreground">
               No voices available{category ? ` for ${category}` : ""}
             </div>
-          ) : (
+          ) : category ? (
             filteredVoices.map((voice) => (
               <SelectItem
                 key={voice.voice_id}
                 value={voice.voice_id}
                 data-testid={`select-voice-option-${voice.voice_id}`}
               >
-                <div className="flex items-center justify-between gap-2 w-full">
-                  <span>{voice.name}</span>
-                  {!category && (
-                    <span className="text-xs text-muted-foreground">
-                      {voice.category}
-                    </span>
-                  )}
-                </div>
+                <span>{voice.name}</span>
               </SelectItem>
             ))
+          ) : (
+            <>
+              {USER_VOICE_CATEGORIES.map((cat) => {
+                const voicesInCategory = filteredVoices.filter(
+                  (v) => v.category === cat
+                );
+                if (voicesInCategory.length === 0) return null;
+                return (
+                  <SelectGroup key={cat}>
+                    <SelectLabel className="text-xs font-semibold text-muted-foreground px-2 py-1.5">
+                      {cat}
+                    </SelectLabel>
+                    {voicesInCategory.map((voice) => (
+                      <SelectItem
+                        key={voice.voice_id}
+                        value={voice.voice_id}
+                        data-testid={`select-voice-option-${voice.voice_id}`}
+                      >
+                        <span>{voice.name}</span>
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                );
+              })}
+              {(() => {
+                const uncategorizedVoices = filteredVoices.filter(
+                  (v) => !v.category || !USER_VOICE_CATEGORIES.includes(v.category as typeof USER_VOICE_CATEGORIES[number])
+                );
+                if (uncategorizedVoices.length === 0) return null;
+                return (
+                  <SelectGroup>
+                    <SelectLabel className="text-xs font-semibold text-muted-foreground px-2 py-1.5">
+                      Other
+                    </SelectLabel>
+                    {uncategorizedVoices.map((voice) => (
+                      <SelectItem
+                        key={voice.voice_id}
+                        value={voice.voice_id}
+                        data-testid={`select-voice-option-${voice.voice_id}`}
+                      >
+                        <span>{voice.name}</span>
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                );
+              })()}
+            </>
           )}
         </SelectContent>
       </Select>
