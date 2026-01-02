@@ -25,7 +25,7 @@ export const useSimpleProduction = () => {
   const processProduction = async (script: string, projectId: string): Promise<OrchestrationResult> => {
     setState({
       isProcessing: true,
-      step: 'Sending script to Groq AI Director...',
+      step: 'Sending script to Director Agent...',
       audioUrl: null,
       error: null,
       chunks: [],
@@ -36,7 +36,7 @@ export const useSimpleProduction = () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Not authenticated. Please log in.');
 
-      console.log('🎬 Triggering Groq AI Director for project:', projectId);
+      console.log('🎬 Triggering Director Agent for project:', projectId);
       console.log('📝 Script length:', script.length, 'characters');
       
       const startTime = Date.now();
@@ -54,15 +54,15 @@ export const useSimpleProduction = () => {
         body: JSON.stringify({ project_id: projectId, script_text:script }),
       });
 
-      const groqElapsed = Date.now() - startTime;
-      console.log(`⚡ Groq AI Director response in ${groqElapsed}ms`);
+      const directorElapsed = Date.now() - startTime;
+      console.log(`⚡ Director Agent response in ${directorElapsed}ms`);
 
       const responseText = await fetchResponse.text();
       console.log('📥 Response status:', fetchResponse.status);
       console.log('📥 Response body:', responseText);
 
       if (!fetchResponse.ok) {
-        console.error('❌ Groq AI Director error:', responseText);
+        console.error('❌ Director Agent error:', responseText);
         let errorMessage = `HTTP ${fetchResponse.status}`;
         try {
           const errorJson = JSON.parse(responseText);
@@ -70,23 +70,23 @@ export const useSimpleProduction = () => {
         } catch {
           errorMessage = responseText || `HTTP ${fetchResponse.status}`;
         }
-        throw new Error(`Groq AI Director error: ${errorMessage}`);
+        throw new Error(`Director Agent error: ${errorMessage}`);
       }
 
-      let groqResult;
+      let directorResult;
       try {
-        groqResult = JSON.parse(responseText);
+        directorResult = JSON.parse(responseText);
       } catch {
-        throw new Error('Failed to parse Groq AI Director response');
+        throw new Error('Failed to parse Director Agent response');
       }
-      if (!groqResult?.success) {
-        console.error('❌ Groq AI Director failed:', groqResult);
-        throw new Error(groqResult?.error || 'Groq AI Director returned unsuccessful response');
+      if (!directorResult?.success) {
+        console.error('❌ Director Agent failed:', directorResult);
+        throw new Error(directorResult?.error || 'Director Agent returned unsuccessful response');
       }
 
-      console.log('✅ Groq AI Director completed:', {
-        scene_count: groqResult.scene_count,
-        processing_time_ms: groqResult.processing_time,
+      console.log('✅ Director Agent completed:', {
+        scene_count: directorResult.scene_count,
+        processing_time_ms: directorResult.processing_time,
       });
 
       setState(prev => ({ ...prev, step: 'Retrieving Director JSON...' }));
@@ -144,7 +144,7 @@ export const useSimpleProduction = () => {
 
       if (!directorJson) {
         throw new Error(
-          `Director JSON not found after Groq processing.\n\n` +
+          `Director JSON not found after processing.\n\n` +
           `The AI processed the script successfully but the data wasn't saved.\n` +
           `Project ID: ${projectId}\n\n` +
           `Please try again or check Supabase logs.`
@@ -172,7 +172,7 @@ export const useSimpleProduction = () => {
 
       const totalTime = Date.now() - startTime;
       console.log(`✅ Total production time: ${totalTime}ms`);
-      console.log(`   - AI Director: ${groqResult.processing_time_ms}ms`);
+      console.log(`   - AI Director: ${directorResult.processing_time_ms}ms`);
       console.log(`   - Orchestration: ${totalTime - totalAiTime}ms`);
 
       const scenesArray = Array.isArray(directorJson) ? directorJson : (directorJson.scenes || []);
