@@ -17,6 +17,10 @@ interface SignInFormProps {
 export function SignInForm({ onSubmit, onForgotPassword, loading = false, error }: SignInFormProps) {
   const form = useForm<SignInSchema>({
     resolver: zodResolver(signInSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
   });
 
   const email = form.watch("email");

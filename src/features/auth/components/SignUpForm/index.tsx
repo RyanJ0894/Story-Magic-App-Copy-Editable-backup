@@ -17,6 +17,10 @@ interface SignUpFormProps {
 export function SignUpForm({ onSubmit, loading = false, error, invitationToken }: SignUpFormProps) {
   const form = useForm<SignUpSchema>({
     resolver: zodResolver(signUpSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
   });
 
   return (

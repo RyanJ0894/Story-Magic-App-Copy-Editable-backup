@@ -13,6 +13,10 @@ export const getAuthErrorMessage = (error: AuthError): string => {
     return "Please check your email and click the confirmation link before signing in.";
   }
   
+  if (error.message.includes("sending confirmation email") || error.message.includes("email rate limit")) {
+    return "Unable to send verification email. Please try again in a few minutes, or contact support if the issue persists.";
+  }
+  
   return error.message || "An unexpected error occurred. Please try again.";
 };
 
