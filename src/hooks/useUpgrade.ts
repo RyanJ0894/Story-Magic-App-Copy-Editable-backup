@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { supabase } from '../../supabase/client';
+import { supabase } from '@/integrations/supabase/client';
 import { type PlanTier, PLAN_HIERARCHY } from '@/types/plans';
 import { useToast } from '@/hooks/use-toast';
 

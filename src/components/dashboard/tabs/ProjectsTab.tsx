@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { type UserRole, type RolePermissions } from "@/types/roles";
 import { useEffect, useState } from "react";
-import { supabase } from "../../../../supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ProjectsTabProps {
   userRole: UserRole;

@@ -1,5 +1,5 @@
 import { CreateProjectData, Project, ProjectWithDetails } from "../project.type";
-import { supabase } from "../../../../supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 import { runDirector } from "../../../../supabase/filmDirectorApi";
 
 export const projectApi = {

@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Mic, DollarSign, ArrowRight } from "lucide-react";
 import ChunkProgressDemo from "@/components/demo/ChunkProgressDemo";
 import ScriptPlayerDemo from "@/components/demo/ScriptPlayerDemo";
-import { supabase } from "../../supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 import { getDirectorJSON, generateAudio, DirectorJSON } from "../../supabase/filmDirectorApi";
 import { ChunkProgressData } from "@/features/projects/project-chunk.type";
 
