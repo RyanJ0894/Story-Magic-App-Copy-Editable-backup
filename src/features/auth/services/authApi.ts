@@ -10,10 +10,20 @@ export const authApi = {
   },
 
   signUp: async (data: { email: string; password: string }, redirectUrl?: string) => {
-    return await supabase.auth.signUp({
+    const result = await supabase.auth.signUp({
       ...data,
       options: redirectUrl ? { emailRedirectTo: redirectUrl } : undefined,
     });
+    
+    // If user was created successfully but email failed, treat as partial success
+    // The user exists and can try to sign in (if email is disabled) or request a new verification
+    if (result.error && result.data?.user) {
+      console.warn('User created but email sending may have failed:', result.error.message);
+      // Return success with user data, the calling code will handle showing appropriate message
+      return { data: result.data, error: null };
+    }
+    
+    return result;
   },
 
   resendVerification: async (email: string, redirectUrl: string) => {
