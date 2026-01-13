@@ -1,4 +1,4 @@
-import { supabase } from "../../../../supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 
 export const authApi = {
   getCurrentUser: async () => {
