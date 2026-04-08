@@ -1,23 +1,29 @@
 import { AuthError } from "@supabase/supabase-js";
 
 export const getAuthErrorMessage = (error: AuthError): string => {
-  if (error.message.includes("User already registered")) {
+  const msg = error?.message || "";
+
+  if (msg === "Failed to fetch" || msg.includes("NetworkError") || msg.includes("fetch")) {
+    return "Cannot connect to the authentication server. Your Supabase project may be paused — please visit your Supabase dashboard to resume it, then try again.";
+  }
+
+  if (msg.includes("User already registered")) {
     return "An account with this email already exists. Please sign in instead.";
   }
   
-  if (error.message.includes("Invalid login credentials")) {
+  if (msg.includes("Invalid login credentials")) {
     return "Invalid email or password. Please check your credentials and try again.";
   }
   
-  if (error.message.includes("Email not confirmed")) {
+  if (msg.includes("Email not confirmed")) {
     return "Please check your email and click the confirmation link before signing in.";
   }
   
-  if (error.message.includes("sending confirmation email") || error.message.includes("email rate limit")) {
+  if (msg.includes("sending confirmation email") || msg.includes("email rate limit")) {
     return "Unable to send verification email. Please try again in a few minutes, or contact support if the issue persists.";
   }
   
-  return error.message || "An unexpected error occurred. Please try again.";
+  return msg || "An unexpected error occurred. Please try again.";
 };
 
 export const getRedirectUrl = (path: string = "/"): string => {
