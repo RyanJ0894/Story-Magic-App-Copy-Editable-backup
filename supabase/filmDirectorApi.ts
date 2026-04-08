@@ -1,5 +1,5 @@
 /// <reference types="vite/client" />
-  import { supabase } from "./client";
+  import { supabase } from "@/integrations/supabase/client";
 
 const WEBHOOK_N8N_URL = import.meta.env.VITE_WEBHOOK_N8N_AI;
 

@@ -202,7 +202,23 @@ Preferred communication style: Simple, everyday language.
 
 ```
 VITE_SUPABASE_URL - Supabase project URL
-VITE_SUPABASE_ANON_KEY - Supabase anonymous key
+VITE_SUPABASE_PUBLISHABLE_KEY - Supabase anonymous/publishable key (was VITE_SUPABASE_ANON_KEY in old files)
 VITE_WEBHOOK_N8N_AI - N8N webhook URL for AI Director
 GROQ_API_KEY - Groq API key for ultra-fast LLM inference (get free at console.groq.com)
 ```
+
+## Replit Migration Notes
+
+**Migrated from Lovable to Replit.** Key changes made:
+
+1. **Fixed duplicate Supabase client bug** — `supabase/filmDirectorApi.ts` was importing from the old `supabase/client.ts` (which used `VITE_SUPABASE_ANON_KEY` and created a second GoTrueClient). Fixed to import from `@/integrations/supabase/client` (the authoritative client). This resolved "Multiple GoTrueClient instances" warning and "Failed to fetch" auth errors.
+
+2. **Single Supabase client** — All files must import Supabase exclusively from `@/integrations/supabase/client`. The file `supabase/client.ts` is now orphaned and can be deleted.
+
+3. **Supabase retained** — The project uses Supabase Auth, Database, Edge Functions, and Realtime. A full Neon/Drizzle migration was intentionally skipped as it would require re-architecting the entire auth and data layer.
+
+4. **Vite server** — Configured with `server.allowedHosts: true` and `host: "0.0.0.0"` for Replit proxy compatibility.
+
+5. **Known issue** — ElevenLabs voices are fetched via a Supabase Edge Function. If the edge function URL is unreachable (e.g. Supabase project paused), voices will fail silently. This is non-blocking.
+
+6. **Enterprise page password** — Currently client-side only (`Masejase0894`). Not secure for production — should be moved server-side.
