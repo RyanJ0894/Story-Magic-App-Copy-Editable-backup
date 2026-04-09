@@ -161,7 +161,7 @@ export default function Pricing() {
       annualPrice: 960,
       positioning: "Unlimited creative freedom for serious filmmakers",
       features: [
-        "Unlimited script uploads (up to 150 pages each)",
+        "30 script uploads (up to 150 pages each)",
         "Full premium voice library (150+ voices)",
         "Custom voice cloning (up to 10 cloned voices)",
         "Exclusive voice marketplace access",
